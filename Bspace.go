@@ -16,9 +16,21 @@ type Buffer struct {
 //Inicia el numero de columnas en una tabla
 func (sp *Space) NewSearchSpace (startLine int64,endLine int64,data ...string )(buf *Buffer){
 	 
-	if  sp.Size_file / sp.Size_line <= endLine {
+	//Buffer para leer directorios
+	if sp.FileCoding == Directory {
+
+		buf = &Buffer{
+			StartLine: startLine,
+			EndLine:   endLine + 1,
+			Buffer: make(map[string][][]byte),
+		}
+		buf.Buffer["buffer"]    = make([][]byte ,1)
+		return
+	}
+
+	if  sp.SizeFileLine < endLine {
 		
-		log.Fatalln("NewSearchSpace: error endLine",sp.Url ,endLine ,sp.Size_file / sp.Size_line)
+		log.Fatalln("NewSearchSpace: error endLine",sp.Url ,endLine ,sp.SizeFileLine)
 		
 	}
 

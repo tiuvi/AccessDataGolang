@@ -3,16 +3,25 @@ package bd
 import (
 	"bytes"
 	"log"
-
+	"strconv"
+	"os"
+	"sync/atomic"
 )
 
 func (sp *Space) WriteColumnSpace(line int64, column map[string][]byte){
 
-	//Actualizamos el numero de lineas
-	sp.complete_file_lines(line)
+	if line == -1 {
 
-	//Actualizamos el tamaño del archivo
-	sp.update_size_file(line)
+		line = atomic.AddInt64(&sp.SizeFileLine, 1)
+		
+	}
+
+	if line > sp.SizeFileLine {
+
+		atomic.AddInt64(&sp.SizeFileLine, line - sp.SizeFileLine )
+		
+	}
+	log.Println("Writefile lineas: ",sp.SizeFileLine )
 
 	//ind -> index val -> valor
 	for val := range sp.IndexSizeColumns {
@@ -51,22 +60,23 @@ func (sp *Space) WriteColumnSpace(line int64, column map[string][]byte){
 		//Primer caso el texto es menor que el tamaño de la linea
 		//En este caso añadimos un padding de espacios al final
 		
-		//if text_count < sp.Size_line {
-		if text_count < sp.IndexSizeColumns[val][1] {
+		sizeColumn := sp.IndexSizeColumns[val][1] - sp.IndexSizeColumns[val][0]
+
+		if text_count < sizeColumn {
 			//whitespace := bytes.Repeat( []byte{32} , int(sp.Size_line - text_count)) 
 			//column[val] = append(column[val] ,  whitespace... )
 
-			whitespace := bytes.Repeat( []byte(" ") , int(sp.IndexSizeColumns[val][1] - text_count)) 
+			whitespace := bytes.Repeat( []byte(" ") , int(sizeColumn - text_count)) 
 						
 			column[val] = append(column[val] ,  whitespace... )
 		}
 
 		//Segundo caso el string es mayor que el tamaño de la linea
 		//	if text_count > sp.Size_line {
-		if text_count > sp.IndexSizeColumns[val][1] {
+		if text_count > sizeColumn {
 
 			//column[val] = column[val][:sp.Size_line]
-			column[val] = column[val][:sp.IndexSizeColumns[val][1]]
+			column[val] = column[val][:sizeColumn]
 		}
 		
 	
@@ -74,8 +84,9 @@ func (sp *Space) WriteColumnSpace(line int64, column map[string][]byte){
 
 
 		sp.File.WriteAt(column[val], sp.Size_line * line + sp.IndexSizeColumns[val][0])
-		
-		
+
+	
+
 		//🔥🔥🔥Actualizamos ram
 		if (sp.FileNativeType & RamSearch) != 0 && sp.IndexSizeColumns[val][0] == 0  {
 
@@ -91,51 +102,103 @@ func (sp *Space) WriteColumnSpace(line int64, column map[string][]byte){
 
 	}
 
+
+
 }
 
 
 func (sp *Space) WriteListBitSpace(line int64, column map[string][]byte){
 	
+
+	sp.Lock()
+	defer sp.Unlock()
+	sp.File, sp.err = os.OpenFile(sp.Name + "." + sp.Extension , os.O_RDWR | os.O_CREATE, 0666)
+
 	var byteLine int64 =  line / 8
 
-	sp.complete_file_lines_bit(byteLine)
-
-
-
-		bufferBit := make([]byte , 1 )
-		_ , sp.err = sp.File.ReadAt(bufferBit , byteLine)
 		
-		var bitLine int64 =  line - ((line / 8) * 8)
-
-		log.Println("Bitline: ", bitLine)
-		//Antes
-		log.Printf("Antes: %08b", bufferBit)
-
-		for val, ind := range sp.IndexSizeColumns {
-
-			if ind[0] == 0 {
-
-				switch string(column[val]) {
+	bufferBit := make([]byte , 1 )
 	
-				case "on":
-					sp.writeBit(bitLine ,true , bufferBit )
-				case "off":
-					sp.writeBit(bitLine ,false , bufferBit )
-				}
-				
-				break
+
+	_ , err := sp.File.ReadAt(bufferBit , byteLine)
+	if err != nil{
+
+		bufferBit = []byte{0}
+
+	}
+
+
+	var bitLine int64 =  line - ((line / 8) * 8)
+
+
+
+	for val, ind := range sp.IndexSizeColumns {
+
+		if ind[0] == 0 {
+
+			switch string(column[val]) {
+
+			case "on":
+				sp.writeBit(bitLine ,true , bufferBit )
+			case "off":
+				sp.writeBit(bitLine ,false , bufferBit )
 			}
+			
+			break
 		}
+	}
 
-		//Despues
-		log.Printf("Despues: %08b", bufferBit)
+	sp.File.WriteAt(bufferBit, byteLine )	
+	
+	return
+}
 
-		sp.File.WriteAt(bufferBit, byteLine )
 
-		return
+
+
+
+func (sp *Space) WriteEmptyDirSpace(line int64, column map[string][]byte){
+
+	var err error
+	var value []byte
+	var found bool
+
+	_ , found = column["newBuffer"]
+	if found {
+
+		sp.File, sp.err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
+		if err != nil {
+
+			log.Print(err)
+		
+		}
+	}
+
+	value , found = column["appendBuffer"]
+	if found {
+
+		sp.File, sp.err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_APPEND, 0666)
+		
+		if err != nil {
+
+			log.Print(err)
+		
+		}
+		if _, err := sp.File.Write(value); 
+		err != nil {
+
+			log.Print(err)
+	
+		}
+	}
+
+	_ , found = column["endBuffer"]
+	if found {
+
+		defer sp.File.Close()
+
 	}
 
 
 
-
-
+}

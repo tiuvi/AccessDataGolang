@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"strconv"
+
+
 )
 
 
@@ -144,7 +146,7 @@ func (sp *Space) MultiColumnSpace(buf Buffer){
 func (sp *Space) FullFileSpace(buf Buffer){
 
 
-	buf.Buffer["buffer"][0], sp.err = os.ReadFile(sp.Url + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Exetnsion)
+	buf.Buffer["buffer"][0], sp.err = os.ReadFile(sp.Url + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
 
 	if sp.err != nil {
 
@@ -158,26 +160,27 @@ func (sp *Space) FullFileSpace(buf Buffer){
 func (sp *Space) ListBitSpace(buf Buffer){
 
 
-	var byteLine int64 =  buf.StartLine / 8
-
-	sp.complete_file_lines_bit(byteLine)
-
-	bufferBit := make([]byte , 1 )
-
-	_ , sp.err = sp.File.ReadAt(bufferBit , byteLine)
-	
-	//var bitLine int64 =  line - ((line / 8) * 8)
-	var bitLine int64 =  buf.StartLine % 8 
-
-	log.Println("Bitline: ", bitLine)
-	//Antes
-	log.Printf("Readbit: %08b", bufferBit)
-
-	turn := sp.readBit(bitLine,bufferBit)
 
 	for val, ind := range sp.IndexSizeColumns {
 
 		if ind[0] == 0 {
+
+
+	var byteLine int64 =  buf.StartLine / 8
+
+
+	bufferBit := make([]byte , 1 )
+
+	_ , err := sp.File.ReadAt(bufferBit , byteLine)
+	if err !=nil {
+
+		buf.Buffer[val] = append(buf.Buffer[val] , []byte("off"))
+		return
+	}
+
+	var bitLine int64 =  buf.StartLine % 8 
+
+	turn := sp.readBit(bitLine,bufferBit)
 
 			if turn {
 
@@ -192,5 +195,17 @@ func (sp *Space) ListBitSpace(buf Buffer){
 	}
 
 	log.Println("buffer Rspace: ", string(buf.Buffer["buffer"][0])  )
+
+}
+
+func (sp *Space) ReadEmptyDirSpace(buf Buffer){
+
+	buf.Buffer["buffer"][0], sp.err = os.ReadFile(sp.Name + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
+
+	if sp.err != nil {
+
+		buf.Buffer["buffer"][0] = []byte{}
+
+	}
 
 }

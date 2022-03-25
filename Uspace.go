@@ -54,6 +54,17 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 		// Rompemos switch byte
 		break
 
+		case Directory:
+			switch obj.FileTypeDir {
+
+				case EmptyDir:
+					obj.WriteEmptyDirSpace(line, column)
+					break
+
+				default: 
+					return
+			}
+		break
 		//Defalt si no es bytes o bit
 		default: 
 				return
@@ -139,6 +150,18 @@ func (obj *Space) Rspace (column Buffer){
 					return
 			}
 		// Rompemos switch byte
+		break
+
+		case Directory:
+			switch obj.FileTypeDir {
+
+				case EmptyDir:
+					obj.ReadEmptyDirSpace(column)
+					break
+
+				default: 
+					return
+			}
 		break
 
 		//Defalt si no es bytes o bit

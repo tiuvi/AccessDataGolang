@@ -1,0 +1,65 @@
+
+Iniciar un directorio
+var route = &bd.Space{
+	Url: autoload_options.CentralRoute,
+}
+
+Iniciar una sola columna
+
+var routeName = &bd.Space{
+	Url: autoload_options.CentralRoute + "/routeName.sram",
+	IndexSizeColumns: map[string][2]int64{
+		"routeName": {0,16},
+	},
+	Size_line: 16,
+}
+
+
+Iniciar multicolumna
+
+var space = &bd.Space{
+	Url: autoload_options.BdReal + "/users.tdisk",
+	IndexSizeColumns: map[string][2]int64{
+		"email": {0,16},
+		"password": {16,22},
+	},
+	Size_line: 22,
+}
+
+Añadir preformat y postformat default
+
+Hooker: map[string]func([]byte)[]byte{
+    bd.Preformat: func( input_bytes []byte)( output_bytes []byte){
+        return bytes.ToLower(input_bytes)
+    },
+    bd.Postformat: func( input_bytes []byte)( output_bytes []byte){
+        return bytes.ToUpper(input_bytes)
+    },
+},
+
+Añadir preformat y postformat por columnas
+
+	Hooker: map[string]func([]byte)[]byte{
+		bd.Preformat + "email": func( input_bytes []byte)( output_bytes []byte){
+			return bytes.ToLower(input_bytes)
+		},
+		bd.Postformat + "email": func( input_bytes []byte)( output_bytes []byte){
+			return bytes.ToUpper(input_bytes)
+		},
+	},
+
+
+Escribir
+like.Wspace(linea , map[string][]byte {
+        "like": []byte("off"),
+    })
+
+Leer
+column := *space.NewSearchSpace(inicioLinea,FinalLinea , Columnas)
+like.Rspace(column)
+likeStr := string(column.Buffer["like"][0])
+
+Leer ram
+data, found := spaceR.Rmapspace(string )
+
+value, found := spaceR.Rindexspace(line int64)

@@ -2,39 +2,12 @@ package bd
 
 import (
 	"bytes"
-	"log"
 )
 
-func (obj *Space ) complete_file_lines(line int64){
 
-	if line  * obj.Size_line > obj.Size_file {
-		
-		save_table := int(  ( (obj.Size_line * line ) - obj.Size_file) )
-		whitespace := bytes.Repeat( []byte(" ") , save_table ) 
-	
-		obj.File.WriteAt(whitespace , obj.Size_file)				
-		
-		obj.Size_file = obj.Size_line * line
-	
-	}
-}
 
-func (obj *Space ) complete_file_lines_bit(line int64){
 
-	log.Println("Complete file lines bit: ",line, obj.Size_file)
-	if line > obj.Size_file {
-	
-		log.Println("run..." , []byte{00})
 
-		n, err := obj.File.WriteAt( []byte{0} , line   )				
-		log.Println(n)
-		log.Println(err)
-		
-		obj.Size_file = line
-		log.Println("Complete file lines bit: ",line, obj.Size_file)
-
-	}
-}
 
 func (obj *Space ) writeBit(id int64,turn bool ,bufferBit []byte)([]byte){
 
@@ -84,14 +57,7 @@ func (obj *Space ) readBit(id int64,bufferBit []byte)(bool){
 
 }
 
-func (obj *Space ) update_size_file(line int64){
 
-	if line  * obj.Size_line == obj.Size_file {
-		
-		obj.Size_file = obj.Size_line * (line + 1)	
-
-	}
-}
 
 func (obj *Space ) updateRamMap(str_write []byte, line int64){
 

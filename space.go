@@ -6,12 +6,12 @@ package bd
 	//id , user , token
 	//Siguiente paso imprimir una respuesta
 
+
 import (
 	"log"
 	"os"
 	"strings"
 	"sync"
-	"io/fs"
 )
 
 type FileNativeType int64
@@ -26,14 +26,15 @@ const(
 //Diferenciar archivos de Bit de archivos de Byte
 type FileCoding int
 const(
-	Bit FileCoding = iota
+	Bit FileCoding = iota + 1
 	Byte
+	Directory
 )
 
 //Diferenciar archivos de una sola columna, de los archivos multicolumna
 type FileTipeByte int
 const(
-	OneColumn FileTipeByte = iota
+	OneColumn FileTipeByte = iota + 1
 	MultiColumn
 	FullFile
 )
@@ -41,7 +42,12 @@ const(
 //Actualmente solo para lista de bits
 type FileTipeBit int
 const(
-	ListBit FileTipeBit = iota
+	ListBit FileTipeBit = iota + 1
+)
+
+type FileTypeDir int
+const(
+	EmptyDir FileTypeDir = iota + 1
 )
 
 type Hook string 
@@ -56,13 +62,17 @@ type Space struct  {
 
 	//Propiedades comunes a todos los archivos
 	Url string
-	Exetnsion string
+	Name string
+	Exist bool
+	Extension string
+
 	File *os.File
 	Size_line int64
-	Size_file int64
+	SizeFileLine int64
 	NumberLines int64
 
 	sync.RWMutex
+	
 
 	//Indice de columnas y tamaño de columna
 	IndexSizeColumns map[string][2]int64
@@ -74,7 +84,7 @@ type Space struct  {
 	FileCoding   FileCoding
 	FileTipeByte FileTipeByte
 	FileTipeBit  FileTipeBit
-	
+	FileTypeDir  FileTypeDir
 	//Formateadores antes y despues
 	Hooker map[string]func([]byte)[]byte
 
@@ -115,32 +125,103 @@ type Space struct  {
 // Dependiendo de si el archivo permanece abierto y si necesita
 //sincronizacion con ram.
 
+//Retocar funcion para una ejecucion diferente en tiempo de copilacion y tiempo de
+//ejecucion
+
 func (obj *Space ) Ospace(){
 
-	//Abrimos el archivo y que permanezca abierto
-	obj.File, obj.err = os.OpenFile(obj.Url , os.O_RDWR | os.O_CREATE, 0666)
+	//Tiempo de ejecucion
+	if obj.Exist {
 
-	//Si error lo pintamos en consola
+		switch obj.FileCoding {
+
+			case Directory:
+				return
+
+			default:
+				obj.File, obj.err = os.OpenFile(obj.Name + "." + obj.Extension , os.O_RDWR | os.O_CREATE, 0666)
+				return
+		}
+	}
+
+	
+	//Obtenemos la extension del fichero
+	fileName := strings.SplitN(obj.Url,".",2)
+	if len(fileName) == 1 {
+		obj.Name = fileName[0]
+	}
+	if len(fileName) == 2 {
+		obj.Name = fileName[0]
+		obj.Extension =  fileName[1]
+	}
+
+
+	if obj.Extension == "dir" {
+
+		obj.Extension = ""
+
+		infoDir , err := os.Stat(obj.Name)
+		if err != nil {
+	
+			log.Println("Crea una funcion de creacion de directorios.")
+	
+		}
+	
+		if infoDir.IsDir() {
+	
+			obj.FileCoding  = Directory
+			obj.FileTypeDir = EmptyDir
+			obj.Exist = true
+			return
+		}
+	}
+
+
+	log.Println(obj.Name + "." + obj.Extension)
+	//Tiempo de compilacion
+	obj.File, obj.err = os.OpenFile(obj.Name + "." + obj.Extension , os.O_RDWR | os.O_CREATE, 0666)
+
 	if obj.err != nil {
 
 		log.Println(obj.err)
-
+		obj.Exist = false
+		return
+	
 	}
 
+	obj.Exist = true
+
+	info, err := obj.File.Stat()
+	if err != nil {
+		
+		log.Println(err)
+		obj.Exist = false
+	
+	}
+
+	obj.Exist = true
+	
+
+	obj.SizeFileLine = (info.Size() / obj.Size_line) - 1
+	log.Println("Numero lineas archivo: ",obj.SizeFileLine )
+
+
+	/*
 	//Obtenemos filstat en tiempo de copilacion
 	var info fs.FileInfo
 	info , obj.err = obj.File.Stat()
-	
 	//Si error lo pintamos en consola
 	if obj.err != nil {
 
 		log.Println(obj.err)
 
 	}
-
 	//Obtenemos el tamaño en tiempo de copilacion y lo usamos en tiempo de
 	//ejecucion
 	obj.Size_file = info.Size()
+	*/
+
+
 
 	//Si el archivo es multicolumna, contamos las columnas.
 	if len(obj.IndexSizeColumns) > 1 {
@@ -157,13 +238,11 @@ func (obj *Space ) Ospace(){
 
 	}
 		
-	//Obtenemos la extension del fichero
-	fileName := strings.SplitN(obj.Url,".",2)
 
 	//sram: fichero que sincroniza un archivo de n lineas
 	//con un mapa en la memoria ram asociando valor linea -> n linea
 	
-	if fileName[1] == "sram" || fileName[1] == "bram"{
+	if obj.Extension == "sram" || obj.Extension == "bram"{
 		
 		obj.FileNativeType |= RamSearch
 
@@ -177,13 +256,13 @@ func (obj *Space ) Ospace(){
 			}
 		}
 
-		mapColumn := *obj.NewSearchSpace(0,(obj.Size_file / obj.Size_line) - 1, field)
+		mapColumn := *obj.NewSearchSpace(0, obj.SizeFileLine  , field)
 		obj.Rspace(mapColumn)
 	
 		obj.Search = make(map[string]int64)
 
 		var x int64
-		for x = 0 ; x < (obj.Size_file / obj.Size_line); x++{
+		for x = 0 ; x <= obj.SizeFileLine; x++{
 			
 			obj.Search[ string( mapColumn.Buffer[field][x] ) ] = x
 			
@@ -197,7 +276,7 @@ func (obj *Space ) Ospace(){
 	//iram: archivo que sincroniza un archivo de n lineas 
 	//con un array en la memoria asociando n lineas -> n valores
 	
-	if fileName[1] == "iram" || fileName[1] == "bram"{
+	if obj.Extension == "iram" || obj.Extension == "bram"{
 			
 		obj.FileNativeType |= RamIndex
 
@@ -212,13 +291,13 @@ func (obj *Space ) Ospace(){
 			}
 		}
 
-		mapColumn := *obj.NewSearchSpace(0,(obj.Size_file / obj.Size_line) - 1, field)
+		mapColumn := *obj.NewSearchSpace(0, obj.SizeFileLine, field)
 		obj.Rspace(mapColumn)
 
 		obj.Index = make([]string ,0)
 		
 		var x int64
-		for x = 0 ; x < (obj.Size_file / obj.Size_line); x++{
+		for x = 0 ; x <= obj.SizeFileLine; x++{
 			
 			obj.Index = append(obj.Index, string( mapColumn.Buffer[field][x] ))
 
@@ -229,7 +308,7 @@ func (obj *Space ) Ospace(){
 
 	//tdisk son archivos que se abren en tiempo de copilacion y 
 	//permanecen abiertos en tiempo de ejecucion
-	if fileName[1] == "tdisk" {
+	if obj.Extension == "tdisk" {
 
 		obj.FileNativeType  |= tdisk
 
@@ -237,19 +316,21 @@ func (obj *Space ) Ospace(){
 
 	//disk: Son archivos normales que se abren y se cierran en
 	//tiempo de ejecucion
-	if fileName[1] == "disk" {
+	if obj.Extension == "disk" {
 		
 		obj.FileNativeType  |= disk
 
 	}
 
 	//bdisk: Lista de bit en un archivo disk
-	if fileName[1] == "bdisk" {
+	if obj.Extension == "bdisk" {
 
 		//La primera propiedad indica si se cierra el archivo
 		obj.FileNativeType  |= disk
 		obj.FileCoding      = Bit
 		obj.FileTipeBit     = ListBit
+		defer obj.File.Close()
+		
 	
 	}
 
