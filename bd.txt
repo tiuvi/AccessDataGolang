@@ -296,6 +296,23 @@ package bd
 	https://pkg.go.dev/os#File.SyscallConn
 	SyscallConn devuelve un archivo sin formato.
 
+	🔥 Descriptores de archivos Unix
+	Documentacion linux
+	https://www.kernel.org/doc/man-pages/
+
+	💧Pread - Leer un descriptor
+	https://pkg.go.dev/golang.org/x/sys@v0.0.0-20220325203850-36772127a21f/unix#Pread
+	https://pkg.go.dev/golang.org/x/sys@v0.0.0-20220325203850-36772127a21f/unix#Preadv
+	https://pkg.go.dev/golang.org/x/sys@v0.0.0-20220325203850-36772127a21f/unix#Preadv2
+
+	💧Pwrite - escribe en un descriptor
+	https://pkg.go.dev/golang.org/x/sys@v0.0.0-20220325203850-36772127a21f/unix#Pwrite
+	https://pkg.go.dev/golang.org/x/sys@v0.0.0-20220325203850-36772127a21f/unix#Pwritev
+	https://pkg.go.dev/golang.org/x/sys@v0.0.0-20220325203850-36772127a21f/unix#Pwritev2
+	
+	💧Bloquear un puntero
+	https://pkg.go.dev/golang.org/x/sys@v0.0.0-20220325203850-36772127a21f/unix#Flock
+
 🔥 Avanzado tuberias
 
 	https://pkg.go.dev/os#Pipe
@@ -394,50 +411,6 @@ comportamiento.
 	PathSeparator = '/'
 	separador de lista de ruta específico del sistema operativo
 	🔋 PathListSeparator = ':' 
-
-
-
-
-
-
-
-
-Ejemplo de estructura
-
-type Read_all_obj struct {
-	Path   string
-	Archive string
-}
-
-
-
-
-
-
-
-
-
-
-Ejemplo de añadir padding
-	if obj.Size > 0 {
-
-		var text_count   = len(texto)
-
-		if text_count < obj.Size {
-
-			var añadir = obj.Size - text_count
-			
-			var whitespace = bytes.Repeat( []byte(" ") , añadir) 
-							
-			texto = append(texto,  whitespace... )
-		}
-
-		if text_count > obj.Size {
-
-			return errors.New("size_error")
-		}
-	}
-*/
 
 
 

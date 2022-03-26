@@ -111,9 +111,12 @@ func (sp *Space) WriteListBitSpace(line int64, column map[string][]byte){
 	
 
 	sp.Lock()
+	
+	sp.File , _ = os.OpenFile(sp.Name + "." + sp.Extension , os.O_RDWR | os.O_CREATE, 0666)
+	
+	defer sp.File.Close()
 	defer sp.Unlock()
-	sp.File, sp.err = os.OpenFile(sp.Name + "." + sp.Extension , os.O_RDWR | os.O_CREATE, 0666)
-
+	
 	var byteLine int64 =  line / 8
 
 		
@@ -150,6 +153,7 @@ func (sp *Space) WriteListBitSpace(line int64, column map[string][]byte){
 
 	sp.File.WriteAt(bufferBit, byteLine )	
 	
+
 	return
 }
 

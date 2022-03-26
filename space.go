@@ -1,17 +1,16 @@
 package bd
 
-
-	//Actualizacion de archivos, api rest
-	//Diferenciar el acceso entre datos privados y publicos
-	//id , user , token
-	//Siguiente paso imprimir una respuesta
-
+//Actualizacion de archivos, api rest
+//Diferenciar el acceso entre datos privados y publicos
+//id , user , token
+//Siguiente paso imprimir una respuesta
 
 import (
 	"log"
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 type FileNativeType int64
@@ -37,6 +36,7 @@ const(
 	OneColumn FileTipeByte = iota + 1
 	MultiColumn
 	FullFile
+	MultiColumnDefer
 )
 
 //Actualmente solo para lista de bits
@@ -58,6 +58,8 @@ const(
 
 
 
+
+
 type Space struct  {
 
 	//Propiedades comunes a todos los archivos
@@ -67,6 +69,8 @@ type Space struct  {
 	Extension string
 
 	File *os.File
+	Spacef spaceDescriptors
+
 	Size_line int64
 	SizeFileLine int64
 	NumberLines int64
@@ -97,12 +101,118 @@ type Space struct  {
 	err error
 }
 
+type DescriptorInformation struct {
+	Name string
+	Descriptor int64
+	Time time.Time
+}
+type DescriptorInformations []DescriptorInformation
+
+type spaceDescriptors struct {
+	Descriptor map[string]int64
+	Information []DescriptorInformation
+	sync.RWMutex
+}
+
+var mSpace = &spaceDescriptors{
+	Descriptor: make(map[string]int64,0),
+	Information: make(DescriptorInformations,0),
+}
+
+
+func NewDac(){
+
+	//Archivos abiertos
+	fileOpen := 1000
+	//tikectDb := time.Tick(time.Duration(1) * time.Hour)
+	tikectDb := time.Tick(time.Duration(30) * time.Second)
+	for range tikectDb {
+		/*
+		log.Println("Nuevo ticket")
+		log.Println("-----","     ","-----")
+		log.Println(len(mSpace.Information))
+		log.Println(len(mSpace.Descriptor))
+		log.Println("-----","     ","-----")
+		*/
+
+		if len(mSpace.Descriptor) == 0 {
+			log.Println("Descriptor parada ")
+			continue
+		}
+
+		if len(mSpace.Information) == 0{
+			log.Println("Information parada ")
+			continue
+		}
+		log.Println("Lock parada")
+		mSpace.Lock()
+		
+	
+		//log.Println("Nuevo Bucle: ", "","")
+		//log.Println("-----","     ","-----")
+		//log.Println("-----","     ","-----")
+		for value := range mSpace.Descriptor{
+			log.Println(value)
+		}
+		//log.Println("-----","     ","-----")
+		//log.Println("-----","     ","-----")
+		for ind := range mSpace.Information{
+			log.Println(mSpace.Information[ind])
+		}
+
+		
+		//for ind := range mSpace.Information {
+		ind :=0
+		for len(mSpace.Information) > fileOpen  {
+		//	log.Println("-----","     ","-----")
+			//log.Println(ind)
+			//log.Println("-----","     ","-----")
+
+			/*
+			if fileOpen > len(mSpace.Information) {
+				break
+			}
+			*/
+			//Cierre del descriptor
+			descriptor := os.NewFile(uintptr(mSpace.Information[ind].Descriptor), mSpace.Information[ind].Name)
+			err := descriptor.Close()
+			if err != nil {
+				log.Println(err)
+			}
+			log.Println("-----","     ","-----")
+			log.Println(len(mSpace.Information))
+			log.Println(mSpace.Information[ind].Name)
+			log.Println("-----","     ","-----")
+			//Borrado
+			delete(mSpace.Descriptor  ,  mSpace.Information[ind].Name)
+			mSpace.Information = append(mSpace.Information[:ind], mSpace.Information[ind+1:]... )
+		
+				
+		}
+		//mSpace.Information = mSpace.Information[5:]
+			
+		/*
+		log.Println("-----","     ","-----")
+		log.Println("-----","     ","-----")
+		for value := range mSpace.Descriptor{
+			log.Println(value)
+		}
+		log.Println("-----","     ","-----")
+		log.Println("-----","     ","-----")
+		for ind := range mSpace.Information{
+			log.Println(mSpace.Information[ind])
+		}
+		log.Println("-----","     ","-----")
+		log.Println("-----","     ","-----")
+		log.Println("-----"," END ","-----")
+		*/
+		mSpace.Unlock()
+	}
+	
 
 
 
-
-
-
+}
 
 
 
@@ -177,7 +287,7 @@ func (obj *Space ) Ospace(){
 	}
 
 
-	log.Println(obj.Name + "." + obj.Extension)
+
 	//Tiempo de compilacion
 	obj.File, obj.err = os.OpenFile(obj.Name + "." + obj.Extension , os.O_RDWR | os.O_CREATE, 0666)
 
@@ -203,23 +313,8 @@ func (obj *Space ) Ospace(){
 	
 
 	obj.SizeFileLine = (info.Size() / obj.Size_line) - 1
-	log.Println("Numero lineas archivo: ",obj.SizeFileLine )
 
 
-	/*
-	//Obtenemos filstat en tiempo de copilacion
-	var info fs.FileInfo
-	info , obj.err = obj.File.Stat()
-	//Si error lo pintamos en consola
-	if obj.err != nil {
-
-		log.Println(obj.err)
-
-	}
-	//Obtenemos el tamaño en tiempo de copilacion y lo usamos en tiempo de
-	//ejecucion
-	obj.Size_file = info.Size()
-	*/
 
 
 
@@ -322,11 +417,27 @@ func (obj *Space ) Ospace(){
 
 	}
 
+		//disk: Son archivos normales que se abren y se cierran en
+	//tiempo de ejecucion
+	if obj.Extension == "defer" {
+		
+		obj.FileTipeByte = MultiColumnDefer
+		mSpace.Lock()
+		mSpace.Descriptor[obj.Url] = int64(obj.File.Fd())
+		mSpace.Information = append( mSpace.Information , DescriptorInformation{obj.Url, int64(obj.File.Fd()) , time.Now()}  )
+		mSpace.Unlock()
+
+		//log.Println(mSpace.Information[len(mSpace.Information)-1])
+
+	}
+
+	
+
 	//bdisk: Lista de bit en un archivo disk
 	if obj.Extension == "bdisk" {
 
 		//La primera propiedad indica si se cierra el archivo
-		obj.FileNativeType  |= disk
+		//obj.FileNativeType  |= disk
 		obj.FileCoding      = Bit
 		obj.FileTipeBit     = ListBit
 		defer obj.File.Close()
