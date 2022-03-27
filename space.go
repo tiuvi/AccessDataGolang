@@ -101,21 +101,23 @@ type Space struct  {
 	err error
 }
 
+
+
 type DescriptorInformation struct {
 	Name string
-	Descriptor int64
 	Time time.Time
 }
 type DescriptorInformations []DescriptorInformation
 
 type spaceDescriptors struct {
-	Descriptor map[string]int64
+	Descriptor map[string] *os.File
 	Information []DescriptorInformation
 	sync.RWMutex
+
 }
 
 var mSpace = &spaceDescriptors{
-	Descriptor: make(map[string]int64,0),
+	Descriptor: make(map[string]*os.File,0),
 	Information: make(DescriptorInformations,0),
 }
 
@@ -123,7 +125,7 @@ var mSpace = &spaceDescriptors{
 func NewDac(){
 
 	//Archivos abiertos
-	fileOpen := 1000
+	fileOpen := 1000000
 	//tikectDb := time.Tick(time.Duration(1) * time.Hour)
 	tikectDb := time.Tick(time.Duration(30) * time.Second)
 	for range tikectDb {
@@ -151,6 +153,7 @@ func NewDac(){
 		//log.Println("Nuevo Bucle: ", "","")
 		//log.Println("-----","     ","-----")
 		//log.Println("-----","     ","-----")
+		/*
 		for value := range mSpace.Descriptor{
 			log.Println(value)
 		}
@@ -159,7 +162,7 @@ func NewDac(){
 		for ind := range mSpace.Information{
 			log.Println(mSpace.Information[ind])
 		}
-
+		*/
 		
 		//for ind := range mSpace.Information {
 		ind :=0
@@ -174,13 +177,19 @@ func NewDac(){
 			}
 			*/
 			//Cierre del descriptor
-			descriptor := os.NewFile(uintptr(mSpace.Information[ind].Descriptor), mSpace.Information[ind].Name)
-			err := descriptor.Close()
-			if err != nil {
-				log.Println(err)
+			start := time.Now()
+			value, found := mSpace.Descriptor[mSpace.Information[ind].Name]
+			timeSince := time.Since(start).Nanoseconds()
+
+			if found {
+				err := value.Close()
+				if err != nil {
+					log.Println(err)
+				}
 			}
+	
 			log.Println("-----","     ","-----")
-			log.Println(len(mSpace.Information))
+			log.Println("elementos: ", len(mSpace.Information) , "Tiempo: ", timeSince)
 			log.Println(mSpace.Information[ind].Name)
 			log.Println("-----","     ","-----")
 			//Borrado
@@ -423,8 +432,8 @@ func (obj *Space ) Ospace(){
 		
 		obj.FileTipeByte = MultiColumnDefer
 		mSpace.Lock()
-		mSpace.Descriptor[obj.Url] = int64(obj.File.Fd())
-		mSpace.Information = append( mSpace.Information , DescriptorInformation{obj.Url, int64(obj.File.Fd()) , time.Now()}  )
+		mSpace.Descriptor[obj.Url] = obj.File
+		mSpace.Information = append( mSpace.Information , DescriptorInformation{obj.Url,time.Now()}  )
 		mSpace.Unlock()
 
 		//log.Println(mSpace.Information[len(mSpace.Information)-1])
