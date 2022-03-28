@@ -1,24 +1,18 @@
 package bd
 
-import (
+//import "log"
 
-	"log"
-	//"time"
-)
-
+//"log"
+//"time"
 
 //Esta funcion escribe en el numero de linea requerido
 //Pasandole un string en forma de bytes
 func (obj *Space ) Wspace(line int64, column map[string][]byte){
 
-	//Revisar apertura disk
-		if (obj.FileNativeType & disk) != 0 {
 
-			obj.Ospace()
+	obj.Ospace()
 
-		}
-
-
+		
 	//Difenciar archivos de bit de archivos de byte
 	switch obj.FileCoding {
 
@@ -54,7 +48,7 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 		// Rompemos switch byte
 		break
 
-		case Directory:
+		case Dir:
 			switch obj.FileTypeDir {
 
 				case EmptyDir:
@@ -69,37 +63,16 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 		default: 
 				return
 	}
-
-		
-
-	
-	if (obj.FileNativeType & tdisk) != 0 {
-
-	}
-
-	if (obj.FileNativeType & disk) != 0 {
-
-		defer obj.File.Close()
-
-	}
 	
 }
 
 
 
-//Esta funcion lee la linea simplemente le pasamos el numero de linea
-//Que queremos leer y devuelve un buffer
-
-//func (obj *Space) Rspace (line int64)(buffer []byte){
 func (obj *Space) Rspace (column Buffer){
 
 
-	//var start time.Time
-	//start = time.Now()
-	//log.Println( "Buffer: ", time.Since(start).Nanoseconds())
-
 	//Iniciando archivos cerrados
-	if (obj.FileNativeType & disk) != 0 {
+	if (obj.FileNativeType & Disk) != 0 {
 
 		obj.Ospace()
 
@@ -152,7 +125,7 @@ func (obj *Space) Rspace (column Buffer){
 		// Rompemos switch byte
 		break
 
-		case Directory:
+		case Dir:
 			switch obj.FileTypeDir {
 
 				case EmptyDir:
@@ -169,17 +142,6 @@ func (obj *Space) Rspace (column Buffer){
 				return
 	}
 
-
-	if obj.err != nil {
-		log.Println(obj.err)
-	}
-
-	if (obj.FileNativeType & disk) != 0 {
-
-		defer obj.File.Close()
-
-	}
-
 	return
 }
 
@@ -190,9 +152,9 @@ func (obj *Space) Rspace (column Buffer){
 
 func (obj *Space ) Rmapspace(str_write string)(value int64, found bool){
 
-	if int64(len(str_write)) > obj.Size_line{
+	if int64(len(str_write)) > obj.SizeLine{
 
-		str_write = str_write[:obj.Size_line]
+		str_write = str_write[:obj.SizeLine]
 
 	}
 	

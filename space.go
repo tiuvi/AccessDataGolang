@@ -15,8 +15,10 @@ import (
 
 type FileNativeType int64
 const(
-	disk FileNativeType = 1 << iota
-	tdisk
+	Disk FileNativeType = 1 << iota
+	DeferDisk 
+	PermDisk
+	Directory
 	RamSearch
 	RamIndex
 )
@@ -27,7 +29,7 @@ type FileCoding int
 const(
 	Bit FileCoding = iota + 1
 	Byte
-	Directory
+	Dir
 )
 
 //Diferenciar archivos de una sola columna, de los archivos multicolumna
@@ -36,7 +38,6 @@ const(
 	OneColumn FileTipeByte = iota + 1
 	MultiColumn
 	FullFile
-	MultiColumnDefer
 )
 
 //Actualmente solo para lista de bits
@@ -62,43 +63,41 @@ const(
 
 type Space struct  {
 
+	
+	//Indica el estado del archivo en la aplicacion
+	FileNativeType FileNativeType
 	//Propiedades comunes a todos los archivos
 	Url string
+	//Indice de columnas y tamaño de columna
+	IndexSizeColumns map[string][2]int64
+
 	Name string
-	Exist bool
 	Extension string
 
 	File *os.File
 	Spacef spaceDescriptors
+	spaceDisk spaceDisk
 
-	Size_line int64
+	compilation bool
+	SizeLine int64
 	SizeFileLine int64
-	NumberLines int64
-
-	sync.RWMutex
-	
-
-	//Indice de columnas y tamaño de columna
-	IndexSizeColumns map[string][2]int64
-
-	//Tipo de archivo nativo
-	FileNativeType FileNativeType
 
 	//Casos de uso para las funciones writes y read
 	FileCoding   FileCoding
 	FileTipeByte FileTipeByte
 	FileTipeBit  FileTipeBit
 	FileTypeDir  FileTypeDir
+
 	//Formateadores antes y despues
 	Hooker map[string]func([]byte)[]byte
-
+	
+	sync.RWMutex
 	//Mapa del archivo en memoria
 	Search map[string]int64 
 
 	//Array del archivo en memoria
 	Index []string
 
-	err error
 }
 
 
@@ -121,106 +120,41 @@ var mSpace = &spaceDescriptors{
 	Information: make(DescriptorInformations,0),
 }
 
+type spaceDisk struct{
+	DiskFile map[string] *os.File
+	sync.RWMutex
+}
+
+var diskSpace = &spaceDisk{
+	DiskFile: make(map[string]*os.File,0),
+}
+
+var extensionFile = map[string]string{
+	//Archivos
+	"odac":"Archivo mono cololmna especial para guardar un solo valor",
+	"mdac":"Archivo multicolumna especial para guardar varios valores",
+	"iram":"Archivo con un indice o array permanente en la ram",
+	"sram":"Archivo con un mapa permanente en la ram",
+	"bram":"Archivo con un mapa y un indice permanente en la ram",
+	"bitlist":"Lista de bit con dos estados posibles verdadero y falso",
+}
+
+var extensionDir = map[string]string{
+	//Directorios
+	"dir":"Gestiona una carpeta como si fuera un unico archivo",
+}
 
 func NewDac(){
 
-	//Archivos abiertos
-	fileOpen := 1000000
-	//tikectDb := time.Tick(time.Duration(1) * time.Hour)
-	tikectDb := time.Tick(time.Duration(30) * time.Second)
-	for range tikectDb {
-		/*
-		log.Println("Nuevo ticket")
-		log.Println("-----","     ","-----")
-		log.Println(len(mSpace.Information))
-		log.Println(len(mSpace.Descriptor))
-		log.Println("-----","     ","-----")
-		*/
+	log.Println("-----","     ","-----")
+	log.Println("New DAc")
+	log.Println("-----","     ","-----")
 
-		if len(mSpace.Descriptor) == 0 {
-			log.Println("Descriptor parada ")
-			continue
-		}
-
-		if len(mSpace.Information) == 0{
-			log.Println("Information parada ")
-			continue
-		}
-		log.Println("Lock parada")
-		mSpace.Lock()
-		
+	go dacTimerCloserDeferFile()
 	
-		//log.Println("Nuevo Bucle: ", "","")
-		//log.Println("-----","     ","-----")
-		//log.Println("-----","     ","-----")
-		/*
-		for value := range mSpace.Descriptor{
-			log.Println(value)
-		}
-		//log.Println("-----","     ","-----")
-		//log.Println("-----","     ","-----")
-		for ind := range mSpace.Information{
-			log.Println(mSpace.Information[ind])
-		}
-		*/
+	go dacTimerCloserDiskFile()
+
 		
-		//for ind := range mSpace.Information {
-		ind :=0
-		for len(mSpace.Information) > fileOpen  {
-		//	log.Println("-----","     ","-----")
-			//log.Println(ind)
-			//log.Println("-----","     ","-----")
-
-			/*
-			if fileOpen > len(mSpace.Information) {
-				break
-			}
-			*/
-			//Cierre del descriptor
-			start := time.Now()
-			value, found := mSpace.Descriptor[mSpace.Information[ind].Name]
-			timeSince := time.Since(start).Nanoseconds()
-
-			if found {
-				err := value.Close()
-				if err != nil {
-					log.Println(err)
-				}
-			}
-	
-			log.Println("-----","     ","-----")
-			log.Println("elementos: ", len(mSpace.Information) , "Tiempo: ", timeSince)
-			log.Println(mSpace.Information[ind].Name)
-			log.Println("-----","     ","-----")
-			//Borrado
-			delete(mSpace.Descriptor  ,  mSpace.Information[ind].Name)
-			mSpace.Information = append(mSpace.Information[:ind], mSpace.Information[ind+1:]... )
-		
-				
-		}
-		//mSpace.Information = mSpace.Information[5:]
-			
-		/*
-		log.Println("-----","     ","-----")
-		log.Println("-----","     ","-----")
-		for value := range mSpace.Descriptor{
-			log.Println(value)
-		}
-		log.Println("-----","     ","-----")
-		log.Println("-----","     ","-----")
-		for ind := range mSpace.Information{
-			log.Println(mSpace.Information[ind])
-		}
-		log.Println("-----","     ","-----")
-		log.Println("-----","     ","-----")
-		log.Println("-----"," END ","-----")
-		*/
-		mSpace.Unlock()
-	}
-	
-
-
-
 }
 
 
@@ -240,7 +174,7 @@ func NewDac(){
 //Tenemos dos tipos de organizacion de datos una unica columna asignada
 //a una fila y multiples columnas asociadas a una fila
 
-// Tenemos 4 tipos de archivos Ramsearch, Ramindex, Tdisk y disk
+// Tenemos 4 tipos de archivos Ramsearch, Ramindex, PermDisk, DeferDisk y Disk
 // Dependiendo de si el archivo permanece abierto y si necesita
 //sincronizacion con ram.
 
@@ -249,209 +183,54 @@ func NewDac(){
 
 func (obj *Space ) Ospace(){
 
-	//Tiempo de ejecucion
-	if obj.Exist {
 
-		switch obj.FileCoding {
+	//Url obligatoria, siempre tenemos que tener definida a que parte de 
+	//los archivos se va acceder.
+	//En caso de ruta vacia se entendera como un error grave de seguridad.
+	 if obj.Url == ""{
+		log.Fatalln("Ruta de archivo no definida.")
+	 }
 
-			case Directory:
-				return
+	//Tipado de los archivos, la extenion declara el tipo de archivo explicitamente.
+	//En caso de dos puntos se entendera como fallo de seguridad y se cerrara el programa
+	if obj.Name == "" || obj.Extension == "" {
 
-			default:
-				obj.File, obj.err = os.OpenFile(obj.Name + "." + obj.Extension , os.O_RDWR | os.O_CREATE, 0666)
-				return
-		}
-	}
-
-	
-	//Obtenemos la extension del fichero
-	fileName := strings.SplitN(obj.Url,".",2)
-	if len(fileName) == 1 {
-		obj.Name = fileName[0]
-	}
-	if len(fileName) == 2 {
-		obj.Name = fileName[0]
-		obj.Extension =  fileName[1]
-	}
-
-
-	if obj.Extension == "dir" {
-
-		obj.Extension = ""
-
-		infoDir , err := os.Stat(obj.Name)
-		if err != nil {
-	
-			log.Println("Crea una funcion de creacion de directorios.")
+		fileName := strings.SplitN(obj.Url,".",2)
+		if len(fileName) == 1 {
+			log.Fatalln("Extension de archivo no definida.")
 	
 		}
-	
-		if infoDir.IsDir() {
-	
-			obj.FileCoding  = Directory
-			obj.FileTypeDir = EmptyDir
-			obj.Exist = true
-			return
+		if len(fileName) == 2 {
+			obj.Name = fileName[0]
+			obj.Extension =  fileName[1]
+		}
+		if len(fileName) > 2 {
+			log.Fatalln("Solo se permite un punto para declarar la extension.")
 		}
 	}
 
 
-
-	//Tiempo de compilacion
-	obj.File, obj.err = os.OpenFile(obj.Name + "." + obj.Extension , os.O_RDWR | os.O_CREATE, 0666)
-
-	if obj.err != nil {
-
-		log.Println(obj.err)
-		obj.Exist = false
-		return
-	
-	}
-
-	obj.Exist = true
-
-	info, err := obj.File.Stat()
-	if err != nil {
+	//Funciones que abren archivos
+	//Tipan el acceso a los archivos o directorios
+	switch obj.FileNativeType {
 		
-		log.Println(err)
-		obj.Exist = false
-	
-	}
-
-	obj.Exist = true
-	
-
-	obj.SizeFileLine = (info.Size() / obj.Size_line) - 1
-
-
-
-
-
-	//Si el archivo es multicolumna, contamos las columnas.
-	if len(obj.IndexSizeColumns) > 1 {
-
-		obj.FileCoding = Byte
-		obj.FileTipeByte = MultiColumn
-
-	}
-	
-	if len(obj.IndexSizeColumns) == 1  {
-
-		obj.FileCoding = Byte
-		obj.FileTipeByte = OneColumn
-
-	}
-		
-
-	//sram: fichero que sincroniza un archivo de n lineas
-	//con un mapa en la memoria ram asociando valor linea -> n linea
-	
-	if obj.Extension == "sram" || obj.Extension == "bram"{
-		
-		obj.FileNativeType |= RamSearch
-
-		var field string
-		for val, ind := range obj.IndexSizeColumns {
-
-			if ind[0] == 0 {
-
-				field = val
-				break
-			}
-		}
-
-		mapColumn := *obj.NewSearchSpace(0, obj.SizeFileLine  , field)
-		obj.Rspace(mapColumn)
-	
-		obj.Search = make(map[string]int64)
-
-		var x int64
-		for x = 0 ; x <= obj.SizeFileLine; x++{
-			
-			obj.Search[ string( mapColumn.Buffer[field][x] ) ] = x
-			
-			
-		}
-	
-		
-	}
-	
-
-	//iram: archivo que sincroniza un archivo de n lineas 
-	//con un array en la memoria asociando n lineas -> n valores
-	
-	if obj.Extension == "iram" || obj.Extension == "bram"{
-			
-		obj.FileNativeType |= RamIndex
-
-		var field string
-
-		for val, ind := range obj.IndexSizeColumns {
-
-			if ind[0] == 0 {
-
-				field = val
-				break
-			}
-		}
-
-		mapColumn := *obj.NewSearchSpace(0, obj.SizeFileLine, field)
-		obj.Rspace(mapColumn)
-
-		obj.Index = make([]string ,0)
-		
-		var x int64
-		for x = 0 ; x <= obj.SizeFileLine; x++{
-			
-			obj.Index = append(obj.Index, string( mapColumn.Buffer[field][x] ))
-
-		}
-		
-	}
-
-
-	//tdisk son archivos que se abren en tiempo de copilacion y 
-	//permanecen abiertos en tiempo de ejecucion
-	if obj.Extension == "tdisk" {
-
-		obj.FileNativeType  |= tdisk
-
-	}
-
-	//disk: Son archivos normales que se abren y se cierran en
-	//tiempo de ejecucion
-	if obj.Extension == "disk" {
-		
-		obj.FileNativeType  |= disk
-
-	}
-
-		//disk: Son archivos normales que se abren y se cierran en
-	//tiempo de ejecucion
-	if obj.Extension == "defer" {
-		
-		obj.FileTipeByte = MultiColumnDefer
-		mSpace.Lock()
-		mSpace.Descriptor[obj.Url] = obj.File
-		mSpace.Information = append( mSpace.Information , DescriptorInformation{obj.Url,time.Now()}  )
-		mSpace.Unlock()
-
-		//log.Println(mSpace.Information[len(mSpace.Information)-1])
-
-	}
-
-	
-
-	//bdisk: Lista de bit en un archivo disk
-	if obj.Extension == "bdisk" {
-
-		//La primera propiedad indica si se cierra el archivo
-		//obj.FileNativeType  |= disk
-		obj.FileCoding      = Bit
-		obj.FileTipeBit     = ListBit
-		defer obj.File.Close()
-		
-	
+		case obj.FileNativeType & Disk:
+			obj.ospaceDisk()
+			obj.ospaceCompilationFile()
+			break
+		case obj.FileNativeType & DeferDisk:
+			obj.ospaceDeferDisk()
+			obj.ospaceCompilationFile()
+			break
+		case obj.FileNativeType & PermDisk:
+			obj.ospacePermDisk()
+			obj.ospaceCompilationFile()
+			break
+		case obj.FileNativeType & Directory:
+			obj.ospaceDirectory()
+			break
+		default:
+			log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", obj.Url)
 	}
 
 }

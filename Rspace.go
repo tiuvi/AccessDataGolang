@@ -12,10 +12,15 @@ import (
 
 func (sp *Space) OneColumnSpace(buf Buffer){
 	
+	var err error
 	startLine := buf.StartLine
 	endLine   := buf.EndLine
 
-	_ , sp.err = sp.File.ReadAt(buf.Buffer["buffer"][0] , startLine * sp.Size_line )
+	_ , err = sp.File.ReadAt(buf.Buffer["buffer"][0] , startLine * sp.SizeLine )
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	if (endLine - startLine ) == 1 {
 
@@ -59,7 +64,7 @@ func (sp *Space) OneColumnSpace(buf Buffer){
 						continue
 					}
 	
-				buf.Buffer[val] = append(buf.Buffer[val], bytes.Trim(buf.Buffer["buffer"][0][:sp.Size_line] , " "))
+				buf.Buffer[val] = append(buf.Buffer[val], bytes.Trim(buf.Buffer["buffer"][0][:sp.SizeLine] , " "))
 
 				//Postformat por columnas
 				function, exist := sp.Hooker[Postformat + val]
@@ -82,7 +87,7 @@ func (sp *Space) OneColumnSpace(buf Buffer){
 			}
 	
 			//End bucle
-			buf.Buffer["buffer"][0] = buf.Buffer["buffer"][0][sp.Size_line:]
+			buf.Buffer["buffer"][0] = buf.Buffer["buffer"][0][sp.SizeLine:]
 		
 		}
 		
@@ -97,11 +102,15 @@ func (sp *Space) OneColumnSpace(buf Buffer){
 
 func (sp *Space) MultiColumnSpace(buf Buffer){
 
+	var err error
 	startLine := buf.StartLine
 	endLine   := buf.EndLine
 
-	_ , sp.err = sp.File.ReadAt(buf.Buffer["buffer"][0] , startLine * sp.Size_line )
-	
+	_ , err = sp.File.ReadAt(buf.Buffer["buffer"][0] , startLine * sp.SizeLine )
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	
 	for startLine < endLine {
 		
@@ -134,7 +143,7 @@ func (sp *Space) MultiColumnSpace(buf Buffer){
 		}
 	
 		//End bucle
-		buf.Buffer["buffer"][0] = buf.Buffer["buffer"][0][sp.Size_line:]
+		buf.Buffer["buffer"][0] = buf.Buffer["buffer"][0][sp.SizeLine:]
 	
 	}
 
@@ -145,10 +154,11 @@ func (sp *Space) MultiColumnSpace(buf Buffer){
 
 func (sp *Space) FullFileSpace(buf Buffer){
 
+	var err error
 
-	buf.Buffer["buffer"][0], sp.err = os.ReadFile(sp.Url + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
+	buf.Buffer["buffer"][0], err = os.ReadFile(sp.Url + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
 
-	if sp.err != nil {
+	if err != nil {
 
 		buf.Buffer["buffer"][0] = []byte{}
 
@@ -200,9 +210,9 @@ func (sp *Space) ListBitSpace(buf Buffer){
 
 func (sp *Space) ReadEmptyDirSpace(buf Buffer){
 
-	buf.Buffer["buffer"][0], sp.err = os.ReadFile(sp.Name + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
-
-	if sp.err != nil {
+	var err error
+	buf.Buffer["buffer"][0], err = os.ReadFile(sp.Name + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
+	if err != nil {
 
 		buf.Buffer["buffer"][0] = []byte{}
 

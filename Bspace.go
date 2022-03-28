@@ -17,7 +17,7 @@ type Buffer struct {
 func (sp *Space) NewSearchSpace (startLine int64,endLine int64,data ...string )(buf *Buffer){
 	 
 	//Buffer para leer directorios
-	if sp.FileCoding == Directory {
+	if sp.FileNativeType == Directory {
 
 		buf = &Buffer{
 			StartLine: startLine,
@@ -46,7 +46,7 @@ func (sp *Space) NewSearchSpace (startLine int64,endLine int64,data ...string )(
    }
 
    buf.Buffer["buffer"]    = make([][]byte ,1)
-   buf.Buffer["buffer"][0] = make([]byte ,sp.Size_line * (buf.EndLine - buf.StartLine ))
+   buf.Buffer["buffer"][0] = make([]byte ,sp.SizeLine * (buf.EndLine - buf.StartLine ))
 
    return
 }

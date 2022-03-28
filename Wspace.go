@@ -63,27 +63,18 @@ func (sp *Space) WriteColumnSpace(line int64, column map[string][]byte){
 		sizeColumn := sp.IndexSizeColumns[val][1] - sp.IndexSizeColumns[val][0]
 
 		if text_count < sizeColumn {
-			//whitespace := bytes.Repeat( []byte{32} , int(sp.Size_line - text_count)) 
-			//column[val] = append(column[val] ,  whitespace... )
 
 			whitespace := bytes.Repeat( []byte(" ") , int(sizeColumn - text_count)) 
 						
 			column[val] = append(column[val] ,  whitespace... )
 		}
 
-		//Segundo caso el string es mayor que el tamaño de la linea
-		//	if text_count > sp.Size_line {
 		if text_count > sizeColumn {
 
-			//column[val] = column[val][:sp.Size_line]
 			column[val] = column[val][:sizeColumn]
 		}
 		
-	
-
-
-
-		sp.File.WriteAt(column[val], sp.Size_line * line + sp.IndexSizeColumns[val][0])
+		sp.File.WriteAt(column[val], sp.SizeLine * line + sp.IndexSizeColumns[val][0])
 
 	
 
@@ -170,7 +161,7 @@ func (sp *Space) WriteEmptyDirSpace(line int64, column map[string][]byte){
 	_ , found = column["newBuffer"]
 	if found {
 
-		sp.File, sp.err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
+		sp.File, err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
 		if err != nil {
 
 			log.Print(err)
@@ -181,7 +172,7 @@ func (sp *Space) WriteEmptyDirSpace(line int64, column map[string][]byte){
 	value , found = column["appendBuffer"]
 	if found {
 
-		sp.File, sp.err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_APPEND, 0666)
+		sp.File, err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_APPEND, 0666)
 		
 		if err != nil {
 
