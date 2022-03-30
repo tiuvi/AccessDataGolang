@@ -9,7 +9,7 @@ import (
 
 
 
-func (obj *Space ) writeBit(id int64,turn bool ,bufferBit []byte)([]byte){
+func writeBit(id int64,turn bool ,bufferBit []byte)([]byte){
 
 	 bitId := []uint8{128,64,32,16,8,4,2,1}
 
@@ -40,7 +40,7 @@ func (obj *Space ) writeBit(id int64,turn bool ,bufferBit []byte)([]byte){
 	
 }
 
-func (obj *Space ) readBit(id int64,bufferBit []byte)(bool){
+func readBit(id int64,bufferBit []byte)(bool){
 
 	bitId := []uint8{128,64,32,16,8,4,2,1}
 
@@ -59,7 +59,7 @@ func (obj *Space ) readBit(id int64,bufferBit []byte)(bool){
 
 
 
-func (obj *Space ) updateRamMap(str_write []byte, line int64){
+func (obj *spaceFile ) updateRamMap(str_write []byte, line int64){
 
 	str_write = bytes.Trim(str_write, " ")
 	obj.Lock()
@@ -69,7 +69,7 @@ func (obj *Space ) updateRamMap(str_write []byte, line int64){
 
 }
 
-func (obj *Space ) updateRamIndex(str_write []byte, line int64){
+func (obj *spaceFile ) updateRamIndex(str_write []byte, line int64){
 
 	str := string(bytes.Trim(str_write, " "))
 

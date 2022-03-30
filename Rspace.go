@@ -4,13 +4,10 @@ import (
 	"bytes"
 	"log"
 	"os"
-	"strconv"
-
-
 )
 
 
-func (sp *Space) OneColumnSpace(buf Buffer){
+func (sp *spaceFile) OneColumnSpace(buf Buffer){
 	
 	var err error
 	startLine := buf.StartLine
@@ -100,7 +97,7 @@ func (sp *Space) OneColumnSpace(buf Buffer){
 
 
 
-func (sp *Space) MultiColumnSpace(buf Buffer){
+func (sp *spaceFile) MultiColumnSpace(buf Buffer){
 
 	var err error
 	startLine := buf.StartLine
@@ -152,11 +149,11 @@ func (sp *Space) MultiColumnSpace(buf Buffer){
 	return
 }
 
-func (sp *Space) FullFileSpace(buf Buffer){
+func (sp *spaceFile) FullFileSpace(buf Buffer){
 
 	var err error
 
-	buf.Buffer["buffer"][0], err = os.ReadFile(sp.Url + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
+	buf.Buffer["buffer"][0], err = os.ReadFile(sp.Url)
 
 	if err != nil {
 
@@ -167,7 +164,7 @@ func (sp *Space) FullFileSpace(buf Buffer){
 }
 
 
-func (sp *Space) ListBitSpace(buf Buffer){
+func (sp *spaceFile) ListBitSpace(buf Buffer){
 
 
 
@@ -190,7 +187,7 @@ func (sp *Space) ListBitSpace(buf Buffer){
 
 	var bitLine int64 =  buf.StartLine % 8 
 
-	turn := sp.readBit(bitLine,bufferBit)
+	turn := readBit(bitLine,bufferBit)
 
 			if turn {
 
@@ -208,10 +205,11 @@ func (sp *Space) ListBitSpace(buf Buffer){
 
 }
 
-func (sp *Space) ReadEmptyDirSpace(buf Buffer){
+func (sp *spaceFile) ReadEmptyDirSpace(buf Buffer){
 
 	var err error
-	buf.Buffer["buffer"][0], err = os.ReadFile(sp.Name + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
+	//buf.Buffer["buffer"][0], err = os.ReadFile(sp.Name + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
+	buf.Buffer["buffer"][0], err = os.ReadFile(sp.Url)
 	if err != nil {
 
 		buf.Buffer["buffer"][0] = []byte{}

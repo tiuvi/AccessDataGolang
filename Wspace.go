@@ -3,25 +3,32 @@ package bd
 import (
 	"bytes"
 	"log"
-	"strconv"
+
 	"os"
 	"sync/atomic"
+//	"time"
 )
 
-func (sp *Space) WriteColumnSpace(line int64, column map[string][]byte){
+func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte){
 
+	//test := time.Now()
+	//log.Println("Llego hasta Wspace WriteColumnSpace")
 	if line == -1 {
 
-		line = atomic.AddInt64(&sp.SizeFileLine, 1)
-		
+		///line = atomic.AddInt64(&sp.SizeFileLine, 1)
+		log.Println("Valor atomico line", sp.SizeFileLine)
+		//value , _ := diskSpace.DiskFile[sp.Url]
+		line = atomic.AddInt64(sp.SizeFileLine, 1)
+
+		log.Println("Valor atomico line", line)
 	}
 
-	if line > sp.SizeFileLine {
+	if line > *sp.SizeFileLine {
 
-		atomic.AddInt64(&sp.SizeFileLine, line - sp.SizeFileLine )
+		atomic.AddInt64(sp.SizeFileLine, line - *sp.SizeFileLine )
 		
 	}
-	log.Println("Writefile lineas: ",sp.SizeFileLine )
+//	log.Println("Writefile lineas: ",sp.SizeFileLine )
 
 	//ind -> index val -> valor
 	for val := range sp.IndexSizeColumns {
@@ -36,7 +43,7 @@ func (sp *Space) WriteColumnSpace(line int64, column map[string][]byte){
 		}
 
 
-
+	
 		//Preformat por columnas
 		function, exist := sp.Hooker[Preformat + val]
 		if exist{
@@ -53,7 +60,7 @@ func (sp *Space) WriteColumnSpace(line int64, column map[string][]byte){
 
 			}
 		}
-		
+	
 		//Contamos el array de bytes
 		var text_count = int64(len(column[val]))
 
@@ -74,10 +81,11 @@ func (sp *Space) WriteColumnSpace(line int64, column map[string][]byte){
 			column[val] = column[val][:sizeColumn]
 		}
 		
+		
 		sp.File.WriteAt(column[val], sp.SizeLine * line + sp.IndexSizeColumns[val][0])
-
+		log.Println("EscrituraFinal: ",line,"valor: ", string(column[val]))
 	
-
+		/*
 		//🔥🔥🔥Actualizamos ram
 		if (sp.FileNativeType & RamSearch) != 0 && sp.IndexSizeColumns[val][0] == 0  {
 
@@ -90,20 +98,22 @@ func (sp *Space) WriteColumnSpace(line int64, column map[string][]byte){
 			sp.updateRamIndex(column[val], line)
 
 		}
+		*/
 
-	}
-
+}
+//	log.Println("tiempo de escritura simultanea: ", time.Since(test).Nanoseconds())
+    
 
 
 }
 
 
-func (sp *Space) WriteListBitSpace(line int64, column map[string][]byte){
+func (sp *spaceFile) WriteListBitSpace(line int64, column map[string][]byte){
 	
 
 	sp.Lock()
 	
-	sp.File , _ = os.OpenFile(sp.Name + "." + sp.Extension , os.O_RDWR | os.O_CREATE, 0666)
+	sp.File , _ = os.OpenFile(sp.Url , os.O_RDWR | os.O_CREATE, 0666)
 	
 	defer sp.File.Close()
 	defer sp.Unlock()
@@ -133,9 +143,9 @@ func (sp *Space) WriteListBitSpace(line int64, column map[string][]byte){
 			switch string(column[val]) {
 
 			case "on":
-				sp.writeBit(bitLine ,true , bufferBit )
+				writeBit(bitLine ,true , bufferBit )
 			case "off":
-				sp.writeBit(bitLine ,false , bufferBit )
+				writeBit(bitLine ,false , bufferBit )
 			}
 			
 			break
@@ -152,7 +162,7 @@ func (sp *Space) WriteListBitSpace(line int64, column map[string][]byte){
 
 
 
-func (sp *Space) WriteEmptyDirSpace(line int64, column map[string][]byte){
+func (sp *spaceFile) WriteEmptyDirSpace(line int64, column map[string][]byte){
 
 	var err error
 	var value []byte
@@ -161,7 +171,8 @@ func (sp *Space) WriteEmptyDirSpace(line int64, column map[string][]byte){
 	_ , found = column["newBuffer"]
 	if found {
 
-		sp.File, err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
+		//sp.File, err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
+		sp.File, err = os.OpenFile(sp.Url , os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
 		if err != nil {
 
 			log.Print(err)
@@ -172,8 +183,8 @@ func (sp *Space) WriteEmptyDirSpace(line int64, column map[string][]byte){
 	value , found = column["appendBuffer"]
 	if found {
 
-		sp.File, err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_APPEND, 0666)
-		
+		//sp.File, err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_APPEND, 0666)
+		sp.File, err = os.OpenFile(sp.Url , os.O_RDWR | os.O_APPEND, 0666)
 		if err != nil {
 
 			log.Print(err)

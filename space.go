@@ -8,7 +8,6 @@ package bd
 import (
 	"log"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -60,74 +59,69 @@ const(
 
 
 
-
 type Space struct  {
 
-	
 	//Indica el estado del archivo en la aplicacion
 	FileNativeType FileNativeType
 	//Propiedades comunes a todos los archivos
-	Url string
-	//Indice de columnas y tamaño de columna
-	IndexSizeColumns map[string][2]int64
-
+	Dir string
 	Name string
 	Extension string
-
-	File *os.File
-	Spacef spaceDescriptors
-	spaceDisk spaceDisk
-
-	compilation bool
+	url string
 	SizeLine int64
-	SizeFileLine int64
 
-	//Casos de uso para las funciones writes y read
-	FileCoding   FileCoding
-	FileTipeByte FileTipeByte
-	FileTipeBit  FileTipeBit
-	FileTypeDir  FileTypeDir
+	//Indice de columnas y tamaño de columna
+	IndexSizeColumns map[string][2]int64
 
 	//Formateadores antes y despues
 	Hooker map[string]func([]byte)[]byte
 	
+	FileCoding   FileCoding
+	FileTipeByte FileTipeByte
+	FileTipeBit  FileTipeBit
+	FileTypeDir  FileTypeDir
+	compilation bool
+
+}
+
+type spaceFile struct {
+
+	File *os.File
+	Url string
+	IndexSizeColumns map[string][2]int64
+	Hooker map[string]func([]byte)[]byte
+	SizeLine int64
+	SizeFileLine *int64
+
 	sync.RWMutex
 	//Mapa del archivo en memoria
 	Search map[string]int64 
-
 	//Array del archivo en memoria
 	Index []string
-
-}
-
-
-
-type DescriptorInformation struct {
-	Name string
-	Time time.Time
-}
-type DescriptorInformations []DescriptorInformation
-
-type spaceDescriptors struct {
-	Descriptor map[string] *os.File
-	Information []DescriptorInformation
-	sync.RWMutex
-
-}
-
-var mSpace = &spaceDescriptors{
-	Descriptor: make(map[string]*os.File,0),
-	Information: make(DescriptorInformations,0),
 }
 
 type spaceDisk struct{
-	DiskFile map[string] *os.File
+	DiskFile map[string]*spaceFile
 	sync.RWMutex
 }
 
-var diskSpace = &spaceDisk{
-	DiskFile: make(map[string]*os.File,0),
+type spaceDeferDisk struct {
+	DeferFile map[string]*spaceFile
+	Info []deferFileInfo
+	sync.RWMutex
 }
+
+type deferFileInfo struct {
+	Name string
+	Time time.Time
+}
+
+type spacePermDisk struct{
+	PermDisk map[string]*spaceFile
+	sync.RWMutex
+}
+
+
 
 var extensionFile = map[string]string{
 	//Archivos
@@ -146,21 +140,13 @@ var extensionDir = map[string]string{
 
 func NewDac(){
 
-	log.Println("-----","     ","-----")
-	log.Println("New DAc")
-	log.Println("-----","     ","-----")
+	log.Println("-----",  "New DAc"  ,"-----")
 
 	go dacTimerCloserDeferFile()
 	
 	go dacTimerCloserDiskFile()
 
-		
 }
-
-
-
-
-
 
 
 
@@ -181,56 +167,56 @@ func NewDac(){
 //Retocar funcion para una ejecucion diferente en tiempo de copilacion y tiempo de
 //ejecucion
 
-func (obj *Space ) Ospace(){
+func (obj *Space ) Ospace()*spaceFile  {
 
 
-	//Url obligatoria, siempre tenemos que tener definida a que parte de 
-	//los archivos se va acceder.
-	//En caso de ruta vacia se entendera como un error grave de seguridad.
-	 if obj.Url == ""{
-		log.Fatalln("Ruta de archivo no definida.")
-	 }
+	obj.url = obj.Dir + obj.Name + "." + obj.Extension
 
-	//Tipado de los archivos, la extenion declara el tipo de archivo explicitamente.
-	//En caso de dos puntos se entendera como fallo de seguridad y se cerrara el programa
-	if obj.Name == "" || obj.Extension == "" {
-
-		fileName := strings.SplitN(obj.Url,".",2)
-		if len(fileName) == 1 {
-			log.Fatalln("Extension de archivo no definida.")
 	
-		}
-		if len(fileName) == 2 {
-			obj.Name = fileName[0]
-			obj.Extension =  fileName[1]
-		}
-		if len(fileName) > 2 {
-			log.Fatalln("Solo se permite un punto para declarar la extension.")
-		}
-	}
-
-
-	//Funciones que abren archivos
-	//Tipan el acceso a los archivos o directorios
 	switch obj.FileNativeType {
 		
 		case obj.FileNativeType & Disk:
-			obj.ospaceDisk()
-			obj.ospaceCompilationFile()
-			break
+
+			if !obj.compilation {
+
+				obj.ospaceCompilationFile()
+				log.Println("Copilacion exitosa")
+			}
+			return obj.ospaceDisk()
+		
 		case obj.FileNativeType & DeferDisk:
-			obj.ospaceDeferDisk()
-			obj.ospaceCompilationFile()
-			break
+			if !obj.compilation {
+
+				obj.ospaceCompilationFile()
+		
+			}
+			return obj.ospaceDeferDisk()
+
+			
 		case obj.FileNativeType & PermDisk:
-			obj.ospacePermDisk()
-			obj.ospaceCompilationFile()
-			break
+			if !obj.compilation {
+
+				obj.ospaceCompilationFile()
+		
+			}
+			return obj.ospacePermDisk()
+
+			
 		case obj.FileNativeType & Directory:
 			obj.ospaceDirectory()
 			break
+
 		default:
-			log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", obj.Url)
+			log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", obj.Dir,obj.Name,obj.Extension)
 	}
+
+	return nil
+}
+
+
+
+type UnrealSpace[]*Space
+func ( US UnrealSpace ) OpenDataAccess(){
+
 
 }

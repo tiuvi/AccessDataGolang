@@ -1,18 +1,30 @@
 package bd
 
-//import "log"
+	import "log"
 
-//"log"
-//"time"
 
 //Esta funcion escribe en el numero de linea requerido
 //Pasandole un string en forma de bytes
 func (obj *Space ) Wspace(line int64, column map[string][]byte){
 
+	/*
+	log.Println("Llego hasta Wspace", obj.Url)
+	
+	//1 - chequear si el archivo esta en cola
+	//2 - Tener los datos de ese archivo para modificarlo
+	 value , found := diskSpace.DiskFile[obj.Url]
+	if !found{
+		diskSpace.Lock()
+		value = obj.Ospace()
+		diskSpace.Unlock()
+	}
+	//	log.Println("Llego hasta Wspace found")
+	*/
 
-	obj.Ospace()
-
-		
+	
+	spaceFile := obj.Ospace()
+	log.Println("Write space: " , spaceFile)
+	
 	//Difenciar archivos de bit de archivos de byte
 	switch obj.FileCoding {
 
@@ -23,7 +35,7 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 			switch obj.FileTipeBit {
 				//Caso lista de bits
 				case ListBit:	
-					obj.WriteListBitSpace(line, column)
+				spaceFile.WriteListBitSpace(line, column)
 					break
 				default:
 					return
@@ -33,13 +45,13 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 
 		//Segundo caso archivos de byte
 		case Byte:
-
+	
 			//Segun el tipo de archivo aplicamos una funcion diferente
 			switch obj.FileTipeByte {
-			
+				
 				case OneColumn,MultiColumn:
 					//Funcion OneColumn interfaz
-					obj.WriteColumnSpace(line, column)
+					spaceFile.WriteColumnSpace(line, column)
 					break
 
 				default: 
@@ -52,7 +64,8 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 			switch obj.FileTypeDir {
 
 				case EmptyDir:
-					obj.WriteEmptyDirSpace(line, column)
+					//Añadir modificacion de url desde aqui
+					spaceFile.WriteEmptyDirSpace(line, column)
 					break
 
 				default: 
@@ -64,6 +77,7 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 				return
 	}
 	
+
 }
 
 
@@ -71,16 +85,10 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 func (obj *Space) Rspace (column Buffer){
 
 
-	//Iniciando archivos cerrados
-	if (obj.FileNativeType & Disk) != 0 {
 
-		obj.Ospace()
+	spaceFile := obj.Ospace()
 
-	}
-
-
-
-
+	
 	//Difenciar archivos de bit de archivos de byte
 	switch obj.FileCoding {
 
@@ -92,7 +100,7 @@ func (obj *Space) Rspace (column Buffer){
 			
 				case ListBit:
 					//Funcion ListBit interfaz
-					obj.ListBitSpace(column)
+					spaceFile.ListBitSpace(column)
 					break
 				default:
 					return
@@ -108,15 +116,15 @@ func (obj *Space) Rspace (column Buffer){
 			
 				case OneColumn:
 					//Funcion OneColumn interfaz
-					obj.OneColumnSpace(column)
+					spaceFile.OneColumnSpace(column)
 					break
 				case MultiColumn:
 					//Funcion Multicolumn interfaz
-					obj.MultiColumnSpace(column)
+					spaceFile.MultiColumnSpace(column)
 					break
 				case FullFile:
-					//Funcion FullFileSpace interfaz
-					obj.FullFileSpace(column)
+					//Añadir modificacion de url desde aqui
+					spaceFile.FullFileSpace(column)
 					break
 
 				default: 
@@ -129,7 +137,8 @@ func (obj *Space) Rspace (column Buffer){
 			switch obj.FileTypeDir {
 
 				case EmptyDir:
-					obj.ReadEmptyDirSpace(column)
+					//Añadir modificacion de url desde aqui
+					spaceFile.ReadEmptyDirSpace(column)
 					break
 
 				default: 
@@ -142,6 +151,7 @@ func (obj *Space) Rspace (column Buffer){
 				return
 	}
 
+
 	return
 }
 
@@ -150,7 +160,7 @@ func (obj *Space) Rspace (column Buffer){
 
 
 
-func (obj *Space ) Rmapspace(str_write string)(value int64, found bool){
+func (obj *spaceFile ) Rmapspace(str_write string)(value int64, found bool){
 
 	if int64(len(str_write)) > obj.SizeLine{
 
@@ -175,7 +185,7 @@ func (obj *Space ) Rmapspace(str_write string)(value int64, found bool){
 }
 
 
-func (obj *Space ) Rindexspace(line int64)(value string, found bool){
+func (obj *spaceFile ) Rindexspace(line int64)(value string, found bool){
 
 	if  int64(len(obj.Index) ) > line {
 
