@@ -1,0 +1,10 @@
+
+Testear disk write una columna, multicolumna
+
+Testear disk read onecolumn, multicolumn
+
+Testear searchram indexram y biram
+
+Tesear writebit y readbit
+
+Seguir con las funciones de lectura y escritura en directorios

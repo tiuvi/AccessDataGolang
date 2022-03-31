@@ -9,18 +9,13 @@ import (
 //	"time"
 )
 
-func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte){
+func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte)int64{
 
-	//test := time.Now()
-	//log.Println("Llego hasta Wspace WriteColumnSpace")
+
 	if line == -1 {
-
-		///line = atomic.AddInt64(&sp.SizeFileLine, 1)
-		log.Println("Valor atomico line", sp.SizeFileLine)
-		//value , _ := diskSpace.DiskFile[sp.Url]
+		log.Println("SizeFileLine",*sp.SizeFileLine)
 		line = atomic.AddInt64(sp.SizeFileLine, 1)
 
-		log.Println("Valor atomico line", line)
 	}
 
 	if line > *sp.SizeFileLine {
@@ -28,7 +23,6 @@ func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte){
 		atomic.AddInt64(sp.SizeFileLine, line - *sp.SizeFileLine )
 		
 	}
-//	log.Println("Writefile lineas: ",sp.SizeFileLine )
 
 	//ind -> index val -> valor
 	for val := range sp.IndexSizeColumns {
@@ -42,8 +36,6 @@ func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte){
 
 		}
 
-
-	
 		//Preformat por columnas
 		function, exist := sp.Hooker[Preformat + val]
 		if exist{
@@ -66,7 +58,6 @@ func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte){
 
 		//Primer caso el texto es menor que el tamaño de la linea
 		//En este caso añadimos un padding de espacios al final
-		
 		sizeColumn := sp.IndexSizeColumns[val][1] - sp.IndexSizeColumns[val][0]
 
 		if text_count < sizeColumn {
@@ -83,16 +74,17 @@ func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte){
 		
 		
 		sp.File.WriteAt(column[val], sp.SizeLine * line + sp.IndexSizeColumns[val][0])
-		log.Println("EscrituraFinal: ",line,"valor: ", string(column[val]))
+
 	
-		/*
+		
 		//🔥🔥🔥Actualizamos ram
-		if (sp.FileNativeType & RamSearch) != 0 && sp.IndexSizeColumns[val][0] == 0  {
+		if (sp.Space.FileNativeType & RamSearch) != 0 && sp.IndexSizeColumns[val][0] == 0  {
 
 			sp.updateRamMap(column[val], line)
 
 		}
-		
+
+		/*
 		if (sp.FileNativeType & RamIndex) != 0 && sp.IndexSizeColumns[val][0] == 0 {
 
 			sp.updateRamIndex(column[val], line)
@@ -104,7 +96,7 @@ func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte){
 //	log.Println("tiempo de escritura simultanea: ", time.Since(test).Nanoseconds())
     
 
-
+	return line
 }
 
 

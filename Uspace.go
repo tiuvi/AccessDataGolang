@@ -5,26 +5,12 @@ package bd
 
 //Esta funcion escribe en el numero de linea requerido
 //Pasandole un string en forma de bytes
-func (obj *Space ) Wspace(line int64, column map[string][]byte){
+func (obj *Space ) Wspace(line int64, column map[string][]byte)int64{
 
-	/*
-	log.Println("Llego hasta Wspace", obj.Url)
-	
-	//1 - chequear si el archivo esta en cola
-	//2 - Tener los datos de ese archivo para modificarlo
-	 value , found := diskSpace.DiskFile[obj.Url]
-	if !found{
-		diskSpace.Lock()
-		value = obj.Ospace()
-		diskSpace.Unlock()
-	}
-	//	log.Println("Llego hasta Wspace found")
-	*/
 
-	
-	spaceFile := obj.Ospace()
-	log.Println("Write space: " , spaceFile)
-	
+	spaceFile := obj.OSpace()
+	log.Println("Write space: " , *spaceFile.SizeFileLine)
+
 	//Difenciar archivos de bit de archivos de byte
 	switch obj.FileCoding {
 
@@ -36,12 +22,8 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 				//Caso lista de bits
 				case ListBit:	
 				spaceFile.WriteListBitSpace(line, column)
-					break
-				default:
-					return
+				break
 			}
-		// Rompemos switch bit
-		break
 
 		//Segundo caso archivos de byte
 		case Byte:
@@ -51,14 +33,8 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 				
 				case OneColumn,MultiColumn:
 					//Funcion OneColumn interfaz
-					spaceFile.WriteColumnSpace(line, column)
-					break
-
-				default: 
-					return
+					return spaceFile.WriteColumnSpace(line, column)
 			}
-		// Rompemos switch byte
-		break
 
 		case Dir:
 			switch obj.FileTypeDir {
@@ -68,16 +44,9 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte){
 					spaceFile.WriteEmptyDirSpace(line, column)
 					break
 
-				default: 
-					return
 			}
-		break
-		//Defalt si no es bytes o bit
-		default: 
-				return
 	}
-	
-
+	return -1
 }
 
 
@@ -86,7 +55,7 @@ func (obj *Space) Rspace (column Buffer){
 
 
 
-	spaceFile := obj.Ospace()
+	spaceFile := obj.OSpace()
 
 	
 	//Difenciar archivos de bit de archivos de byte

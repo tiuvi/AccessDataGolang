@@ -10,6 +10,24 @@ import(
 
 func (obj *Space ) ospaceCompilationFile() {
 
+	if len(obj.Dir) == 0 {
+
+		log.Fatalln("Ruta directorio vacio en: ", obj.Dir,obj.Name, obj.Extension)
+
+	}
+	
+	if len(obj.Extension) == 0 {
+
+		log.Fatalln("Extension vacia en: ", obj.Dir,obj.Name, obj.Extension )
+
+	}
+
+	if _ , found := extensionFile[obj.Extension];  !found{
+
+		log.Fatalln("Extension no valida en: ", obj.Dir,obj.Name, obj.Extension)
+
+	}
+
 	
 	LenIndexSizeColumns := len(obj.IndexSizeColumns)
 	if LenIndexSizeColumns == 0 {
@@ -17,23 +35,17 @@ func (obj *Space ) ospaceCompilationFile() {
 		log.Fatalln("Iniciaste un archivo de acceso a datos sin columnas", obj.url)
 	}
 
+	if _ , found := obj.IndexSizeColumns["buffer"]; found {
+
+		log.Fatalln("La palabra buffer esta reservada para el programa.", obj.url,obj.IndexSizeColumns)
+
+	}
+
 	//Actualizamos el valor del ancho de la linea
 	for _, val := range obj.IndexSizeColumns{
 
 		obj.SizeLine += (val[1] - val[0])
 	}
-
-
-
-
-	_ ,found := extensionFile[obj.Extension]
-	if !found {
-
-		log.Fatalln("Extension de archivo no soportado. ", obj.url )
-
-	}
-
-
 
 	//Lectura de archivos monocolumna
 	if LenIndexSizeColumns == 1 && obj.Extension == "odac" {
@@ -57,7 +69,7 @@ func (obj *Space ) ospaceCompilationFile() {
 	if obj.Extension == "sram"{
 
 		obj.ospaceCompilationFileUpdateColumn(LenIndexSizeColumns)
-		obj.FileNativeType |= RamSearch
+		obj.FileNativeType = RamSearch | obj.FileNativeType
 		obj.compilation = true
 		return
 	}
@@ -118,8 +130,13 @@ func (obj *Space ) ospaceDisk()*spaceFile {
 		//Quitamos el cerrojo de la estructura diskSpace
 		diskSpace.Unlock()
 
+		if (obj.FileNativeType & RamSearch) != 0 {
+			
+			obj.ospaceCompilationFileRamSearch(spacef)
+			log.Println("Result RamSearch: ",spacef )
+		}
 	}
-
+	
 	return spacef
 }
 
@@ -167,6 +184,7 @@ func (obj *Space ) ospacePermDisk()*spaceFile{
 		permSpace.PermDisk[obj.url] = spacef
 		//Quitamos el cerrojo de la estructura diskSpace
 		permSpace.Unlock()
+	
 
 	}
 
@@ -200,8 +218,8 @@ func (obj *Space ) ospaceDirectory(){
 
 
 
-/*
-func (obj *spaceFile ) ospaceCompilationFileRamSearch() {
+
+func (obj *Space ) ospaceCompilationFileRamSearch(sF *spaceFile) {
 
 	obj.FileNativeType |= RamSearch
 
@@ -215,21 +233,22 @@ func (obj *spaceFile ) ospaceCompilationFileRamSearch() {
 		}
 	}
 
-	mapColumn := *obj.NewSearchSpace(0, *obj.SizeFileLine  , field)
+	mapColumn := obj.NewSearchSpace(0, *sF.SizeFileLine  , field)
 	obj.Rspace(mapColumn)
 
-	obj.Search = make(map[string]int64)
+	sF.Search = make(map[string]int64)
 
 	var x int64
-	for x = 0 ; x <= obj.SizeFileLine; x++{
+	for x = 0 ; x <= *sF.SizeFileLine; x++{
 		
-		obj.Search[ string( mapColumn.Buffer[field][x] ) ] = x
+		sF.Search[ string( mapColumn.Buffer[field][x] ) ] = x
 		
 		
 	}
 
 }
 
+/*
 func (obj *spaceFile ) ospaceCompilationFileRamIndex() {
 
 	obj.FileNativeType |= RamIndex
@@ -317,7 +336,8 @@ func (obj *Space )newSpaceFile()*spaceFile{
 			//Migrar los errores de archivo a un log de archivo
 			log.Println("Error al abrir o crear el archivo.", err)
 		}
-
+		
+		spacef.Space = obj
 		//Url pasada como valor dir + name + extension -> name dinamico
 		spacef.Url = obj.url
 		//Columnas pasadas por referencia al spacio

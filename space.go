@@ -10,7 +10,10 @@ import (
 	"os"
 	"sync"
 	"time"
+
 )
+
+
 
 type FileNativeType int64
 const(
@@ -58,6 +61,30 @@ const(
 
 
 
+const(
+	//Archivo mono cololmna especial para guardar un solo valor
+	Odac  = "odac"
+	//Archivo multicolumna especial para guardar varios valores
+	Mdac  = "mdac"
+	//Archivo con un indice o array permanente en la ram
+	Iram  = "iram"
+	//Archivo con un mapa permanente en la ram
+	Sram  = "sram"
+	//Archivo con un mapa y un indice permanente en la ram
+	Bram  = "bram"
+	//Lista de bit con dos estados posibles verdadero y falso
+	BitList  = "bitlist"
+)
+
+var extensionFile = map[string]string{
+	//Archivos
+	Odac:     "Archivo mono cololmna especial para guardar un solo valor",
+	Mdac:     "Archivo multicolumna especial para guardar varios valores",
+	Iram:     "Archivo con un indice o array permanente en la ram",
+	Sram:     "Archivo con un mapa permanente en la ram",
+	Bram:     "Archivo con un mapa y un indice permanente en la ram",
+	BitList:  "Lista de bit con dos estados posibles verdadero y falso",
+}
 
 type Space struct  {
 
@@ -66,8 +93,10 @@ type Space struct  {
 	//Propiedades comunes a todos los archivos
 	Dir string
 	Name string
+	//Cambiar Extension
 	Extension string
 	url string
+
 	SizeLine int64
 
 	//Indice de columnas y tamaño de columna
@@ -85,7 +114,7 @@ type Space struct  {
 }
 
 type spaceFile struct {
-
+	Space *Space
 	File *os.File
 	Url string
 	IndexSizeColumns map[string][2]int64
@@ -123,15 +152,7 @@ type spacePermDisk struct{
 
 
 
-var extensionFile = map[string]string{
-	//Archivos
-	"odac":"Archivo mono cololmna especial para guardar un solo valor",
-	"mdac":"Archivo multicolumna especial para guardar varios valores",
-	"iram":"Archivo con un indice o array permanente en la ram",
-	"sram":"Archivo con un mapa permanente en la ram",
-	"bram":"Archivo con un mapa y un indice permanente en la ram",
-	"bitlist":"Lista de bit con dos estados posibles verdadero y falso",
-}
+
 
 var extensionDir = map[string]string{
 	//Directorios
@@ -167,56 +188,61 @@ func NewDac(){
 //Retocar funcion para una ejecucion diferente en tiempo de copilacion y tiempo de
 //ejecucion
 
-func (obj *Space ) Ospace()*spaceFile  {
+func (obj *Space ) OSpace()*spaceFile  {
 
 
-	obj.url = obj.Dir + obj.Name + "." + obj.Extension
+	if !obj.compilation {
 
-	
-	switch obj.FileNativeType {
-		
-		case obj.FileNativeType & Disk:
+		obj.ospaceCompilationFile()
 
-			if !obj.compilation {
-
-				obj.ospaceCompilationFile()
-				log.Println("Copilacion exitosa")
-			}
-			return obj.ospaceDisk()
-		
-		case obj.FileNativeType & DeferDisk:
-			if !obj.compilation {
-
-				obj.ospaceCompilationFile()
-		
-			}
-			return obj.ospaceDeferDisk()
-
-			
-		case obj.FileNativeType & PermDisk:
-			if !obj.compilation {
-
-				obj.ospaceCompilationFile()
-		
-			}
-			return obj.ospacePermDisk()
-
-			
-		case obj.FileNativeType & Directory:
-			obj.ospaceDirectory()
-			break
-
-		default:
-			log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", obj.Dir,obj.Name,obj.Extension)
 	}
 
+	if len(obj.url) == 0 {
+
+		if len(obj.Name) == 0 {
+
+			log.Fatalln("Nombre de archivo vacio en: ", obj.Dir, obj.Extension)
+	
+		}
+		obj.url = obj.Dir + obj.Name + "." + obj.Extension
+		
+	}
+
+	
+	if (obj.FileNativeType & Disk) != 0 {
+
+		return obj.ospaceDisk()
+
+	} else if (obj.FileNativeType & DeferDisk) != 0 {
+
+		return obj.ospaceDeferDisk()
+
+	} else if (obj.FileNativeType & PermDisk) != 0 {
+
+		return obj.ospacePermDisk()
+
+	} else if (obj.FileNativeType & Directory) != 0 {
+
+		obj.ospaceDirectory()
+		return nil
+	}
+
+	log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", obj.Dir,obj.Name,obj.Extension)
 	return nil
 }
 
 
+func (obj *Space ) ReNameSpace(name string)*Space {
 
-type UnrealSpace[]*Space
-func ( US UnrealSpace ) OpenDataAccess(){
+	if len(name) == 0 {
 
+		log.Fatalln("Nombre de archivo vacio en: ", obj.Dir, obj.Extension)
 
+	}
+
+	NewFile := *obj
+	NewFile.Name = name
+	NewFile.url = NewFile.Dir + NewFile.Name + "." + NewFile.Extension
+
+	return &NewFile
 }
