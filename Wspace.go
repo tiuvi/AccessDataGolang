@@ -78,19 +78,19 @@ func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte)int64
 	
 		
 		//🔥🔥🔥Actualizamos ram
-		if (sp.Space.FileNativeType & RamSearch) != 0 && sp.IndexSizeColumns[val][0] == 0  {
+		if (sp.FileNativeType & RamSearch) != 0 && sp.IndexSizeColumns[val][0] == 0  {
 
 			sp.updateRamMap(column[val], line)
 
 		}
 
-		/*
+		
 		if (sp.FileNativeType & RamIndex) != 0 && sp.IndexSizeColumns[val][0] == 0 {
 
 			sp.updateRamIndex(column[val], line)
 
 		}
-		*/
+		
 
 }
 //	log.Println("tiempo de escritura simultanea: ", time.Since(test).Nanoseconds())

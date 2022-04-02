@@ -2,6 +2,8 @@ package bd
 
 import (
 	"bytes"
+
+	//"log"
 )
 
 
@@ -58,7 +60,7 @@ func readBit(id int64,bufferBit []byte)(bool){
 }
 
 
-
+//#bd/corerealtime
 func (obj *spaceFile ) updateRamMap(str_write []byte, line int64){
 
 	str_write = bytes.Trim(str_write, " ")
@@ -69,6 +71,8 @@ func (obj *spaceFile ) updateRamMap(str_write []byte, line int64){
 
 }
 
+
+//#bd/corerealtime
 func (obj *spaceFile ) updateRamIndex(str_write []byte, line int64){
 
 	str := string(bytes.Trim(str_write, " "))
@@ -87,4 +91,48 @@ func (obj *spaceFile ) updateRamIndex(str_write []byte, line int64){
 
 	obj.Index[line] = str
 
+}
+
+
+func CheckBit(base int64, compare int64)(bool){
+
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+	return false
+}
+
+func (sp *spaceFile) hookerPostFormatMap(buf *Buffer,val string){
+
+	//Postformat por columnas
+	function, exist := sp.Hooker[Postformat + val]
+	if exist{
+
+		buf.BufferMap[val][len(buf.BufferMap[val])-1] = function(buf.BufferMap[val][len(buf.BufferMap[val])-1])
+
+	} else {
+
+		//Postformat global
+		function, exist = sp.Hooker[Postformat]
+		if exist {
+
+			buf.BufferMap[val][len(buf.BufferMap[val])-1] = function(buf.BufferMap[val][len(buf.BufferMap[val])-1])
+
+		}
+	}
+
+}
+
+func (sp *spaceFile) hookerPostFormatBuff(buf *Buffer){
+
+		//Postformat global
+		function, exist := sp.Hooker[Postformat]
+		if exist {
+
+			buf.Buffer = function(buf.Buffer)
+
+		}
 }

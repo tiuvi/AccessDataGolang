@@ -51,7 +51,7 @@ func (obj *Space ) Wspace(line int64, column map[string][]byte)int64{
 
 
 
-func (obj *Space) Rspace (column Buffer){
+func (obj *Space) Rspace (column *Buffer){
 
 
 

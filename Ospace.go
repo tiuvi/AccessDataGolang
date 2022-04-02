@@ -219,65 +219,10 @@ func (obj *Space ) ospaceDirectory(){
 
 
 
-func (obj *Space ) ospaceCompilationFileRamSearch(sF *spaceFile) {
 
-	obj.FileNativeType |= RamSearch
 
-	var field string
-	for val, ind := range obj.IndexSizeColumns {
 
-		if ind[0] == 0 {
 
-			field = val
-			break
-		}
-	}
-
-	mapColumn := obj.NewSearchSpace(0, *sF.SizeFileLine  , field)
-	obj.Rspace(mapColumn)
-
-	sF.Search = make(map[string]int64)
-
-	var x int64
-	for x = 0 ; x <= *sF.SizeFileLine; x++{
-		
-		sF.Search[ string( mapColumn.Buffer[field][x] ) ] = x
-		
-		
-	}
-
-}
-
-/*
-func (obj *spaceFile ) ospaceCompilationFileRamIndex() {
-
-	obj.FileNativeType |= RamIndex
-
-	var field string
-
-	for val, ind := range obj.IndexSizeColumns {
-
-		if ind[0] == 0 {
-
-			field = val
-			break
-		}
-	}
-
-	mapColumn := *obj.NewSearchSpace(0, *obj.SizeFileLine, field)
-	obj.Rspace(mapColumn)
-
-	obj.Index = make([]string ,0)
-	
-	var x int64
-	for x = 0 ; x <= obj.SizeFileLine; x++{
-		
-		obj.Index = append(obj.Index, string( mapColumn.Buffer[field][x] ))
-
-	}
-
-}
-*/
 
 func (obj *Space ) ospaceCompilationFileUpdateColumn(LenIndexSizeColumns int) {
 
@@ -336,7 +281,7 @@ func (obj *Space )newSpaceFile()*spaceFile{
 			//Migrar los errores de archivo a un log de archivo
 			log.Println("Error al abrir o crear el archivo.", err)
 		}
-		
+
 		spacef.Space = obj
 		//Url pasada como valor dir + name + extension -> name dinamico
 		spacef.Url = obj.url
@@ -367,3 +312,63 @@ func (obj *spaceFile ) ospaceAtomicUpdateSizeFileLine()int64 {
 	return (size / obj.SizeLine) -1
 }
 
+func (obj *Space ) ospaceCompilationFileRamSearch(sF *spaceFile) {
+
+	obj.FileNativeType |= RamSearch
+
+	var field string
+	for val, ind := range obj.IndexSizeColumns {
+
+		if ind[0] == 0 {
+
+			field = val
+			break
+		}
+	}
+
+	mapColumn := obj.Bspace( BuffMap, 0, *sF.SizeFileLine  , field)
+	obj.Rspace(mapColumn)
+
+	sF.Search = make(map[string]int64)
+
+	var x int64
+	for x = 0 ; x <= *sF.SizeFileLine; x++{
+		
+		sF.Search[ string( mapColumn.BufferMap[field][x] ) ] = x
+		
+		
+	}
+
+}
+
+
+
+
+func (obj *Space ) ospaceCompilationFileRamIndex(sF *spaceFile) {
+
+	obj.FileNativeType |= RamIndex
+
+	var field string
+
+	for val, ind := range obj.IndexSizeColumns {
+
+		if ind[0] == 0 {
+
+			field = val
+			break
+		}
+	}
+
+	mapColumn := obj.Bspace(BuffMap,0, *sF.SizeFileLine, field)
+	obj.Rspace(mapColumn)
+
+	sF.Index = make([]string ,0)
+	
+	var x int64
+	for x = 0 ; x <= *sF.SizeFileLine; x++{
+		
+		sF.Index = append(sF.Index, string( mapColumn.BufferMap[field][x] ))
+
+	}
+
+}

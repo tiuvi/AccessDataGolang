@@ -114,7 +114,7 @@ type Space struct  {
 }
 
 type spaceFile struct {
-	Space *Space
+	*Space
 	File *os.File
 	Url string
 	IndexSizeColumns map[string][2]int64
@@ -246,3 +246,4 @@ func (obj *Space ) ReNameSpace(name string)*Space {
 
 	return &NewFile
 }
+

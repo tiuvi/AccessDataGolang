@@ -1,0 +1,6 @@
+
+Testear searchram indexram y biram
+
+Tesear writebit y readbit
+
+Seguir con las funciones de lectura y escritura en directorios
