@@ -126,13 +126,47 @@ func (sp *spaceFile) hookerPostFormatMap(buf *Buffer,val string){
 
 }
 
-func (sp *spaceFile) hookerPostFormatBuff(buf *Buffer){
+
+func (sp *spaceFile) hookerPostFormatBuff(buf *Buffer,val string){
+
+	//Postformat por columnas
+	function, exist := sp.Hooker[Postformat + val]
+	if exist{
+
+		buf.Buffer = function(buf.Buffer)
+
+	} else {
 
 		//Postformat global
-		function, exist := sp.Hooker[Postformat]
+		function, exist = sp.Hooker[Postformat]
 		if exist {
 
 			buf.Buffer = function(buf.Buffer)
-
+		
 		}
+	}
+}
+
+func (sp *spaceFile) hookerPostFormatBuffMultiColumn(buf *[]byte,val string){
+
+	//Postformat por columnas
+	function, exist := sp.Hooker[Postformat + val]
+	if exist{
+
+		testBuf := *buf
+		testBuf  = function(testBuf)
+		*buf      = testBuf
+
+	} else {
+
+		//Postformat global
+		function, exist = sp.Hooker[Postformat]
+		if exist {
+
+			testBuf := *buf
+			testBuf  = function(testBuf)
+			*buf      = testBuf
+		}
+	}
+	
 }

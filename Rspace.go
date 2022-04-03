@@ -28,11 +28,19 @@ func (sp *spaceFile) OneColumnSpace(buf *Buffer){
 	startLine := buf.StartLine
 	endLine   := buf.EndLine
 
+
 	//Primer caso cuando solo hay que leer una linea.
 	if (endLine - startLine ) == 1 {
 
 
 		if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
+
+			var colName string
+			for val := range buf.BufferMap{
+		
+				colName = val		
+			
+			}
 
 			//Leemos una sola linea
 			_ , err = sp.File.ReadAt(buf.Buffer , startLine * sp.SizeLine )
@@ -45,8 +53,10 @@ func (sp *spaceFile) OneColumnSpace(buf *Buffer){
 			buf.Buffer = bytes.Trim(buf.Buffer , " ")
 
 			//Activamos PostFormat si existe
-			if sp.Hooker !=nil {
-				sp.hookerPostFormatBuff(buf)
+			if sp.Hooker != nil {
+				
+				sp.hookerPostFormatBuff(buf,colName)
+
 			}
 
 			//Cerramos el script y pasamos datos por referencia.
@@ -55,6 +65,13 @@ func (sp *spaceFile) OneColumnSpace(buf *Buffer){
 
 
 		if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
+
+			var colName string
+			for val := range buf.BufferMap{
+		
+				colName = val		
+			
+			}
 
 			//Leemos una sola linea
 			_ , err = sp.File.ReadAt(buf.Buffer , startLine * sp.SizeLine )
@@ -68,11 +85,19 @@ func (sp *spaceFile) OneColumnSpace(buf *Buffer){
 
 			//Activamos PostFormat si existe
 			if sp.Hooker != nil {
-				sp.hookerPostFormatBuff(buf)
+	
+				for val , ind := range sp.IndexSizeColumns{
+					
+					if ind[0] == 0 {
+
+						sp.hookerPostFormatBuff(buf,val)
+
+					}
+				}
 			}
 
 			//Pasamos el buffer por el canal
-			buf.Channel <- ChanBuf{startLine,buf.Buffer}
+			buf.Channel <- ChanBuf{startLine,colName,buf.Buffer}
 
 			//Cerramos el canal.
 			close(buf.Channel)
@@ -130,6 +155,13 @@ func (sp *spaceFile) OneColumnSpace(buf *Buffer){
 
 		if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
 
+			var colName string
+			for val := range buf.BufferMap{
+		
+				colName = val		
+			
+			}
+
 			for startLine < endLine {
 
 				//El buffer por referencia crea errores en los canales
@@ -147,11 +179,19 @@ func (sp *spaceFile) OneColumnSpace(buf *Buffer){
 				
 				//Activamos PostFormat si existe
 				if sp.Hooker != nil {
-					sp.hookerPostFormatBuff(buf)
+
+					for val , ind := range sp.IndexSizeColumns{
+						
+						if ind[0] == 0 {
+
+							sp.hookerPostFormatBuff(buf,val)
+
+						}
+					}
 				}
 				
-				buf.Channel <- ChanBuf{startLine,buf.Buffer}
-				
+				buf.Channel <- ChanBuf{startLine,colName,buf.Buffer}
+
 				startLine += 1
 				
 			}
@@ -224,49 +264,100 @@ func (sp *spaceFile) MultiColumnSpace(buf *Buffer){
 	startLine := buf.StartLine
 	endLine   := buf.EndLine
 
-	_ , err = sp.File.ReadAt(buf.BufferMap["buffer"][0] , startLine * sp.SizeLine )
-	if err != nil {
-		log.Println(err)
+
+	if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
+		log.Fatalln("Error Grave, Uspace.go ; Rspace.go ; Funcion: MultiColumnSpace ;" +
+		"Buffer no soporta multicolumnas")
 		return
 	}
 	
-	for startLine < endLine {
-		
-		startLine += 1
 
-		for val := range buf.BufferMap {
+	if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
 
-			if val == "buffer" {
-				continue
+		for startLine < endLine {
+
+			//El buffer por referencia crea errores en los canales
+			buf.NewChanBuffer()
+			//Leemos una sola linea
+			_ , err = sp.File.ReadAt(buf.Buffer , startLine * sp.SizeLine)
+			if err != nil {
+
+				log.Println(err)
+
 			}
 
-			buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim(buf.BufferMap["buffer"][0][  sp.IndexSizeColumns[val][0] : sp.IndexSizeColumns[val][1]  ], " "))
-		
-			//Postformat por columnas
-			function, exist := sp.Hooker[Postformat + val]
-			if exist{
+			for val := range buf.BufferMap {
+			
+				value := make([]byte,0)
+				value = append(buf.Buffer[sp.IndexSizeColumns[val][0]:sp.IndexSizeColumns[val][1]])
+	
+				//Limpiamos el buffer de espacios
+				value = bytes.Trim(value , " ")
 
-				buf.BufferMap[val][len(buf.BufferMap[val])-1] = function(buf.BufferMap[val][len(buf.BufferMap[val])-1])
+				
+				//Activamos PostFormat si existe
+				if sp.Hooker != nil {
 
-			} else {
-
-				//Postformat global
-				function, exist = sp.Hooker[Postformat]
-				if exist {
-
-					buf.BufferMap[val][len(buf.BufferMap[val])-1] = function(buf.BufferMap[val][len(buf.BufferMap[val])-1])
+					sp.hookerPostFormatBuffMultiColumn(&value,val)
 
 				}
+				
+				log.Println("Multicolumn RAmchan: ",startLine,val,value)
+				buf.Channel <- ChanBuf{startLine,val,value}
+
+				
 			}
+
+
+			startLine += 1
 		}
 	
-		//End bucle
-		buf.BufferMap["buffer"][0] = buf.BufferMap["buffer"][0][sp.SizeLine:]
+		//Cerramos el canal.
+		close(buf.Channel)
+
+		return
+	}
 	
+	if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
+
+
+		_ , err = sp.File.ReadAt(buf.BufferMap["buffer"][0] , startLine * sp.SizeLine )
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		
+		for startLine < endLine {
+			
+			startLine += 1
+
+			for val := range buf.BufferMap {
+
+				if val == "buffer" {
+					continue
+				}
+
+				buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim(buf.BufferMap["buffer"][0][  sp.IndexSizeColumns[val][0] : sp.IndexSizeColumns[val][1]  ], " "))
+	
+				//Activamos PostFormat si existe
+				if sp.Hooker !=nil {
+					sp.hookerPostFormatMap(buf,val)
+				}
+
+			}
+		
+			//End bucle
+			buf.BufferMap["buffer"][0] = buf.BufferMap["buffer"][0][sp.SizeLine:]
+		
+		}
+
+		delete(buf.BufferMap,"buffer")
+		return
 	}
 
-	delete(buf.BufferMap,"buffer")
 
+	log.Fatalln("Error Grave, Uspace.go ; Rspace.go ; Funcion: MultiColumnSpace ;" +
+	"No Hubo coincidencias")
 	return
 }
 

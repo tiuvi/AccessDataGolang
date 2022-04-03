@@ -50,6 +50,12 @@ func (obj *Space ) ospaceCompilationFile() {
 	//Lectura de archivos monocolumna
 	if LenIndexSizeColumns == 1 && obj.Extension == "odac" {
 
+		if LenIndexSizeColumns > 1 {
+
+			log.Fatalln("As iniciado un archivo de una columna con multiples columnas", obj.url,obj.IndexSizeColumns)
+
+		}
+
 		obj.ospaceCompilationFileUpdateColumn(LenIndexSizeColumns)
 		obj.compilation = true
 		return
@@ -57,6 +63,12 @@ func (obj *Space ) ospaceCompilationFile() {
 
 	//Si el archivo es multicolumna, contamos las columnas.
 	if LenIndexSizeColumns > 1 && obj.Extension == "mdac"{
+
+		if LenIndexSizeColumns == 1 {
+
+			log.Fatalln("As iniciado un archivo de un multicolumna con una columna", obj.url,obj.IndexSizeColumns)
+
+		}
 
 		obj.ospaceCompilationFileUpdateColumn(LenIndexSizeColumns)
 		obj.compilation = true

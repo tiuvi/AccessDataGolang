@@ -17,6 +17,7 @@ const(
 
 type ChanBuf struct{
 	Line int64
+	ColName string
 	Buffer 	[]byte
 }
 
@@ -47,6 +48,20 @@ func (sp *Space) Bspace (typeBuff FileTypeBuffer,startLine int64,endLine int64,d
 		
 	}
 
+	if CheckBit(int64(sp.FileTipeByte), int64(OneColumn)) {
+		
+		if len(data) > 1 {
+			log.Fatalln("Error el archivo solo tiene una columna.",spaceFile.Url   )
+		}
+	}
+
+	if CheckBit(int64(sp.FileTipeByte), int64(MultiColumn)) {
+		
+		if len(data) > len(sp.IndexSizeColumns) {
+			log.Fatalln("Error el archivo solo tiene: ",len(sp.IndexSizeColumns),spaceFile.Url   )
+		}
+	}
+
 	buf = &Buffer{
 		StartLine: startLine,
 		EndLine:   endLine + 1,
@@ -74,6 +89,13 @@ func (sp *Space) Bspace (typeBuff FileTypeBuffer,startLine int64,endLine int64,d
 	
 	if CheckBit(int64(typeBuff), int64(BuffChan) ){
 
+		buf.BufferMap = make(map[string][][]byte)
+
+		for _, value := range data {
+		
+			buf.BufferMap[value] = make([][]byte ,0)
+		}
+	
 		buf.SizeLine = sp.SizeLine
 		buf.Buffer = make([]byte ,sp.SizeLine)
 		buf.Channel =  make(chan ChanBuf,1)
@@ -105,6 +127,8 @@ func (buf *Buffer) NewChanBuffer (){
 
 	buf.Buffer = make([]byte ,buf.SizeLine)
 }
+
+
 
 func (sp *Space) NewSearchBitSpace (line int64, data ...string )(buf *Buffer){
 

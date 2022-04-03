@@ -79,7 +79,7 @@ func (obj *Space) Rspace (column *Buffer){
 
 		//Segundo caso archivos de byte
 		case Byte:
-
+		
 			//Segun el tipo de archivo aplicamos una funcion diferente
 			switch obj.FileTipeByte {
 			
