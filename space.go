@@ -101,7 +101,7 @@ type Space struct  {
 
 	//Indice de columnas y tamaño de columna
 	IndexSizeColumns map[string][2]int64
-
+	LenColumns int
 	//Formateadores antes y despues
 	Hooker map[string]func([]byte)[]byte
 	
@@ -208,20 +208,20 @@ func (obj *Space ) OSpace()*spaceFile  {
 		
 	}
 
-	
-	if (obj.FileNativeType & Disk) != 0 {
+
+	if CheckFileNativeType(obj.FileNativeType, Disk ){
 
 		return obj.ospaceDisk()
 
-	} else if (obj.FileNativeType & DeferDisk) != 0 {
+	} else 	if CheckFileNativeType(obj.FileNativeType, DeferDisk ){
 
 		return obj.ospaceDeferDisk()
 
-	} else if (obj.FileNativeType & PermDisk) != 0 {
+	} else if CheckFileNativeType(obj.FileNativeType, PermDisk ){
 
 		return obj.ospacePermDisk()
 
-	} else if (obj.FileNativeType & Directory) != 0 {
+	} else if CheckFileNativeType(obj.FileNativeType, Directory ){
 
 		obj.ospaceDirectory()
 		return nil
@@ -247,3 +247,57 @@ func (obj *Space ) ReNameSpace(name string)*Space {
 	return &NewFile
 }
 
+
+
+
+
+
+func CheckFileNativeType(base FileNativeType, compare FileNativeType)(bool){
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+	return false
+}
+
+func CheckFileCoding(base FileCoding, compare FileCoding)(bool){
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+	return false
+}
+
+func CheckFileTipeBit(base FileTipeBit, compare FileTipeBit)(bool){
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+	return false
+}
+
+func CheckFileTipeByte(base FileTipeByte, compare FileTipeByte)(bool){
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+	return false
+}
+
+func CheckFileTypeDir(base FileTypeDir, compare FileTypeDir)(bool){
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+	return false
+}

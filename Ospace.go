@@ -28,9 +28,9 @@ func (obj *Space ) ospaceCompilationFile() {
 
 	}
 
-	
-	LenIndexSizeColumns := len(obj.IndexSizeColumns)
-	if LenIndexSizeColumns == 0 {
+	obj.LenColumns = len(obj.IndexSizeColumns)
+
+	if obj.LenColumns == 0 {
 		
 		log.Fatalln("Iniciaste un archivo de acceso a datos sin columnas", obj.url)
 	}
@@ -48,29 +48,29 @@ func (obj *Space ) ospaceCompilationFile() {
 	}
 
 	//Lectura de archivos monocolumna
-	if LenIndexSizeColumns == 1 && obj.Extension == "odac" {
+	if obj.LenColumns == 1 && obj.Extension == "odac" {
 
-		if LenIndexSizeColumns > 1 {
+		if obj.LenColumns > 1 {
 
 			log.Fatalln("As iniciado un archivo de una columna con multiples columnas", obj.url,obj.IndexSizeColumns)
 
 		}
 
-		obj.ospaceCompilationFileUpdateColumn(LenIndexSizeColumns)
+		obj.ospaceCompilationFileUpdateColumn(obj.LenColumns)
 		obj.compilation = true
 		return
 	}
 
 	//Si el archivo es multicolumna, contamos las columnas.
-	if LenIndexSizeColumns > 1 && obj.Extension == "mdac"{
+	if obj.LenColumns > 1 && obj.Extension == "mdac"{
 
-		if LenIndexSizeColumns == 1 {
+		if obj.LenColumns == 1 {
 
 			log.Fatalln("As iniciado un archivo de un multicolumna con una columna", obj.url,obj.IndexSizeColumns)
 
 		}
 
-		obj.ospaceCompilationFileUpdateColumn(LenIndexSizeColumns)
+		obj.ospaceCompilationFileUpdateColumn(obj.LenColumns)
 		obj.compilation = true
 		return
 	}
@@ -80,7 +80,7 @@ func (obj *Space ) ospaceCompilationFile() {
 	//con un mapa en la memoria ram asociando valor linea -> n linea
 	if obj.Extension == "sram"{
 
-		obj.ospaceCompilationFileUpdateColumn(LenIndexSizeColumns)
+		obj.ospaceCompilationFileUpdateColumn(obj.LenColumns)
 		obj.FileNativeType = RamSearch | obj.FileNativeType
 		obj.compilation = true
 		return
@@ -91,7 +91,7 @@ func (obj *Space ) ospaceCompilationFile() {
 	//con un array en la memoria asociando n lineas -> n valores
 	if obj.Extension == "iram"{
 		
-		obj.ospaceCompilationFileUpdateColumn(LenIndexSizeColumns)
+		obj.ospaceCompilationFileUpdateColumn(obj.LenColumns)
 		obj.FileNativeType |= RamIndex
 		obj.compilation = true
 		return
@@ -99,7 +99,7 @@ func (obj *Space ) ospaceCompilationFile() {
 
 	if obj.Extension == "bram" {
 
-		obj.ospaceCompilationFileUpdateColumn(LenIndexSizeColumns)
+		obj.ospaceCompilationFileUpdateColumn(obj.LenColumns)
 		obj.FileNativeType |= RamIndex | RamSearch
 		obj.compilation = true
 		return
@@ -142,8 +142,8 @@ func (obj *Space ) ospaceDisk()*spaceFile {
 		//Quitamos el cerrojo de la estructura diskSpace
 		diskSpace.Unlock()
 
-		if (obj.FileNativeType & RamSearch) != 0 {
-			
+		if CheckFileNativeType(obj.FileNativeType , RamSearch) {
+
 			obj.ospaceCompilationFileRamSearch(spacef)
 			log.Println("Result RamSearch: ",spacef )
 		}
@@ -256,30 +256,7 @@ func (obj *Space ) ospaceCompilationFileUpdateColumn(LenIndexSizeColumns int) {
 
 }
 
-/*
-func (obj *Space ) ospaceCompilationFileUpdateSizeFile() {
-	
-	
-	test := time.Now()
-	info, err := obj.File.Stat()
-	log.Println("tiempo de escritura info: ", time.Since(test).Nanoseconds())
 
-	if err != nil {
-		log.Println("File.Stat error: ",err)
-	}
-
-	//Calculamos el numero de lineas del fichero
-	//obj.SizeFileLine = (info.Size() / obj.SizeLine) - 1
-	atomic.AddInt64(&obj.SizeFileLine, (info.Size() / obj.SizeLine) - 1 )
-	
-
-	size, err := obj.File.Seek(0, 2)
-	if err != nil {
-		log.Println(err)
-	}
-	atomic.AddInt64(&obj.SizeFileLine, (size / obj.SizeLine) - 1 )
-}
-*/
 
 func (obj *Space )newSpaceFile()*spaceFile{
 
@@ -338,7 +315,7 @@ func (obj *Space ) ospaceCompilationFileRamSearch(sF *spaceFile) {
 		}
 	}
 
-	mapColumn := obj.Bspace( BuffMap, 0, *sF.SizeFileLine  , field)
+	mapColumn := obj.BRspace( BuffMap, 0, *sF.SizeFileLine  , field)
 	obj.Rspace(mapColumn)
 
 	sF.Search = make(map[string]int64)
@@ -371,7 +348,7 @@ func (obj *Space ) ospaceCompilationFileRamIndex(sF *spaceFile) {
 		}
 	}
 
-	mapColumn := obj.Bspace(BuffMap,0, *sF.SizeFileLine, field)
+	mapColumn := obj.BRspace(BuffMap,0, *sF.SizeFileLine, field)
 	obj.Rspace(mapColumn)
 
 	sF.Index = make([]string ,0)

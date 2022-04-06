@@ -3,6 +3,7 @@ package bd
 
 import (
 	"log"
+	"sync/atomic"
 //	"net/http"
 	)
 
@@ -12,32 +13,29 @@ const(
 	BuffMap FileTypeBuffer = 1 << iota
 	BuffChan
 	BuffBytes
-	BuffDir
 )
 
-type ChanBuf struct{
+type RChanBuf struct{
 	Line int64
 	ColName string
 	Buffer 	[]byte
 }
 
-type Buffer struct {
+type RBuffer struct {
 
 	StartLine int64
 	EndLine   int64
 	SizeLine  int64
 	typeBuff FileTypeBuffer
 
-	BufferMap    map[string][][]byte
-
 	Buffer []byte
-
-	Channel chan ChanBuf
+	BufferMap    map[string][][]byte
+	Channel chan RChanBuf
 }
 
 
 //Inicia el numero de columnas en una tabla
-func (sp *Space) Bspace (typeBuff FileTypeBuffer,startLine int64,endLine int64,data ...string )(buf *Buffer){
+func (sp *Space) BRspace (typeBuff FileTypeBuffer,startLine int64,endLine int64,data ...string )(buf *RBuffer){
 	 
 
 	spaceFile := sp.OSpace()
@@ -48,62 +46,51 @@ func (sp *Space) Bspace (typeBuff FileTypeBuffer,startLine int64,endLine int64,d
 		
 	}
 
-	if CheckBit(int64(sp.FileTipeByte), int64(OneColumn)) {
+	if CheckFileTipeByte(sp.FileTipeByte, OneColumn) {
 		
 		if len(data) > 1 {
 			log.Fatalln("Error el archivo solo tiene una columna.",spaceFile.Url   )
 		}
 	}
 
-	if CheckBit(int64(sp.FileTipeByte), int64(MultiColumn)) {
+	if CheckFileTipeByte(sp.FileTipeByte, MultiColumn) {
 		
 		if len(data) > len(sp.IndexSizeColumns) {
 			log.Fatalln("Error el archivo solo tiene: ",len(sp.IndexSizeColumns),spaceFile.Url   )
 		}
 	}
 
-	buf = &Buffer{
+	buf = &RBuffer{
 		StartLine: startLine,
 		EndLine:   endLine + 1,
+		SizeLine: sp.SizeLine,
 		typeBuff:typeBuff,
 	}
 
 
-	//tipos de buffer para directorios
-	if CheckBit(int64(typeBuff),int64(BuffDir)) {
-
-		if CheckBit(int64(sp.FileNativeType),int64(Directory)) {		
-	
-			buf.BufferMap = make(map[string][][]byte)
-			buf.BufferMap["buffer"]    = make([][]byte ,1)
-			return
-		}	
-	}
-
 	//Buffer de bytes
-	if CheckBit(int64(typeBuff), int64(BuffBytes) ){
+	if CheckFileTypeBuffer(typeBuff, BuffBytes ){
 
 		buf.Buffer = make([]byte ,sp.SizeLine)
 		return
 	}
 	
-	if CheckBit(int64(typeBuff), int64(BuffChan) ){
+	if CheckFileTypeBuffer(typeBuff, BuffChan){
 
 		buf.BufferMap = make(map[string][][]byte)
 
 		for _, value := range data {
 		
-			buf.BufferMap[value] = make([][]byte ,0)
+			buf.BufferMap[value] = nil
 		}
 	
-		buf.SizeLine = sp.SizeLine
 		buf.Buffer = make([]byte ,sp.SizeLine)
-		buf.Channel =  make(chan ChanBuf,1)
+		buf.Channel =  make(chan RChanBuf,1)
 
 		return
 	}
 	
-	if CheckBit(int64(typeBuff), int64(BuffMap) ){
+	if CheckFileTypeBuffer(typeBuff, BuffMap ){
 
 
 		buf.BufferMap = make(map[string][][]byte)
@@ -123,16 +110,16 @@ func (sp *Space) Bspace (typeBuff FileTypeBuffer,startLine int64,endLine int64,d
    	return
 }
 
-func (buf *Buffer) NewChanBuffer (){
+func (buf *RBuffer) NewChanBuffer (){
 
 	buf.Buffer = make([]byte ,buf.SizeLine)
 }
 
 
+//Migrar searchbit al buffer read normal
+func (sp *Space) NewSearchBitSpace (line int64, data ...string )(buf *RBuffer){
 
-func (sp *Space) NewSearchBitSpace (line int64, data ...string )(buf *Buffer){
-
-	buf = &Buffer{
+	buf = &RBuffer{
 		StartLine: line,
 		BufferMap: make(map[string][][]byte),
 	}
@@ -141,6 +128,16 @@ func (sp *Space) NewSearchBitSpace (line int64, data ...string )(buf *Buffer){
 	buf.BufferMap["buffer"][0] = make([]byte   , 1)
 
 	return
+}
+
+func CheckFileTypeBuffer(base FileTypeBuffer, compare FileTypeBuffer)(bool){
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+	return false
 }
 
 /*
@@ -155,3 +152,99 @@ func ReadChanBuffer(resp http.ResponseWriter, req *http.Request, buffer Buffer){
 	}
 }
 */
+
+
+type WChanBuf struct{
+	Line int64
+	ColName string
+	Buffer 	[]byte
+}
+
+type WBuffer struct {
+
+	Line int64
+	ColumnName string
+	SizeLine  int64
+	typeBuff FileTypeBuffer
+
+	Buffer *[]byte
+	BufferMap map[string][]byte
+	Channel chan WChanBuf
+}
+
+
+
+func (sp *Space) BWspaceBuff(line int64 ,columnName string, buff []byte)(*WBuffer){
+
+	 _ , found := sp.IndexSizeColumns[columnName]
+	if !found {
+
+		log.Fatalln("La columna: " + columnName + " no existe en ese archivo",sp.url)
+		return nil
+	}
+	
+	return &WBuffer{
+		typeBuff: BuffBytes,
+		Line: line,
+		ColumnName: columnName,
+		Buffer: &buff,
+	}
+
+}
+
+
+func (sp *Space) BWspaceBuffMap(line int64 , buff map[string][]byte)(*WBuffer){
+
+	for val := range buff {
+		_ , found := sp.IndexSizeColumns[val]
+		if !found {
+	 
+			log.Fatalln("La columna: " + val + " no existe en ese archivo",sp.url)
+			return nil
+		}
+	}
+
+   return &WBuffer{
+		typeBuff: BuffMap,
+	    Line: line,
+	    BufferMap: buff,
+   }
+
+}
+
+func  BWChanBuf()(*WBuffer){
+
+	return &WBuffer{
+		typeBuff: BuffChan,
+		Channel: make(chan WChanBuf, 0),
+	}
+}
+
+
+func (sp *Space)BWspaceSendchan(line int64, columnName string , buf *[]byte, WBuffer *WBuffer)int64{
+
+	sF := sp.OSpace()
+
+	if line == -1 {
+	
+		line = atomic.AddInt64(sF.SizeFileLine, 1)
+
+	}
+
+	if line > *sF.SizeFileLine {
+
+		atomic.AddInt64(sF.SizeFileLine, line - *sF.SizeFileLine )
+		
+	}
+
+	WBuffer.Buffer = buf
+	WBuffer.Channel <- WChanBuf{line,columnName, *WBuffer.Buffer }
+
+	return line
+}
+
+func (WBuffer *WBuffer) BWspaceClosechan(){
+	
+	close(WBuffer.Channel)
+}
+

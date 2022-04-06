@@ -5,122 +5,134 @@ package bd
 
 //Esta funcion escribe en el numero de linea requerido
 //Pasandole un string en forma de bytes
-func (obj *Space ) Wspace(line int64, column map[string][]byte)int64{
+func (obj *Space ) Wspace(buf *WBuffer)int64{
 
 
 	spaceFile := obj.OSpace()
-	log.Println("Write space: " , *spaceFile.SizeFileLine)
 
-	//Difenciar archivos de bit de archivos de byte
-	switch obj.FileCoding {
 
-		//Primer caso archivo de bit
-		case Bit:
+	if CheckFileCoding(obj.FileCoding , Bit){
 
-			//Segun el tipo de archivo aplicamos una funcion diferente
-			switch obj.FileTipeBit {
-				//Caso lista de bits
-				case ListBit:	
-				spaceFile.WriteListBitSpace(line, column)
-				break
-			}
+		if CheckFileTipeBit(obj.FileTipeBit,ListBit ){
+			//Funcion ListBit interfaz
+			
+			return spaceFile.WriteListBitSpace(buf)
+		}
 
-		//Segundo caso archivos de byte
-		case Byte:
-	
-			//Segun el tipo de archivo aplicamos una funcion diferente
-			switch obj.FileTipeByte {
-				
-				case OneColumn,MultiColumn:
-					//Funcion OneColumn interfaz
-					return spaceFile.WriteColumnSpace(line, column)
-			}
-
-		case Dir:
-			switch obj.FileTypeDir {
-
-				case EmptyDir:
-					//Añadir modificacion de url desde aqui
-					spaceFile.WriteEmptyDirSpace(line, column)
-					break
-
-			}
+		log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
+		"No Hubo coincidencias FileTipeBit")
+		return -1
 	}
+
+	if CheckFileCoding(obj.FileCoding , Byte){
+
+		if CheckFileTipeByte(obj.FileTipeByte,OneColumn){
+
+			return spaceFile.WriteColumnSpace(buf)
+		}
+
+		if CheckFileTipeByte(obj.FileTipeByte,MultiColumn){
+
+			return spaceFile.WriteColumnSpace(buf)
+		}
+
+		if  CheckFileTipeByte(obj.FileTipeByte,FullFile){
+
+			log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
+			"Funcion writeFullFile en desarrollo...")
+			return -1
+		}
+
+		log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
+		"No Hubo coincidencias FileTipeByte")
+		return -1
+	}
+
+
+	if CheckFileCoding(obj.FileCoding , Dir){
+
+		if CheckFileTypeDir(obj.FileTypeDir, EmptyDir){
+
+			log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
+			"Funcion WriteEmptyDirSpace en desarrollo...")
+			//Añadir modificacion de url desde aqui
+			//spaceFile.WriteEmptyDirSpace(buf)
+			return -1
+		}
+
+		log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
+		"No Hubo coincidencias FileTypeDir")
+		return -1
+	}
+
+	log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
+	"No Hubo coincidencias FileCoding")
 	return -1
 }
 
 
 
-func (obj *Space) Rspace (column *Buffer){
+func (obj *Space) Rspace (column *RBuffer){
 
 
 
 	spaceFile := obj.OSpace()
 
 	
-	//Difenciar archivos de bit de archivos de byte
-	switch obj.FileCoding {
+	if CheckFileCoding(obj.FileCoding , Bit){
 
-		//Primer caso archivo de bit
-		case Bit:
+		if CheckFileTipeBit(obj.FileTipeBit,ListBit ){
+			//Funcion ListBit interfaz
+			spaceFile.ListBitSpace(column)
+			return
+		}
 
-			//Segun el tipo de archivo aplicamos una funcion diferente
-			switch obj.FileTipeBit {
-			
-				case ListBit:
-					//Funcion ListBit interfaz
-					spaceFile.ListBitSpace(column)
-					break
-				default:
-					return
-			}
-		// Rompemos switch bit
-		break
+		log.Fatalln("Error Grave, Uspace.go ; Funcion: Rspace ;" +
+		"No Hubo coincidencias FileTipeBit")
+		return
+	}
 
-		//Segundo caso archivos de byte
-		case Byte:
-		
-			//Segun el tipo de archivo aplicamos una funcion diferente
-			switch obj.FileTipeByte {
-			
-				case OneColumn:
-					//Funcion OneColumn interfaz
-					spaceFile.OneColumnSpace(column)
-					break
-				case MultiColumn:
-					//Funcion Multicolumn interfaz
-					spaceFile.MultiColumnSpace(column)
-					break
-				case FullFile:
-					//Añadir modificacion de url desde aqui
-					spaceFile.FullFileSpace(column)
-					break
+	if CheckFileCoding(obj.FileCoding , Byte){
 
-				default: 
-					return
-			}
-		// Rompemos switch byte
-		break
+		if CheckFileTipeByte(obj.FileTipeByte,OneColumn){
+			//Funcion OneColumn interfaz
+			spaceFile.OneColumnSpace(column)
+			return
+		}
 
-		case Dir:
-			switch obj.FileTypeDir {
+		if CheckFileTipeByte(obj.FileTipeByte,MultiColumn){
+			//Funcion Multicolumn interfaz
+			spaceFile.MultiColumnSpace(column)
+			return
+		}
 
-				case EmptyDir:
-					//Añadir modificacion de url desde aqui
-					spaceFile.ReadEmptyDirSpace(column)
-					break
+		if  CheckFileTipeByte(obj.FileTipeByte,FullFile){
+			//Añadir modificacion de url desde aqui
+			spaceFile.FullFileSpace(column)
+		}
 
-				default: 
-					return
-			}
-		break
-
-		//Defalt si no es bytes o bit
-		default: 
-				return
+		log.Fatalln("Error Grave, Uspace.go ; Funcion: Rspace ;" +
+		"No Hubo coincidencias FileTipeByte")
+		return
 	}
 
 
+	if CheckFileCoding(obj.FileCoding , Dir){
+
+		if CheckFileTypeDir(obj.FileTypeDir, EmptyDir){
+
+			//Añadir modificacion de url desde aqui
+			spaceFile.ReadEmptyDirSpace(column)
+			return
+		}
+
+		log.Fatalln("Error Grave, Uspace.go ; Funcion: Rspace ;" +
+		"No Hubo coincidencias FileTypeDir")
+		return
+	}
+
+	log.Fatalln("Error Grave, Uspace.go ; Funcion: Rspace ;" +
+	"No Hubo coincidencias FileCoding")
 	return
 }
 

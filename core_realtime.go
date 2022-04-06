@@ -105,7 +105,83 @@ func CheckBit(base int64, compare int64)(bool){
 	return false
 }
 
-func (sp *spaceFile) hookerPostFormatMap(buf *Buffer,val string){
+
+
+
+
+/*
+*
+* hooker preformat
+*/
+
+func (sp *spaceFile) hookerPreFormatMap(buf *WBuffer,val string){
+
+	//Preformat por columnas
+	function, exist := sp.Hooker[Preformat + val]
+	if exist{
+
+		buf.BufferMap[val] = function(buf.BufferMap[val])
+
+	} else {
+
+		//Preformat global
+		function, exist = sp.Hooker[Preformat]
+		if exist {
+
+			buf.BufferMap[val] = function(buf.BufferMap[val])
+
+		}
+	}
+}
+
+func (sp *spaceFile) hookerPreFormatBuf(buf *WBuffer){
+
+	//Preformat por columnas
+	function, exist := sp.Hooker[Preformat + buf.ColumnName]
+	if exist{
+
+		*buf.Buffer = function(*buf.Buffer)
+
+	} else {
+
+		//Preformat global
+		function, exist = sp.Hooker[Preformat]
+		if exist {
+
+			*buf.Buffer = function(*buf.Buffer)
+
+		}
+	}
+}
+
+
+func (sp *spaceFile) hookerPreFormatChan(name string, buf *[]byte){
+
+	//Preformat por columnas
+	function, exist := sp.Hooker[Preformat + name]
+	if exist{
+
+		*buf = function(*buf)
+
+	} else {
+
+		//Preformat global
+		function, exist = sp.Hooker[Preformat]
+		if exist {
+
+			*buf = function(*buf)
+
+		}
+	}
+}
+
+/*
+* Hooker post format
+*
+*
+*/
+
+func (sp *spaceFile) hookerPostFormatMap(buf *RBuffer,val string){
 
 	//Postformat por columnas
 	function, exist := sp.Hooker[Postformat + val]
@@ -127,7 +203,7 @@ func (sp *spaceFile) hookerPostFormatMap(buf *Buffer,val string){
 }
 
 
-func (sp *spaceFile) hookerPostFormatBuff(buf *Buffer,val string){
+func (sp *spaceFile) hookerPostFormatBuff(buf *RBuffer,val string){
 
 	//Postformat por columnas
 	function, exist := sp.Hooker[Postformat + val]
@@ -169,4 +245,34 @@ func (sp *spaceFile) hookerPostFormatBuffMultiColumn(buf *[]byte,val string){
 		}
 	}
 	
+}
+
+
+
+/*
+* Paddding column
+*
+*
+*
+**/
+func (sp *spaceFile)columnSpacePadding(colName string, buf *[]byte){
+
+	//Contamos el array de bytes
+	var text_count = int64(len(*buf))
+
+	//Primer caso el texto es menor que el tamaño de la linea
+	//En este caso añadimos un padding de espacios al final
+	sizeColumn := sp.IndexSizeColumns[colName][1] - sp.IndexSizeColumns[colName][0]
+
+	if text_count < sizeColumn {
+
+		whitespace := bytes.Repeat( []byte(" ") , int(sizeColumn - text_count)) 
+					
+		*buf = append(*buf ,  whitespace... )
+	}
+
+	if text_count > sizeColumn {
+
+		*buf = (*buf)[:sizeColumn]
+	}
 }

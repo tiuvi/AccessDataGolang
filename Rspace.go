@@ -18,11 +18,12 @@ if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
 }
 
 if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
+
 }
 */
 
 
-func (sp *spaceFile) OneColumnSpace(buf *Buffer){
+func (sp *spaceFile) OneColumnSpace(buf *RBuffer){
 	
 	var err error
 	startLine := buf.StartLine
@@ -97,7 +98,7 @@ func (sp *spaceFile) OneColumnSpace(buf *Buffer){
 			}
 
 			//Pasamos el buffer por el canal
-			buf.Channel <- ChanBuf{startLine,colName,buf.Buffer}
+			buf.Channel <- RChanBuf{startLine,colName,buf.Buffer}
 
 			//Cerramos el canal.
 			close(buf.Channel)
@@ -190,7 +191,7 @@ func (sp *spaceFile) OneColumnSpace(buf *Buffer){
 					}
 				}
 				
-				buf.Channel <- ChanBuf{startLine,colName,buf.Buffer}
+				buf.Channel <- RChanBuf{startLine,colName,buf.Buffer}
 
 				startLine += 1
 				
@@ -258,7 +259,7 @@ func (sp *spaceFile) OneColumnSpace(buf *Buffer){
 
 
 
-func (sp *spaceFile) MultiColumnSpace(buf *Buffer){
+func (sp *spaceFile) MultiColumnSpace(buf *RBuffer){
 
 	var err error
 	startLine := buf.StartLine
@@ -303,7 +304,7 @@ func (sp *spaceFile) MultiColumnSpace(buf *Buffer){
 				}
 				
 				log.Println("Multicolumn RAmchan: ",startLine,val,value)
-				buf.Channel <- ChanBuf{startLine,val,value}
+				buf.Channel <- RChanBuf{startLine,val,value}
 
 				
 			}
@@ -361,63 +362,158 @@ func (sp *spaceFile) MultiColumnSpace(buf *Buffer){
 	return
 }
 
-func (sp *spaceFile) FullFileSpace(buf *Buffer){
+
+func (sp *spaceFile) FullFileSpace(buf *RBuffer){
 
 	var err error
+	if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
+	
+		buf.Buffer, err = os.ReadFile(sp.Url)
+		if err != nil {
 
-	buf.BufferMap["buffer"][0], err = os.ReadFile(sp.Url)
+			buf.Buffer = nil
+			return
+		}
+		return
+	}
+	
+	if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
+	
+		buf.Buffer, err = os.ReadFile(sp.Url)
+		if err != nil {
 
-	if err != nil {
-
-		buf.BufferMap["buffer"][0] = []byte{}
+			buf.Channel <- RChanBuf{0 , "file", nil}
+			close(buf.Channel)
+			return
+		}
+		buf.Channel <- RChanBuf{0 , "file", buf.Buffer}
+		close(buf.Channel)
+		return
 
 	}
+	
+	if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
 
-}
+		buf.BufferMap["buffer"][0], err = os.ReadFile(sp.Url)
+		if err != nil {
 
-
-func (sp *spaceFile) ListBitSpace(buf *Buffer){
-
-
-
-	for val, ind := range sp.IndexSizeColumns {
-
-		if ind[0] == 0 {
-
-
-	var byteLine int64 =  buf.StartLine / 8
-
-
-	bufferBit := make([]byte , 1 )
-
-	_ , err := sp.File.ReadAt(bufferBit , byteLine)
-	if err !=nil {
-
-		buf.BufferMap[val] = append(buf.BufferMap[val] , []byte("off"))
+			buf.BufferMap["buffer"][0] = []byte{}
+			return
+		}
 		return
 	}
 
-	var bitLine int64 =  buf.StartLine % 8 
+	log.Fatalln("Error Grave, Uspace.go ; Rspace.go ; Funcion: FullFileSpace ;" +
+	"No Hubo coincidencias")
+	return
+}
 
-	turn := readBit(bitLine,bufferBit)
 
-			if turn {
+func (sp *spaceFile) ListBitSpace(buf *RBuffer){
 
-				buf.BufferMap[val] = append(buf.BufferMap[val] , []byte("on"))
+	if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
 
-			}else{
+		var byteLine int64 =  buf.StartLine / 8
+	
+		bufferBit := make([]byte , 1 )
 
-				buf.BufferMap[val] = append(buf.BufferMap[val] , []byte("off"))
+		_ , err := sp.File.ReadAt(bufferBit , byteLine)
+		if err !=nil {
 
+			buf.Buffer = []byte("off")
+			return
+		}
+
+		var bitLine int64 =  buf.StartLine % 8 
+
+		turn := readBit(bitLine,bufferBit)
+
+		if turn {
+
+			buf.Buffer = []byte("on")
+
+		}else{
+
+			buf.Buffer = []byte("off")
+
+		}
+		return
+	}
+	
+	if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
+	
+		var byteLine int64 =  buf.StartLine / 8
+	
+		bufferBit := make([]byte , 1 )
+
+		_ , err := sp.File.ReadAt(bufferBit , byteLine)
+		if err !=nil {
+
+			buf.Channel <- RChanBuf{0 , "ListBit", []byte("off")}
+			close(buf.Channel)
+			return
+		}
+
+		var bitLine int64 =  buf.StartLine % 8 
+
+		turn := readBit(bitLine,bufferBit)
+
+		if turn {
+
+			buf.Channel <- RChanBuf{1 , "ListBit", []byte("on")}
+			close(buf.Channel)
+
+		}else{
+
+			buf.Channel <- RChanBuf{0 , "ListBit", []byte("off")}
+			close(buf.Channel)
+		}
+		return
+	}
+	
+	if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
+	
+		for val, ind := range sp.IndexSizeColumns {
+
+			if ind[0] == 0 {
+	
+				var byteLine int64 =  buf.StartLine / 8
+	
+				bufferBit := make([]byte , 1 )
+	
+				_ , err := sp.File.ReadAt(bufferBit , byteLine)
+				if err !=nil {
+	
+					buf.BufferMap[val] = append(buf.BufferMap[val] , []byte("off"))
+					return
+				}
+	
+				var bitLine int64 =  buf.StartLine % 8 
+	
+				turn := readBit(bitLine,bufferBit)
+	
+				if turn {
+	
+					buf.BufferMap[val] = append(buf.BufferMap[val] , []byte("on"))
+	
+				}else{
+	
+					buf.BufferMap[val] = append(buf.BufferMap[val] , []byte("off"))
+	
+				}
 			}
+			return
 		}
 	}
 
-	log.Println("buffer Rspace: ", string(buf.BufferMap["buffer"][0])  )
+	
 
+	log.Fatalln("Error Grave, Uspace.go ; Rspace.go ; Funcion: ListBitSpace ;" +
+	"No Hubo coincidencias")
+	return
 }
 
-func (sp *spaceFile) ReadEmptyDirSpace(buf *Buffer){
+func (sp *spaceFile) ReadEmptyDirSpace(buf *RBuffer){
 
 	var err error
 	//buf.BufferMap["buffer"][0], err = os.ReadFile(sp.Name + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
