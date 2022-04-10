@@ -6,56 +6,147 @@ import (
 
 	"os"
 	"sync/atomic"
-//	"time"
+	//	"time"
 )
 
-func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte)int64{
+func (sp *spaceFile) WriteColumnSpace(buf *WBuffer)int64{
 
+	if CheckFileTypeBuffer(buf.typeBuff , BuffMap ){
 
-	if line == -1 {
-		log.Println("SizeFileLine",*sp.SizeFileLine)
-		line = atomic.AddInt64(sp.SizeFileLine, 1)
+		if sp.IndexSizeFields != nil {
 
-	}
-
-	if line > *sp.SizeFileLine {
-
-		atomic.AddInt64(sp.SizeFileLine, line - *sp.SizeFileLine )
+			for columnName, bufMap := range buf.BufferMap {
 		
-	}
-
-	//ind -> index val -> valor
-	for val := range sp.IndexSizeColumns {
-			
-		//value-> valor found -> Encontrado en el mapa
-		_, found := column[val]
-		//Si no encontramos la columna seguimos con el ciclo for
-		if !found {
-			
-			continue
-
-		}
-
-		//Preformat por columnas
-		function, exist := sp.Hooker[Preformat + val]
-		if exist{
-
-			column[val] = function(column[val])
-
-		} else {
-
-			//Preformat global
-			function, exist = sp.Hooker[Preformat]
-			if exist {
-
-				column[val] = function(column[val])
-
+				_, found := sp.IndexSizeFields[columnName]
+				if found {
+				
+					sp.WriteIndexSizeField(columnName, &bufMap)
+					
+				}
 			}
 		}
-	
-		//Contamos el array de bytes
-		var text_count = int64(len(column[val]))
 
+		//Actualización de campos sin lineas.
+		if buf.Line == -2 {
+	
+			return -2
+	
+		}
+
+		//Añade una linea.
+		if buf.Line == -1 {
+	
+			buf.Line = atomic.AddInt64(sp.SizeFileLine, 1)
+	
+		}
+		//Añade lineas hasta llegar a la linea indicada.
+		if buf.Line > *sp.SizeFileLine {
+	
+			atomic.AddInt64(sp.SizeFileLine, buf.Line - *sp.SizeFileLine )
+			
+		}
+		
+		//ind -> index val -> valor
+		for val := range sp.IndexSizeColumns {
+				
+			//value-> valor found -> Encontrado en el mapa
+			bufBytes, found := buf.BufferMap[val]
+			//Si no encontramos la columna seguimos con el ciclo for
+			if !found {
+				
+				continue
+	
+			}
+			if sp.Hooker != nil {
+	
+				sp.hookerPreFormatPointer(&bufBytes,val)
+			}
+			
+		
+			//Contamos el array de bytes
+			var text_count = int64(len(bufBytes))
+	
+			//Primer caso el texto es menor que el tamaño de la linea
+			//En este caso añadimos un padding de espacios al final
+			sizeColumn := sp.IndexSizeColumns[val][1] - sp.IndexSizeColumns[val][0]
+	
+			if text_count < sizeColumn {
+	
+				whitespace := bytes.Repeat( []byte(" ") , int(sizeColumn - text_count)) 
+							
+				bufBytes = append(bufBytes ,  whitespace... )
+			}
+	
+			if text_count > sizeColumn {
+	
+				bufBytes = bufBytes[:sizeColumn]
+			}
+			
+			
+			sp.File.WriteAt(bufBytes, sp.SizeLine * buf.Line + sp.IndexSizeColumns[val][0])
+	
+		
+			
+			//🔥🔥🔥Actualizamos ram
+			if (sp.FileNativeType & RamSearch) != 0 && sp.IndexSizeColumns[val][0] == 0  {
+	
+				sp.updateRamMap(bufBytes, buf.Line)
+	
+			}
+	
+			
+			if (sp.FileNativeType & RamIndex) != 0 && sp.IndexSizeColumns[val][0] == 0 {
+	
+				sp.updateRamIndex(bufBytes, buf.Line)
+	
+			}
+			
+	
+		}
+	}
+
+	//Buffer de bytes
+	if CheckFileTypeBuffer(buf.typeBuff , BuffBytes ){
+
+
+		if sp.IndexSizeFields != nil {
+
+			_, found := sp.IndexSizeFields[buf.ColumnName]
+			if found {
+				sp.WriteIndexSizeField(buf.ColumnName,buf.Buffer)
+				return -2
+			}
+
+		}
+		
+		//Actualización de campos sin lineas.
+		if buf.Line == -2 {
+
+			return -2
+	
+		}
+
+		if buf.Line == -1 {
+	
+			buf.Line = atomic.AddInt64(sp.SizeFileLine, 1)
+	
+		}
+	
+		if buf.Line > *sp.SizeFileLine {
+	
+			atomic.AddInt64(sp.SizeFileLine, buf.Line - *sp.SizeFileLine )
+			
+		}
+
+		if sp.Hooker != nil {
+
+			sp.hookerPreFormatPointer(buf.Buffer,buf.ColumnName)
+
+		}
+
+		//Contamos el array de bytes
+		var text_count = int64(len(*buf.Buffer))
+		val := buf.ColumnName
 		//Primer caso el texto es menor que el tamaño de la linea
 		//En este caso añadimos un padding de espacios al final
 		sizeColumn := sp.IndexSizeColumns[val][1] - sp.IndexSizeColumns[val][0]
@@ -64,43 +155,99 @@ func (sp *spaceFile) WriteColumnSpace(line int64, column map[string][]byte)int64
 
 			whitespace := bytes.Repeat( []byte(" ") , int(sizeColumn - text_count)) 
 						
-			column[val] = append(column[val] ,  whitespace... )
+			*buf.Buffer = append(*buf.Buffer ,  whitespace... )
 		}
 
 		if text_count > sizeColumn {
 
-			column[val] = column[val][:sizeColumn]
+			*buf.Buffer = (*buf.Buffer)[:sizeColumn]
 		}
 		
 		
-		sp.File.WriteAt(column[val], sp.SizeLine * line + sp.IndexSizeColumns[val][0])
-
+		sp.File.WriteAt(*buf.Buffer, sp.lenFields + (sp.SizeLine * buf.Line) + sp.IndexSizeColumns[val][0])
 	
 		
-		//🔥🔥🔥Actualizamos ram
-		if (sp.FileNativeType & RamSearch) != 0 && sp.IndexSizeColumns[val][0] == 0  {
+			
+			//🔥🔥🔥Actualizamos ram
+			if (sp.FileNativeType & RamSearch) != 0 && sp.IndexSizeColumns[val][0] == 0  {
+	
+				sp.updateRamMap(*buf.Buffer, buf.Line)
+	
+			}
+	
+			
+			if (sp.FileNativeType & RamIndex) != 0 && sp.IndexSizeColumns[val][0] == 0 {
+	
+				sp.updateRamIndex(*buf.Buffer, buf.Line)
+	
+			}
 
-			sp.updateRamMap(column[val], line)
+	}
 
-		}
+
+	if CheckFileTypeBuffer(buf.typeBuff , BuffChan ){
+
+		for Ch := range buf.Channel {
+
+			colName := Ch.ColName
+			line    := Ch.Line
+			buf     := &Ch.Buffer
+
+			log.Println("writefieldschan")
+			
+			if sp.IndexSizeFields != nil {
+
+				_, found := sp.IndexSizeFields[colName]
+				if found {
+				
+					sp.WriteIndexSizeField(colName, buf)
+					continue
+				}
+				
+			}
+
+			if line == -2 {
+
+				continue
+
+			}
+
+			if sp.Hooker != nil {
+				
+				sp.hookerPreFormatPointer(buf, colName)
+			
+			}
+	
+
+			sp.columnSpacePadding(colName , buf)
 
 		
-		if (sp.FileNativeType & RamIndex) != 0 && sp.IndexSizeColumns[val][0] == 0 {
-
-			sp.updateRamIndex(column[val], line)
-
-		}
+			sp.File.WriteAt(*buf, sp.lenFields + sp.SizeLine * line + sp.IndexSizeColumns[colName][0])
+			
 		
+			
+			//🔥🔥🔥Actualizamos ram
+			if (sp.FileNativeType & RamSearch) != 0 && sp.IndexSizeColumns[colName][0] == 0  {
+	
+				sp.updateRamMap(*buf, line)
+	
+			}
+	
+			
+			if (sp.FileNativeType & RamIndex) != 0 && sp.IndexSizeColumns[colName][0] == 0 {
+	
+				sp.updateRamIndex(*buf, line)
+	
+			}
+	
+		}
+	}
 
+	return buf.Line
 }
-//	log.Println("tiempo de escritura simultanea: ", time.Since(test).Nanoseconds())
-    
-
-	return line
-}
 
 
-func (sp *spaceFile) WriteListBitSpace(line int64, column map[string][]byte){
+func (sp *spaceFile) WriteListBitSpace(buf *WBuffer)int64{
 	
 
 	sp.Lock()
@@ -110,7 +257,7 @@ func (sp *spaceFile) WriteListBitSpace(line int64, column map[string][]byte){
 	defer sp.File.Close()
 	defer sp.Unlock()
 	
-	var byteLine int64 =  line / 8
+	var byteLine int64 =  buf.Line / 8
 
 		
 	bufferBit := make([]byte , 1 )
@@ -124,7 +271,7 @@ func (sp *spaceFile) WriteListBitSpace(line int64, column map[string][]byte){
 	}
 
 
-	var bitLine int64 =  line - ((line / 8) * 8)
+	var bitLine int64 =  buf.Line - ((buf.Line / 8) * 8)
 
 
 
@@ -132,7 +279,7 @@ func (sp *spaceFile) WriteListBitSpace(line int64, column map[string][]byte){
 
 		if ind[0] == 0 {
 
-			switch string(column[val]) {
+			switch string(buf.BufferMap[val]) {
 
 			case "on":
 				writeBit(bitLine ,true , bufferBit )
@@ -146,15 +293,14 @@ func (sp *spaceFile) WriteListBitSpace(line int64, column map[string][]byte){
 
 	sp.File.WriteAt(bufferBit, byteLine )	
 	
-
-	return
+	return buf.Line
 }
 
 
 
 
-
-func (sp *spaceFile) WriteEmptyDirSpace(line int64, column map[string][]byte){
+/*
+func (sp *spaceFile) WriteEmptyDirSpace(buf *WBuffer){
 
 	var err error
 	var value []byte
@@ -200,3 +346,4 @@ func (sp *spaceFile) WriteEmptyDirSpace(line int64, column map[string][]byte){
 
 
 }
+*/
