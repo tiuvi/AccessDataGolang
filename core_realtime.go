@@ -114,6 +114,27 @@ func CheckBit(base int64, compare int64)(bool){
 * hooker preformat
 */
 
+func (sp *spaceFile) hookerPreFormatPointer(bufByte *[]byte,colName string){
+
+	//Preformat por columnas
+	function, exist := sp.Hooker[Preformat + colName]
+	if exist{
+
+		 function(bufByte)
+
+	} else {
+
+		//Preformat global
+		function, exist = sp.Hooker[Preformat]
+		if exist {
+
+			function(bufByte)
+
+		}
+	}
+}
+
+/*
 func (sp *spaceFile) hookerPreFormatMap(buf *WBuffer,val string){
 
 	//Preformat por columnas
@@ -174,13 +195,33 @@ func (sp *spaceFile) hookerPreFormatChan(name string, buf *[]byte){
 		}
 	}
 }
-
+*/
 /*
 * Hooker post format
 *
 *
 */
+func (sp *spaceFile) hookerPostFormatPointer(bufByte *[]byte,colName string){
 
+	//Postformat por columnas
+	function, exist := sp.Hooker[Postformat + colName]
+	if exist{
+
+		function(bufByte)
+
+	} else {
+
+		//Postformat global
+		function, exist = sp.Hooker[Postformat]
+		if exist {
+
+			function(bufByte)
+		
+		}
+	}
+}
+
+/*
 func (sp *spaceFile) hookerPostFormatMap(buf *RBuffer,val string){
 
 	//Postformat por columnas
@@ -246,7 +287,7 @@ func (sp *spaceFile) hookerPostFormatBuffMultiColumn(buf *[]byte,val string){
 	}
 	
 }
-
+*/
 
 
 /*
@@ -275,4 +316,49 @@ func (sp *spaceFile)columnSpacePadding(colName string, buf *[]byte){
 
 		*buf = (*buf)[:sizeColumn]
 	}
+}
+
+
+
+/*
+* Escribiendo en los fields, funcion para todo el mundo
+*
+*
+*/
+func (sF *spaceFile) WriteIndexSizeField(columnName string,buff *[]byte ){
+
+	if sF.Hooker != nil {
+
+		sF.hookerPreFormatPointer(buff, columnName)
+
+	}
+
+	//Contamos el array de bytes
+	var text_count = int64(len(*buff))
+	
+	//Obtenemos el campo
+	sizeField , _ := sF.IndexSizeFields[columnName]
+
+	//Obtenermos el valor de las columnas
+	sizeColumn    := sizeField[1] - sizeField[0]
+	//Primer caso el texto es menor que el tamaño de la linea
+	//En este caso añadimos un padding de espacios al final
+	
+
+	if text_count < sizeColumn {
+
+		whitespace := bytes.Repeat( []byte(" ") , int(sizeColumn - text_count)) 
+					
+		*buff = append(*buff ,  whitespace... )
+	}
+
+	if text_count > sizeColumn {
+
+		*buff = (*buff)[:sizeColumn]
+	}
+	
+	
+	sF.File.WriteAt(*buff,   + sizeField[0])
+
+
 }

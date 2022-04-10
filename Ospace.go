@@ -28,11 +28,16 @@ func (obj *Space ) ospaceCompilationFile() {
 
 	}
 
-	obj.LenColumns = len(obj.IndexSizeColumns)
+	if obj.Extension == "dir"{
+		return
+	}
 
-	if obj.LenColumns == 0 {
+	obj.lenColumns = int64(len(obj.IndexSizeColumns))
+	obj.lenFields  = int64(len(obj.IndexSizeFields))
+
+	if obj.lenColumns == 0 && obj.lenFields == 0{
 		
-		log.Fatalln("Iniciaste un archivo de acceso a datos sin columnas", obj.url)
+		log.Fatalln("Iniciaste un archivo de acceso a datos sin columnas y sin campos.", obj.url)
 	}
 
 	if _ , found := obj.IndexSizeColumns["buffer"]; found {
@@ -41,36 +46,110 @@ func (obj *Space ) ospaceCompilationFile() {
 
 	}
 
-	//Actualizamos el valor del ancho de la linea
-	for _, val := range obj.IndexSizeColumns{
+	checkMap := make(map[string]bool)
 
-		obj.SizeLine += (val[1] - val[0])
+	if obj.lenFields != 0 {
+
+		obj.lenFields       = 0
+		var checkSizeFields int64 = 0
+
+		for name, val := range obj.IndexSizeFields{
+
+			checkMap[name] = true
+
+			calcSizeLine := (val[1] - val[0])
+			if calcSizeLine <= 0 {
+	
+				log.Fatalln("Los fields no pueden tener un tamaño inferior a cero.",
+				obj.url,obj.IndexSizeColumns)
+			}
+
+			obj.lenFields += calcSizeLine
+
+			if val[1] >= checkSizeFields {
+
+				checkSizeFields = val[1]
+			}
+		}
+
+		if checkSizeFields != int64(obj.lenFields){
+			log.Fatalln("Los campos estan mal escritos, Ejemplo: field1: 0,20; field2:20,30;", obj.url)
+		}
+
 	}
 
-	//Lectura de archivos monocolumna
-	if obj.LenColumns == 1 && obj.Extension == "odac" {
 
-		if obj.LenColumns > 1 {
+	log.Println(obj.Name)
+	log.Println(obj.lenFields)
+	log.Println(obj.IndexSizeColumns)
+
+	//Actualizamos el valor del ancho de la linea
+	if obj.lenColumns != 0 {
+
+		var checkSizeColumns int64 = 0
+
+		for name , val := range obj.IndexSizeColumns{
+
+			if obj.IndexSizeFields != nil {
+
+				if found := checkMap[name]; found{
+
+					log.Fatalln("El campo: " + name +" coincide con la columna: " + name + " en: ",
+					obj.url)
+				
+				}
+			}
+	
+			calcSizeLine := (val[1] - val[0])
+			if calcSizeLine <= 0 {
+
+				log.Fatalln("Las columnas no pueden tener un tamaño inferior a cero.",
+				obj.url,obj.IndexSizeColumns)
+			}
+
+			obj.SizeLine += calcSizeLine
+
+			if val[1] >= checkSizeColumns {
+
+				checkSizeColumns = val[1]
+			}
+			
+		}
+		
+		if checkSizeColumns != obj.SizeLine {
+
+			log.Fatalln("Las columnas estan mal escritos, Ejemplo: column1: 0,20; column2:20,30;", obj.url)
+		
+		}
+
+	}
+	
+
+	
+	//Lectura de archivos monocolumna
+	if obj.lenColumns == 1 && obj.Extension == "odac" {
+
+		if obj.lenColumns > 1 {
 
 			log.Fatalln("As iniciado un archivo de una columna con multiples columnas", obj.url,obj.IndexSizeColumns)
 
 		}
 
-		obj.ospaceCompilationFileUpdateColumn(obj.LenColumns)
+		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
 		obj.compilation = true
 		return
 	}
 
 	//Si el archivo es multicolumna, contamos las columnas.
-	if obj.LenColumns > 1 && obj.Extension == "mdac"{
+	if obj.lenColumns > 1 && obj.Extension == "mdac"{
 
-		if obj.LenColumns == 1 {
+		if obj.lenColumns == 1 {
 
 			log.Fatalln("As iniciado un archivo de un multicolumna con una columna", obj.url,obj.IndexSizeColumns)
 
 		}
 
-		obj.ospaceCompilationFileUpdateColumn(obj.LenColumns)
+		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
 		obj.compilation = true
 		return
 	}
@@ -80,7 +159,7 @@ func (obj *Space ) ospaceCompilationFile() {
 	//con un mapa en la memoria ram asociando valor linea -> n linea
 	if obj.Extension == "sram"{
 
-		obj.ospaceCompilationFileUpdateColumn(obj.LenColumns)
+		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
 		obj.FileNativeType = RamSearch | obj.FileNativeType
 		obj.compilation = true
 		return
@@ -91,7 +170,7 @@ func (obj *Space ) ospaceCompilationFile() {
 	//con un array en la memoria asociando n lineas -> n valores
 	if obj.Extension == "iram"{
 		
-		obj.ospaceCompilationFileUpdateColumn(obj.LenColumns)
+		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
 		obj.FileNativeType |= RamIndex
 		obj.compilation = true
 		return
@@ -99,7 +178,7 @@ func (obj *Space ) ospaceCompilationFile() {
 
 	if obj.Extension == "bram" {
 
-		obj.ospaceCompilationFileUpdateColumn(obj.LenColumns)
+		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
 		obj.FileNativeType |= RamIndex | RamSearch
 		obj.compilation = true
 		return
@@ -145,7 +224,7 @@ func (obj *Space ) ospaceDisk()*spaceFile {
 		if CheckFileNativeType(obj.FileNativeType , RamSearch) {
 
 			obj.ospaceCompilationFileRamSearch(spacef)
-			log.Println("Result RamSearch: ",spacef )
+	
 		}
 	}
 	
@@ -211,18 +290,22 @@ func (obj *Space ) ospacePermDisk()*spaceFile{
 func (obj *Space ) ospaceDirectory(){
 
 
-	infoDir , err := os.Stat(obj.Name)
+
+	_ , err := os.Stat(obj.url)
 	if err != nil {
 
 		log.Println("Crea una funcion de creacion de directorios.")
 
 	}
 
+	return
+/*
 	if infoDir.IsDir() {
 
 		obj.FileTypeDir = EmptyDir
 		return
 	}
+	*/
 
 }
 
@@ -236,7 +319,7 @@ func (obj *Space ) ospaceDirectory(){
 
 
 
-func (obj *Space ) ospaceCompilationFileUpdateColumn(LenIndexSizeColumns int) {
+func (obj *Space ) ospaceCompilationFileUpdateColumn(LenIndexSizeColumns int64) {
 
 		//Lectura de archivos monocolumna
 		if LenIndexSizeColumns == 1 {
@@ -274,12 +357,6 @@ func (obj *Space )newSpaceFile()*spaceFile{
 		spacef.Space = obj
 		//Url pasada como valor dir + name + extension -> name dinamico
 		spacef.Url = obj.url
-		//Columnas pasadas por referencia al spacio
-		spacef.IndexSizeColumns = obj.IndexSizeColumns 
-		//Hookers pasados por referencia para filtrar datos
-		spacef.Hooker = obj.Hooker
-		//Size line pasado por valor (Valor total de la linea)
-		spacef.SizeLine     = obj.SizeLine
 		//Iniciamos un puntero a SizeFileLine manejado atomicamente por
 		//un contador atomico
 		spacef.SizeFileLine = new(int64)

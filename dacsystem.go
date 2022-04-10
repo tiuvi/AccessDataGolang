@@ -13,7 +13,7 @@ func dacTimerCloserDeferFile(){
 	//Numero de archivos maximos
 	fileOpen := 10000
 	//Especifica cada cuanto se ejecuta la funcion
-	tikectDb := time.Tick(time.Duration(30) * time.Second)
+	tikectDb := time.Tick(time.Duration(300) * time.Second)
 	for range tikectDb {
 
 		if len(deferSpace.DeferFile) == 0 {
@@ -57,7 +57,7 @@ func dacTimerCloserDeferFile(){
 func dacTimerCloserDiskFile(){
 
 	//Cada cuanto se ejecuta la funcion
-	tikectDiskFile := time.Tick(time.Duration(30) * time.Second)
+	tikectDiskFile := time.Tick(time.Duration(300) * time.Second)
 	for range tikectDiskFile {
 	
 		if len(diskSpace.DiskFile) == 0 {

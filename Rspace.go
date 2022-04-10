@@ -36,13 +36,8 @@ func (sp *spaceFile) OneColumnSpace(buf *RBuffer){
 
 		if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
 
-			var colName string
-			for val := range buf.BufferMap{
+	
 		
-				colName = val		
-			
-			}
-
 			//Leemos una sola linea
 			_ , err = sp.File.ReadAt(buf.Buffer , startLine * sp.SizeLine )
 			if err != nil {
@@ -56,7 +51,7 @@ func (sp *spaceFile) OneColumnSpace(buf *RBuffer){
 			//Activamos PostFormat si existe
 			if sp.Hooker != nil {
 				
-				sp.hookerPostFormatBuff(buf,colName)
+				sp.hookerPostFormatPointer(&buf.Buffer ,buf.ColName)
 
 			}
 
@@ -86,15 +81,9 @@ func (sp *spaceFile) OneColumnSpace(buf *RBuffer){
 
 			//Activamos PostFormat si existe
 			if sp.Hooker != nil {
-	
-				for val , ind := range sp.IndexSizeColumns{
-					
-					if ind[0] == 0 {
+				
+				sp.hookerPostFormatPointer(&buf.Buffer ,colName)
 
-						sp.hookerPostFormatBuff(buf,val)
-
-					}
-				}
 			}
 
 			//Pasamos el buffer por el canal
@@ -110,7 +99,8 @@ func (sp *spaceFile) OneColumnSpace(buf *RBuffer){
 
 			//Leemos una sola linea en el buffer del mapa
 			//La razon de esto es que es mas eficiente que usar el otro buffer.
-			_ , err = sp.File.ReadAt(buf.BufferMap["buffer"][0] , startLine * sp.SizeLine )
+			bufMapFile := &buf.BufferMap["buffer"][0]
+			_ , err = sp.File.ReadAt(*bufMapFile , startLine * sp.SizeLine )
 			if err != nil {
 				log.Println(err)
 				return
@@ -125,11 +115,14 @@ func (sp *spaceFile) OneColumnSpace(buf *RBuffer){
 				}
 
 				//Anexamos el valor al mapa
-				buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim(buf.BufferMap["buffer"][0] , " "))
+				buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim((*bufMapFile) , " "))
 			
 				//Activamos PostFormat si existe
 				if sp.Hooker !=nil {
-					sp.hookerPostFormatMap(buf,val)
+
+					bufferMap  := &buf.BufferMap[val][len(buf.BufferMap[val])-1]
+					sp.hookerPostFormatPointer(bufferMap, val)
+		
 				}
 				 
 			}
@@ -180,15 +173,9 @@ func (sp *spaceFile) OneColumnSpace(buf *RBuffer){
 				
 				//Activamos PostFormat si existe
 				if sp.Hooker != nil {
+				
+					sp.hookerPostFormatPointer(&buf.Buffer ,colName)
 
-					for val , ind := range sp.IndexSizeColumns{
-						
-						if ind[0] == 0 {
-
-							sp.hookerPostFormatBuff(buf,val)
-
-						}
-					}
 				}
 				
 				buf.Channel <- RChanBuf{startLine,colName,buf.Buffer}
@@ -210,7 +197,8 @@ func (sp *spaceFile) OneColumnSpace(buf *RBuffer){
 				return
 			}
 
-			_ , err = sp.File.ReadAt(buf.BufferMap["buffer"][0] , startLine * sp.SizeLine )
+			bufMapFile := &buf.BufferMap["buffer"][0]
+			_ , err = sp.File.ReadAt(*bufMapFile , startLine * sp.SizeLine )
 			if err != nil {
 				log.Println(err)
 				return
@@ -226,11 +214,14 @@ func (sp *spaceFile) OneColumnSpace(buf *RBuffer){
 							continue
 						}
 		
-					buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim(buf.BufferMap["buffer"][0][:sp.SizeLine] , " "))
+					buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim((*bufMapFile)[:sp.SizeLine] , " "))
 	
 					//Activamos PostFormat si existe
 					if sp.Hooker !=nil {
-						sp.hookerPostFormatMap(buf,val)
+
+						bufferMap  := &buf.BufferMap[val][len(buf.BufferMap[val])-1]
+						sp.hookerPostFormatPointer(bufferMap, val)
+			
 					}
 	
 					
@@ -238,7 +229,7 @@ func (sp *spaceFile) OneColumnSpace(buf *RBuffer){
 	
 				//Cuando terminamos el bucle hemos terminado de hacer range a
 				//todos los campos de esa linea entonces borramos la linea del buffer.
-				buf.BufferMap["buffer"][0] = buf.BufferMap["buffer"][0][sp.SizeLine:]
+				*bufMapFile = (*bufMapFile)[sp.SizeLine:]
 			
 			}
 			//Borramos el buffer
@@ -266,11 +257,49 @@ func (sp *spaceFile) MultiColumnSpace(buf *RBuffer){
 	endLine   := buf.EndLine
 
 
-	if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
-		log.Fatalln("Error Grave, Uspace.go ; Rspace.go ; Funcion: MultiColumnSpace ;" +
-		"Buffer no soporta multicolumnas")
-		return
-	}
+		if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
+
+
+			if sp.IndexSizeFields != nil {
+
+				size, found := sp.IndexSizeFields[buf.ColName]
+				if found {
+
+					_ , err = sp.File.ReadAt(buf.Buffer , size[0])
+					if err != nil {
+						log.Println(err)
+						return
+					}
+				}
+			}
+
+			if sp.IndexSizeColumns != nil {
+
+				size, found := sp.IndexSizeColumns[buf.ColName]
+				if found {
+				
+					_ , err = sp.File.ReadAt(buf.Buffer , sp.lenFields + (startLine * sp.SizeLine) + size[0])
+					if err != nil {
+						log.Println(err)
+						return
+					}
+				}
+			}
+	
+		
+			//Limpiamos espacios en blanco
+			buf.Buffer = bytes.Trim(buf.Buffer , " ")
+
+			//Activamos PostFormat si existe
+			if sp.Hooker != nil {
+				
+				sp.hookerPostFormatPointer(&buf.Buffer ,buf.ColName)
+
+			}
+
+			//Cerramos el script y pasamos datos por referencia.
+			return
+		}
 	
 
 	if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
@@ -298,12 +327,12 @@ func (sp *spaceFile) MultiColumnSpace(buf *RBuffer){
 				
 				//Activamos PostFormat si existe
 				if sp.Hooker != nil {
-
-					sp.hookerPostFormatBuffMultiColumn(&value,val)
+				
+					sp.hookerPostFormatPointer(&value ,val)
 
 				}
 				
-				log.Println("Multicolumn RAmchan: ",startLine,val,value)
+				
 				buf.Channel <- RChanBuf{startLine,val,value}
 
 				
@@ -321,13 +350,13 @@ func (sp *spaceFile) MultiColumnSpace(buf *RBuffer){
 	
 	if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
 
-
-		_ , err = sp.File.ReadAt(buf.BufferMap["buffer"][0] , startLine * sp.SizeLine )
+		bufMapFile := &buf.BufferMap["buffer"][0]
+		_ , err = sp.File.ReadAt(*bufMapFile , startLine * sp.SizeLine )
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		
+
 		for startLine < endLine {
 			
 			startLine += 1
@@ -338,17 +367,20 @@ func (sp *spaceFile) MultiColumnSpace(buf *RBuffer){
 					continue
 				}
 
-				buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim(buf.BufferMap["buffer"][0][  sp.IndexSizeColumns[val][0] : sp.IndexSizeColumns[val][1]  ], " "))
-	
+				buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim((*bufMapFile)[  sp.IndexSizeColumns[val][0] : sp.IndexSizeColumns[val][1]  ], " "))
+				
 				//Activamos PostFormat si existe
-				if sp.Hooker !=nil {
-					sp.hookerPostFormatMap(buf,val)
-				}
+					if sp.Hooker !=nil {
+
+						bufferMap  := &buf.BufferMap[val][len(buf.BufferMap[val])-1]
+						sp.hookerPostFormatPointer(bufferMap, val)
+						
+					}
 
 			}
 		
 			//End bucle
-			buf.BufferMap["buffer"][0] = buf.BufferMap["buffer"][0][sp.SizeLine:]
+			*bufMapFile = (*bufMapFile)[ sp.SizeLine:]
 		
 		}
 

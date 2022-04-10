@@ -74,6 +74,8 @@ const(
 	Bram  = "bram"
 	//Lista de bit con dos estados posibles verdadero y falso
 	BitList  = "bitlist"
+	
+	EmptyFolder = "dir"
 )
 
 var extensionFile = map[string]string{
@@ -84,6 +86,7 @@ var extensionFile = map[string]string{
 	Sram:     "Archivo con un mapa permanente en la ram",
 	Bram:     "Archivo con un mapa y un indice permanente en la ram",
 	BitList:  "Lista de bit con dos estados posibles verdadero y falso",
+	EmptyFolder: 	  "Crea un directorio vacio",
 }
 
 type Space struct  {
@@ -99,11 +102,15 @@ type Space struct  {
 
 	SizeLine int64
 
+	//Indice de fields
+	IndexSizeFields map[string][2]int64
+	lenFields int64
+
 	//Indice de columnas y tamaño de columna
 	IndexSizeColumns map[string][2]int64
-	LenColumns int
+	lenColumns int64
 	//Formateadores antes y despues
-	Hooker map[string]func([]byte)[]byte
+	Hooker map[string]func(*[]byte)
 	
 	FileCoding   FileCoding
 	FileTipeByte FileTipeByte
@@ -117,11 +124,9 @@ type spaceFile struct {
 	*Space
 	File *os.File
 	Url string
-	IndexSizeColumns map[string][2]int64
-	Hooker map[string]func([]byte)[]byte
-	SizeLine int64
+	//Numero de lineas de un archivo
 	SizeFileLine *int64
-
+	//Mutex que sirve para leer y escribir , actualizar mapas , actualizar arrays
 	sync.RWMutex
 	//Mapa del archivo en memoria
 	Search map[string]int64 

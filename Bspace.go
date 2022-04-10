@@ -26,7 +26,8 @@ type RBuffer struct {
 	StartLine int64
 	EndLine   int64
 	SizeLine  int64
-	typeBuff FileTypeBuffer
+	ColName   string
+	typeBuff  FileTypeBuffer
 
 	Buffer []byte
 	BufferMap    map[string][][]byte
@@ -39,6 +40,7 @@ func (sp *Space) BRspace (typeBuff FileTypeBuffer,startLine int64,endLine int64,
 	 
 
 	spaceFile := sp.OSpace()
+	var lenData int64 = int64(len(data))
 
 	if  *spaceFile.SizeFileLine < endLine {
 		
@@ -46,18 +48,17 @@ func (sp *Space) BRspace (typeBuff FileTypeBuffer,startLine int64,endLine int64,
 		
 	}
 
-	if CheckFileTipeByte(sp.FileTipeByte, OneColumn) {
-		
-		if len(data) > 1 {
-			log.Fatalln("Error el archivo solo tiene una columna.",spaceFile.Url   )
-		}
+
+	if lenData > sp.lenColumns + sp.lenFields {
+
+		log.Fatalln("Error el archivo solo tiene: ",sp.lenColumns + sp.lenFields,"columnas y campos",spaceFile.Url   )
+	
 	}
 
-	if CheckFileTipeByte(sp.FileTipeByte, MultiColumn) {
-		
-		if len(data) > len(sp.IndexSizeColumns) {
-			log.Fatalln("Error el archivo solo tiene: ",len(sp.IndexSizeColumns),spaceFile.Url   )
-		}
+	if lenData == 0 {
+
+		log.Fatalln("No se puede enviar un buffer vacio en:",spaceFile.Url   )
+	
 	}
 
 	buf = &RBuffer{
@@ -71,7 +72,36 @@ func (sp *Space) BRspace (typeBuff FileTypeBuffer,startLine int64,endLine int64,
 	//Buffer de bytes
 	if CheckFileTypeBuffer(typeBuff, BuffBytes ){
 
-		buf.Buffer = make([]byte ,sp.SizeLine)
+		if lenData > 1 {
+
+			log.Fatalln("El Buffer de Bytes solo es compatible con un unico campo.",spaceFile.Url   )
+		
+		}
+
+		for _, colname := range data {
+			
+			buf.ColName = colname
+
+			if sp.IndexSizeFields != nil {
+				size, found := sp.IndexSizeFields[buf.ColName]
+				if found {
+
+					buf.Buffer = make([]byte ,size[1] - size[0])
+					return
+				}
+			}
+
+			if sp.IndexSizeColumns != nil {
+				size, found := sp.IndexSizeColumns[buf.ColName]
+				if found {
+					
+					buf.Buffer = make([]byte ,size[1] - size[0])
+					return
+				}
+			}
+		}
+
+		log.Fatalln("Buffer de Bytes sin coincidencias de campos o columnas.",spaceFile.Url   )
 		return
 	}
 	
@@ -117,7 +147,7 @@ func (buf *RBuffer) NewChanBuffer (){
 
 
 //Migrar searchbit al buffer read normal
-func (sp *Space) NewSearchBitSpace (line int64, data ...string )(buf *RBuffer){
+func (sp *Space) NewSearchBitSpace(line int64, data ...string )(buf *RBuffer){
 
 	buf = &RBuffer{
 		StartLine: line,
@@ -176,13 +206,27 @@ type WBuffer struct {
 
 func (sp *Space) BWspaceBuff(line int64 ,columnName string, buff []byte)(*WBuffer){
 
-	 _ , found := sp.IndexSizeColumns[columnName]
-	if !found {
 
-		log.Fatalln("La columna: " + columnName + " no existe en ese archivo",sp.url)
-		return nil
-	}
+
+
+	if sp.IndexSizeColumns != nil {
+
+		_, found := sp.IndexSizeColumns[columnName]
+		if !found {
+			
+			if sp.IndexSizeFields != nil {
 	
+				_, found := sp.IndexSizeFields[columnName]
+				if !found {
+		
+					log.Fatalln("Bspace.go - 222; funcion: BWspaceBuff" +
+					"La columna: " + columnName + " no existe en ese archivo",sp.url)
+					return nil
+				}
+			}
+		}
+	}
+
 	return &WBuffer{
 		typeBuff: BuffBytes,
 		Line: line,
@@ -195,12 +239,24 @@ func (sp *Space) BWspaceBuff(line int64 ,columnName string, buff []byte)(*WBuffe
 
 func (sp *Space) BWspaceBuffMap(line int64 , buff map[string][]byte)(*WBuffer){
 
-	for val := range buff {
-		_ , found := sp.IndexSizeColumns[val]
-		if !found {
-	 
-			log.Fatalln("La columna: " + val + " no existe en ese archivo",sp.url)
-			return nil
+	for columnName := range buff {
+	
+		if sp.IndexSizeColumns != nil {
+
+			_, found := sp.IndexSizeColumns[columnName]
+			if !found {
+				
+				if sp.IndexSizeFields != nil {
+		
+					_, found := sp.IndexSizeFields[columnName]
+					if !found {
+			
+						log.Fatalln("Bspace.go - 222; funcion: BWspaceBuff" +
+						"La columna: " + columnName + " no existe en ese archivo",sp.url)
+						return nil
+					}
+				}
+			}
 		}
 	}
 
@@ -225,16 +281,38 @@ func (sp *Space)BWspaceSendchan(line int64, columnName string , buf *[]byte, WBu
 
 	sF := sp.OSpace()
 
-	if line == -1 {
-	
-		line = atomic.AddInt64(sF.SizeFileLine, 1)
+	if sp.IndexSizeColumns != nil {
 
+		_, found := sp.IndexSizeColumns[columnName]
+		if !found {
+			
+			if sp.IndexSizeFields != nil {
+	
+				_, found := sp.IndexSizeFields[columnName]
+				if !found {
+		
+					log.Fatalln("Bspace.go - 222; funcion: BWspaceBuff" +
+					"La columna: " + columnName + " no existe en ese archivo",sp.url)
+					return -2
+				}
+			}
+		}
 	}
 
-	if line > *sF.SizeFileLine {
+	//Actualización de campos sin lineas.
+	if line != -2 {
 
-		atomic.AddInt64(sF.SizeFileLine, line - *sF.SizeFileLine )
+		if line == -1 {
 		
+			line = atomic.AddInt64(sF.SizeFileLine, 1)
+
+		}
+
+		if line > *sF.SizeFileLine {
+
+			atomic.AddInt64(sF.SizeFileLine, line - *sF.SizeFileLine )
+			
+		}
 	}
 
 	WBuffer.Buffer = buf

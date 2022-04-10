@@ -149,14 +149,15 @@ func (obj *spaceFile ) Rmapspace(str_write string)(value int64, found bool){
 
 	}
 	
+	if obj.Hooker != nil {
 
-	//Preformat global
-	function, exist := obj.Hooker[Preformat]
-	if exist {
-
-		str_write = string(function([]byte(str_write)))
-
+		bufferByte := []byte(str_write)
+		obj.hookerPreFormatPointer(&bufferByte, Preformat)
+		str_write = string(bufferByte)
 	}
+
+
+
 	
 
 	obj.RLock()
