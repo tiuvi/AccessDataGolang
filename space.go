@@ -95,10 +95,9 @@ type Space struct  {
 	FileNativeType FileNativeType
 	//Propiedades comunes a todos los archivos
 	Dir string
-	Name string
+
 	//Cambiar Extension
 	Extension string
-	url string
 
 	SizeLine int64
 
@@ -120,11 +119,12 @@ type Space struct  {
 
 }
 
+
 type spaceFile struct {
 	*Space
 	File *os.File
 	Url string
-	//Numero de lineas de un archivo
+	//Numero de lineas ATOMICO de un archivo
 	SizeFileLine *int64
 	//Mutex que sirve para leer y escribir , actualizar mapas , actualizar arrays
 	sync.RWMutex
@@ -193,50 +193,55 @@ func NewDac(){
 //Retocar funcion para una ejecucion diferente en tiempo de copilacion y tiempo de
 //ejecucion
 
-func (obj *Space ) OSpace()*spaceFile  {
+
+func (obj *Space ) OSpaceInit()bool  {
+
+	return obj.ospaceCompilationFile()
+
+}
+
+func (obj *Space ) OSpace(name string)*spaceFile  {
 
 
 	if !obj.compilation {
 
-		obj.ospaceCompilationFile()
+		log.Fatalln("Este espacio no se ha copilado, copilar mejora la seguridad.", obj.Dir)
 
 	}
 
-	if len(obj.url) == 0 {
 
-		if len(obj.Name) == 0 {
+		if len(name) == 0 {
 
 			log.Fatalln("Nombre de archivo vacio en: ", obj.Dir, obj.Extension)
 	
 		}
-		obj.url = obj.Dir + obj.Name + "." + obj.Extension
-		
-	}
+
 
 
 	if CheckFileNativeType(obj.FileNativeType, Disk ){
 
-		return obj.ospaceDisk()
+		return obj.ospaceDisk(name)
 
 	} else 	if CheckFileNativeType(obj.FileNativeType, DeferDisk ){
 
-		return obj.ospaceDeferDisk()
+		return obj.ospaceDeferDisk(name)
 
 	} else if CheckFileNativeType(obj.FileNativeType, PermDisk ){
 
-		return obj.ospacePermDisk()
+		return obj.ospacePermDisk(name)
 
 	} else if CheckFileNativeType(obj.FileNativeType, Directory ){
 
-		obj.ospaceDirectory()
+		obj.ospaceDirectory(name)
 		return nil
 	}
 
-	log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", obj.Dir,obj.Name,obj.Extension)
+	log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", obj.Dir,obj.Extension)
 	return nil
 }
 
 
+/*
 func (obj *Space ) ReNameSpace(name string)*Space {
 
 	if len(name) == 0 {
@@ -251,7 +256,7 @@ func (obj *Space ) ReNameSpace(name string)*Space {
 
 	return &NewFile
 }
-
+*/
 
 
 

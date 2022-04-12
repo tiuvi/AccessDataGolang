@@ -134,68 +134,7 @@ func (sp *spaceFile) hookerPreFormatPointer(bufByte *[]byte,colName string){
 	}
 }
 
-/*
-func (sp *spaceFile) hookerPreFormatMap(buf *WBuffer,val string){
 
-	//Preformat por columnas
-	function, exist := sp.Hooker[Preformat + val]
-	if exist{
-
-		buf.BufferMap[val] = function(buf.BufferMap[val])
-
-	} else {
-
-		//Preformat global
-		function, exist = sp.Hooker[Preformat]
-		if exist {
-
-			buf.BufferMap[val] = function(buf.BufferMap[val])
-
-		}
-	}
-}
-
-func (sp *spaceFile) hookerPreFormatBuf(buf *WBuffer){
-
-	//Preformat por columnas
-	function, exist := sp.Hooker[Preformat + buf.ColumnName]
-	if exist{
-
-		*buf.Buffer = function(*buf.Buffer)
-
-	} else {
-
-		//Preformat global
-		function, exist = sp.Hooker[Preformat]
-		if exist {
-
-			*buf.Buffer = function(*buf.Buffer)
-
-		}
-	}
-}
-
-
-func (sp *spaceFile) hookerPreFormatChan(name string, buf *[]byte){
-
-	//Preformat por columnas
-	function, exist := sp.Hooker[Preformat + name]
-	if exist{
-
-		*buf = function(*buf)
-
-	} else {
-
-		//Preformat global
-		function, exist = sp.Hooker[Preformat]
-		if exist {
-
-			*buf = function(*buf)
-
-		}
-	}
-}
-*/
 /*
 * Hooker post format
 *
@@ -221,73 +160,6 @@ func (sp *spaceFile) hookerPostFormatPointer(bufByte *[]byte,colName string){
 	}
 }
 
-/*
-func (sp *spaceFile) hookerPostFormatMap(buf *RBuffer,val string){
-
-	//Postformat por columnas
-	function, exist := sp.Hooker[Postformat + val]
-	if exist{
-
-		buf.BufferMap[val][len(buf.BufferMap[val])-1] = function(buf.BufferMap[val][len(buf.BufferMap[val])-1])
-
-	} else {
-
-		//Postformat global
-		function, exist = sp.Hooker[Postformat]
-		if exist {
-
-			buf.BufferMap[val][len(buf.BufferMap[val])-1] = function(buf.BufferMap[val][len(buf.BufferMap[val])-1])
-
-		}
-	}
-
-}
-
-
-func (sp *spaceFile) hookerPostFormatBuff(buf *RBuffer,val string){
-
-	//Postformat por columnas
-	function, exist := sp.Hooker[Postformat + val]
-	if exist{
-
-		buf.Buffer = function(buf.Buffer)
-
-	} else {
-
-		//Postformat global
-		function, exist = sp.Hooker[Postformat]
-		if exist {
-
-			buf.Buffer = function(buf.Buffer)
-		
-		}
-	}
-}
-
-func (sp *spaceFile) hookerPostFormatBuffMultiColumn(buf *[]byte,val string){
-
-	//Postformat por columnas
-	function, exist := sp.Hooker[Postformat + val]
-	if exist{
-
-		testBuf := *buf
-		testBuf  = function(testBuf)
-		*buf      = testBuf
-
-	} else {
-
-		//Postformat global
-		function, exist = sp.Hooker[Postformat]
-		if exist {
-
-			testBuf := *buf
-			testBuf  = function(testBuf)
-			*buf      = testBuf
-		}
-	}
-	
-}
-*/
 
 
 /*

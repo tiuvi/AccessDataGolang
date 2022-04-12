@@ -5,18 +5,18 @@ package bd
 
 //Esta funcion escribe en el numero de linea requerido
 //Pasandole un string en forma de bytes
-func (obj *Space ) Wspace(buf *WBuffer)int64{
+func (buf *WBuffer) Wspace()int64{
 
 
-	spaceFile := obj.OSpace()
+	//spaceFile := obj.OSpace()
 
 
-	if CheckFileCoding(obj.FileCoding , Bit){
+	if CheckFileCoding(buf.FileCoding , Bit){
 
-		if CheckFileTipeBit(obj.FileTipeBit,ListBit ){
+		if CheckFileTipeBit(buf.FileTipeBit,ListBit ){
 			//Funcion ListBit interfaz
 			
-			return spaceFile.WriteListBitSpace(buf)
+			return buf.WriteListBitSpace()
 		}
 
 		log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
@@ -24,19 +24,19 @@ func (obj *Space ) Wspace(buf *WBuffer)int64{
 		return -1
 	}
 
-	if CheckFileCoding(obj.FileCoding , Byte){
+	if CheckFileCoding(buf.FileCoding , Byte){
 
-		if CheckFileTipeByte(obj.FileTipeByte,OneColumn){
+		if CheckFileTipeByte(buf.FileTipeByte,OneColumn){
 
-			return spaceFile.WriteColumnSpace(buf)
+			return buf.WriteColumnSpace()
 		}
 
-		if CheckFileTipeByte(obj.FileTipeByte,MultiColumn){
+		if CheckFileTipeByte(buf.FileTipeByte,MultiColumn){
 
-			return spaceFile.WriteColumnSpace(buf)
+			return buf.WriteColumnSpace()
 		}
 
-		if  CheckFileTipeByte(obj.FileTipeByte,FullFile){
+		if  CheckFileTipeByte(buf.FileTipeByte,FullFile){
 
 			log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
 			"Funcion writeFullFile en desarrollo...")
@@ -49,9 +49,9 @@ func (obj *Space ) Wspace(buf *WBuffer)int64{
 	}
 
 
-	if CheckFileCoding(obj.FileCoding , Dir){
+	if CheckFileCoding(buf.FileCoding , Dir){
 
-		if CheckFileTypeDir(obj.FileTypeDir, EmptyDir){
+		if CheckFileTypeDir(buf.FileTypeDir, EmptyDir){
 
 			log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
 			"Funcion WriteEmptyDirSpace en desarrollo...")
@@ -72,18 +72,18 @@ func (obj *Space ) Wspace(buf *WBuffer)int64{
 
 
 
-func (obj *Space) Rspace (column *RBuffer){
+func (buf *RBuffer)Rspace (){
 
 
 
-	spaceFile := obj.OSpace()
+	//spaceFile := obj.OSpace()
 
 	
-	if CheckFileCoding(obj.FileCoding , Bit){
+	if CheckFileCoding(buf.FileCoding , Bit){
 
-		if CheckFileTipeBit(obj.FileTipeBit,ListBit ){
+		if CheckFileTipeBit(buf.FileTipeBit,ListBit ){
 			//Funcion ListBit interfaz
-			spaceFile.ListBitSpace(column)
+			buf.ListBitSpace()
 			return
 		}
 
@@ -92,23 +92,23 @@ func (obj *Space) Rspace (column *RBuffer){
 		return
 	}
 
-	if CheckFileCoding(obj.FileCoding , Byte){
+	if CheckFileCoding(buf.FileCoding , Byte){
 
-		if CheckFileTipeByte(obj.FileTipeByte,OneColumn){
+		if CheckFileTipeByte(buf.FileTipeByte,OneColumn){
 			//Funcion OneColumn interfaz
-			spaceFile.OneColumnSpace(column)
+			buf.OneColumnSpace()
 			return
 		}
 
-		if CheckFileTipeByte(obj.FileTipeByte,MultiColumn){
+		if CheckFileTipeByte(buf.FileTipeByte,MultiColumn){
 			//Funcion Multicolumn interfaz
-			spaceFile.MultiColumnSpace(column)
+			buf.MultiColumnSpace()
 			return
 		}
 
-		if  CheckFileTipeByte(obj.FileTipeByte,FullFile){
+		if  CheckFileTipeByte(buf.FileTipeByte,FullFile){
 			//Añadir modificacion de url desde aqui
-			spaceFile.FullFileSpace(column)
+			buf.FullFileSpace()
 		}
 
 		log.Fatalln("Error Grave, Uspace.go ; Funcion: Rspace ;" +
@@ -117,12 +117,12 @@ func (obj *Space) Rspace (column *RBuffer){
 	}
 
 
-	if CheckFileCoding(obj.FileCoding , Dir){
+	if CheckFileCoding(buf.FileCoding , Dir){
 
-		if CheckFileTypeDir(obj.FileTypeDir, EmptyDir){
+		if CheckFileTypeDir(buf.FileTypeDir, EmptyDir){
 
 			//Añadir modificacion de url desde aqui
-			spaceFile.ReadEmptyDirSpace(column)
+			buf.ReadEmptyDirSpace()
 			return
 		}
 

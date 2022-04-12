@@ -8,41 +8,39 @@ import(
 )
 
 
-func (obj *Space ) ospaceCompilationFile() {
+func (obj *Space ) ospaceCompilationFile()bool {
 
 	if len(obj.Dir) == 0 {
 
-		log.Fatalln("Ruta directorio vacio en: ", obj.Dir,obj.Name, obj.Extension)
+		log.Fatalln("Ruta directorio vacio en: ", obj.Dir, obj.Extension)
 
 	}
 	
 	if len(obj.Extension) == 0 {
 
-		log.Fatalln("Extension vacia en: ", obj.Dir,obj.Name, obj.Extension )
+		log.Fatalln("Extension vacia en: ", obj.Dir, obj.Extension )
 
 	}
 
 	if _ , found := extensionFile[obj.Extension];  !found{
 
-		log.Fatalln("Extension no valida en: ", obj.Dir,obj.Name, obj.Extension)
+		log.Fatalln("Extension no valida en: ", obj.Dir, obj.Extension)
 
 	}
 
-	if obj.Extension == "dir"{
-		return
-	}
+
 
 	obj.lenColumns = int64(len(obj.IndexSizeColumns))
 	obj.lenFields  = int64(len(obj.IndexSizeFields))
 
 	if obj.lenColumns == 0 && obj.lenFields == 0{
 		
-		log.Fatalln("Iniciaste un archivo de acceso a datos sin columnas y sin campos.", obj.url)
+		log.Fatalln("Iniciaste un archivo de acceso a datos sin columnas y sin campos.", obj.Dir)
 	}
 
 	if _ , found := obj.IndexSizeColumns["buffer"]; found {
 
-		log.Fatalln("La palabra buffer esta reservada para el programa.", obj.url,obj.IndexSizeColumns)
+		log.Fatalln("La palabra buffer esta reservada para el programa.", obj.Dir, obj.IndexSizeColumns)
 
 	}
 
@@ -61,7 +59,7 @@ func (obj *Space ) ospaceCompilationFile() {
 			if calcSizeLine <= 0 {
 	
 				log.Fatalln("Los fields no pueden tener un tamaño inferior a cero.",
-				obj.url,obj.IndexSizeColumns)
+				obj.Dir,obj.IndexSizeColumns)
 			}
 
 			obj.lenFields += calcSizeLine
@@ -73,15 +71,12 @@ func (obj *Space ) ospaceCompilationFile() {
 		}
 
 		if checkSizeFields != int64(obj.lenFields){
-			log.Fatalln("Los campos estan mal escritos, Ejemplo: field1: 0,20; field2:20,30;", obj.url)
+			log.Fatalln("Los campos estan mal escritos, Ejemplo: field1: 0,20; field2:20,30;", obj.Dir)
 		}
 
 	}
 
 
-	log.Println(obj.Name)
-	log.Println(obj.lenFields)
-	log.Println(obj.IndexSizeColumns)
 
 	//Actualizamos el valor del ancho de la linea
 	if obj.lenColumns != 0 {
@@ -95,7 +90,7 @@ func (obj *Space ) ospaceCompilationFile() {
 				if found := checkMap[name]; found{
 
 					log.Fatalln("El campo: " + name +" coincide con la columna: " + name + " en: ",
-					obj.url)
+					obj.Dir)
 				
 				}
 			}
@@ -104,7 +99,7 @@ func (obj *Space ) ospaceCompilationFile() {
 			if calcSizeLine <= 0 {
 
 				log.Fatalln("Las columnas no pueden tener un tamaño inferior a cero.",
-				obj.url,obj.IndexSizeColumns)
+				obj.Dir,obj.IndexSizeColumns)
 			}
 
 			obj.SizeLine += calcSizeLine
@@ -118,7 +113,7 @@ func (obj *Space ) ospaceCompilationFile() {
 		
 		if checkSizeColumns != obj.SizeLine {
 
-			log.Fatalln("Las columnas estan mal escritos, Ejemplo: column1: 0,20; column2:20,30;", obj.url)
+			log.Fatalln("Las columnas estan mal escritos, Ejemplo: column1: 0,20; column2:20,30;", obj.Dir)
 		
 		}
 
@@ -131,13 +126,13 @@ func (obj *Space ) ospaceCompilationFile() {
 
 		if obj.lenColumns > 1 {
 
-			log.Fatalln("As iniciado un archivo de una columna con multiples columnas", obj.url,obj.IndexSizeColumns)
+			log.Fatalln("As iniciado un archivo de una columna con multiples columnas", obj.Dir,obj.IndexSizeColumns)
 
 		}
 
 		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
 		obj.compilation = true
-		return
+		return true
 	}
 
 	//Si el archivo es multicolumna, contamos las columnas.
@@ -145,13 +140,13 @@ func (obj *Space ) ospaceCompilationFile() {
 
 		if obj.lenColumns == 1 {
 
-			log.Fatalln("As iniciado un archivo de un multicolumna con una columna", obj.url,obj.IndexSizeColumns)
+			log.Fatalln("As iniciado un archivo de un multicolumna con una columna", obj.Dir,obj.IndexSizeColumns)
 
 		}
 
 		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
 		obj.compilation = true
-		return
+		return true
 	}
 	
 
@@ -162,7 +157,7 @@ func (obj *Space ) ospaceCompilationFile() {
 		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
 		obj.FileNativeType = RamSearch | obj.FileNativeType
 		obj.compilation = true
-		return
+		return true
 	}
 	
 
@@ -173,7 +168,7 @@ func (obj *Space ) ospaceCompilationFile() {
 		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
 		obj.FileNativeType |= RamIndex
 		obj.compilation = true
-		return
+		return true
 	}
 
 	if obj.Extension == "bram" {
@@ -181,7 +176,7 @@ func (obj *Space ) ospaceCompilationFile() {
 		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
 		obj.FileNativeType |= RamIndex | RamSearch
 		obj.compilation = true
-		return
+		return true
 	}
 
 
@@ -192,11 +187,11 @@ func (obj *Space ) ospaceCompilationFile() {
 		obj.FileCoding      = Bit
 		obj.FileTipeBit     = ListBit
 		obj.compilation = true
-		return
+		return true
 	}
 
-	
-
+	log.Fatalln("Error de copilacion, Ospace.go; funcion: ospaceCompilationFile ; Linea:193", obj.Dir)
+	return false
 }
 
 
@@ -207,25 +202,22 @@ var diskSpace = &spaceDisk{
 }
 
 //Abrimos el espacio en disco
-func (obj *Space ) ospaceDisk()*spaceFile {
+func (obj *Space ) ospaceDisk(name string)*spaceFile {
 
-	spacef , found := diskSpace.DiskFile[obj.url]
+	url := obj.Dir + name + "." + obj.Extension
+
+	spacef , found := diskSpace.DiskFile[url]
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
-		spacef = obj.newSpaceFile()
+		spacef = obj.newSpaceFile(url)
 		//Unico bloqueo cuando se abre el archivo para mantener la atomicidad
 		diskSpace.Lock()
 		//Guardamos nuestra referencia al archivo en el mapa
-		diskSpace.DiskFile[obj.url] = spacef
+		diskSpace.DiskFile[url] = spacef
 		//Quitamos el cerrojo de la estructura diskSpace
 		diskSpace.Unlock()
 
-		if CheckFileNativeType(obj.FileNativeType , RamSearch) {
-
-			obj.ospaceCompilationFileRamSearch(spacef)
-	
-		}
 	}
 	
 	return spacef
@@ -236,20 +228,23 @@ var deferSpace = &spaceDeferDisk{
 	Info: make([]deferFileInfo,0),
 }
 
-func (obj *Space ) ospaceDeferDisk()*spaceFile{
+func (obj *Space ) ospaceDeferDisk(name string)*spaceFile{
 
-	spacef , found := deferSpace.DeferFile[obj.url]
+	url := obj.Dir + name + "." + obj.Extension
+
+	
+	spacef , found := deferSpace.DeferFile[url]
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
-		spacef = obj.newSpaceFile()
+		spacef = obj.newSpaceFile(url)
 		//Unico bloqueo cuando se abre el archivo para mantener la atomicidad
 		deferSpace.Lock()
 		//Creamos una nueva referencia a spaceFile
-		deferSpace.DeferFile[obj.url] = spacef
+		deferSpace.DeferFile[url] = spacef
 		//Añadimos un elemento a la cola de array para su posterior
 		//eleiminacion del mapa en orden
-		deferSpace.Info = append( deferSpace.Info , deferFileInfo{obj.url,time.Now()})
+		deferSpace.Info = append( deferSpace.Info , deferFileInfo{url,time.Now()})
 		//Quitamos el cerrojo de la estructura diskSpace
 		deferSpace.Unlock()
 
@@ -262,17 +257,19 @@ var permSpace = &spacePermDisk{
 	PermDisk: make(map[string]*spaceFile),
 }
 
-func (obj *Space ) ospacePermDisk()*spaceFile{
+func (obj *Space ) ospacePermDisk(name string)*spaceFile{
 
-	spacef , found := permSpace.PermDisk[obj.url]
+	url := obj.Dir + name + "." + obj.Extension
+
+	spacef , found := permSpace.PermDisk[url]
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
-		spacef = obj.newSpaceFile()
+		spacef = obj.newSpaceFile(url)
 		//Unico bloqueo cuando se abre el archivo para mantener la atomicidad
 		permSpace.Lock()
 		//Creamos una nueva referencia a spaceFile
-		permSpace.PermDisk[obj.url] = spacef
+		permSpace.PermDisk[url] = spacef
 		//Quitamos el cerrojo de la estructura diskSpace
 		permSpace.Unlock()
 	
@@ -287,11 +284,12 @@ func (obj *Space ) ospacePermDisk()*spaceFile{
 
 
 
-func (obj *Space ) ospaceDirectory(){
+func (obj *Space ) ospaceDirectory(name string){
 
 
+	url := obj.Dir + name + "." + obj.Extension
 
-	_ , err := os.Stat(obj.url)
+	_ , err := os.Stat(url)
 	if err != nil {
 
 		log.Println("Crea una funcion de creacion de directorios.")
@@ -341,14 +339,14 @@ func (obj *Space ) ospaceCompilationFileUpdateColumn(LenIndexSizeColumns int64) 
 
 
 
-func (obj *Space )newSpaceFile()*spaceFile{
+func (obj *Space )newSpaceFile(url string)*spaceFile{
 
 		var err error
 		//Creamos una nueva referencia a spaceFile
 		spacef := new(spaceFile)
 
 		//Abrimos el archivo
-		spacef.File, err = os.OpenFile(obj.url , os.O_RDWR | os.O_CREATE, 0666)
+		spacef.File, err = os.OpenFile(url , os.O_RDWR | os.O_CREATE, 0666)
 		if err != nil {
 			//Migrar los errores de archivo a un log de archivo
 			log.Println("Error al abrir o crear el archivo.", err)
@@ -356,7 +354,7 @@ func (obj *Space )newSpaceFile()*spaceFile{
 
 		spacef.Space = obj
 		//Url pasada como valor dir + name + extension -> name dinamico
-		spacef.Url = obj.url
+		spacef.Url = url
 		//Iniciamos un puntero a SizeFileLine manejado atomicamente por
 		//un contador atomico
 		spacef.SizeFileLine = new(int64)
@@ -371,19 +369,38 @@ func (obj *Space )newSpaceFile()*spaceFile{
 
 func (obj *spaceFile ) ospaceAtomicUpdateSizeFileLine()int64 {
 	
+	var line int64
 	size, err := obj.File.Seek(0, 2)
 	if err != nil {
 		log.Println(err)
 	}
-	return (size / obj.SizeLine) -1
+	if size > 0 {
+
+		size -= obj.lenFields 
+
+	}
+
+	line = (size / obj.SizeLine)
+
+	if CheckFileCoding(obj.FileCoding , Bit) {
+		if line > 0 {
+
+			line *= 8 
+
+		}
+	
+
+	}
+
+	return line -1
 }
 
-func (obj *Space ) ospaceCompilationFileRamSearch(sF *spaceFile) {
+func (sF *spaceFile) ospaceCompilationFileRamSearch() {
 
-	obj.FileNativeType |= RamSearch
+	sF.FileNativeType |= RamSearch
 
 	var field string
-	for val, ind := range obj.IndexSizeColumns {
+	for val, ind := range sF.IndexSizeColumns {
 
 		if ind[0] == 0 {
 
@@ -392,8 +409,8 @@ func (obj *Space ) ospaceCompilationFileRamSearch(sF *spaceFile) {
 		}
 	}
 
-	mapColumn := obj.BRspace( BuffMap, 0, *sF.SizeFileLine  , field)
-	obj.Rspace(mapColumn)
+	mapColumn := sF.BRspace( BuffMap, 0, *sF.SizeFileLine  , field)
+	mapColumn.Rspace()
 
 	sF.Search = make(map[string]int64)
 
@@ -410,13 +427,13 @@ func (obj *Space ) ospaceCompilationFileRamSearch(sF *spaceFile) {
 
 
 
-func (obj *Space ) ospaceCompilationFileRamIndex(sF *spaceFile) {
+func (sF *spaceFile ) ospaceCompilationFileRamIndex() {
 
-	obj.FileNativeType |= RamIndex
+	sF.FileNativeType |= RamIndex
 
 	var field string
 
-	for val, ind := range obj.IndexSizeColumns {
+	for val, ind := range sF.IndexSizeColumns {
 
 		if ind[0] == 0 {
 
@@ -425,8 +442,8 @@ func (obj *Space ) ospaceCompilationFileRamIndex(sF *spaceFile) {
 		}
 	}
 
-	mapColumn := obj.BRspace(BuffMap,0, *sF.SizeFileLine, field)
-	obj.Rspace(mapColumn)
+	mapColumn := sF.BRspace(BuffMap,0, *sF.SizeFileLine, field)
+	mapColumn.Rspace()
 
 	sF.Index = make([]string ,0)
 	
