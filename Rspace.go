@@ -350,11 +350,13 @@ func (buf *RBuffer) MultiColumnSpace(){
 	
 	if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
 
+	
+
 		bufMapFile := &buf.BufferMap["buffer"][0]
 		_ , err = buf.File.ReadAt(*bufMapFile , buf.lenFields + startLine * buf.SizeLine )
 		if err != nil {
-			log.Println(err)
-			return
+			log.Println("Error: ",err)
+			//return
 		}
 
 		for startLine < endLine {
@@ -362,6 +364,8 @@ func (buf *RBuffer) MultiColumnSpace(){
 			startLine += 1
 
 			for val := range buf.BufferMap {
+
+
 
 				if val == "buffer" {
 					continue
@@ -383,7 +387,7 @@ func (buf *RBuffer) MultiColumnSpace(){
 			*bufMapFile = (*bufMapFile)[ buf.SizeLine:]
 		
 		}
-
+	
 		delete(buf.BufferMap,"buffer")
 		return
 	}

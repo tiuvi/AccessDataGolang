@@ -141,42 +141,5 @@ func (buf *RBuffer)Rspace (){
 
 
 
-func (obj *spaceFile ) Rmapspace(str_write string)(value int64, found bool){
-
-	if int64(len(str_write)) > obj.SizeLine{
-
-		str_write = str_write[:obj.SizeLine]
-
-	}
-	
-	if obj.Hooker != nil {
-
-		bufferByte := []byte(str_write)
-		obj.hookerPreFormatPointer(&bufferByte, Preformat)
-		str_write = string(bufferByte)
-	}
 
 
-
-	
-
-	obj.RLock()
-	value, found = obj.Search[str_write]
-	obj.RUnlock()
-	return
-}
-
-
-func (obj *spaceFile ) Rindexspace(line int64)(value string, found bool){
-
-	if  int64(len(obj.Index) ) > line {
-
-		value, found = obj.Index[line] , true
-
-	} else {
-
-		value, found = "", false
-	}
-
-	return
-}

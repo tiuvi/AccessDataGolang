@@ -21,8 +21,6 @@ const(
 	DeferDisk 
 	PermDisk
 	Directory
-	RamSearch
-	RamIndex
 )
 
 
@@ -66,12 +64,6 @@ const(
 	Odac  = "odac"
 	//Archivo multicolumna especial para guardar varios valores
 	Mdac  = "mdac"
-	//Archivo con un indice o array permanente en la ram
-	Iram  = "iram"
-	//Archivo con un mapa permanente en la ram
-	Sram  = "sram"
-	//Archivo con un mapa y un indice permanente en la ram
-	Bram  = "bram"
 	//Lista de bit con dos estados posibles verdadero y falso
 	BitList  = "bitlist"
 	
@@ -82,9 +74,6 @@ var extensionFile = map[string]string{
 	//Archivos
 	Odac:     "Archivo mono cololmna especial para guardar un solo valor",
 	Mdac:     "Archivo multicolumna especial para guardar varios valores",
-	Iram:     "Archivo con un indice o array permanente en la ram",
-	Sram:     "Archivo con un mapa permanente en la ram",
-	Bram:     "Archivo con un mapa y un indice permanente en la ram",
 	BitList:  "Lista de bit con dos estados posibles verdadero y falso",
 	EmptyFolder: 	  "Crea un directorio vacio",
 }
@@ -128,10 +117,6 @@ type spaceFile struct {
 	SizeFileLine *int64
 	//Mutex que sirve para leer y escribir , actualizar mapas , actualizar arrays
 	sync.RWMutex
-	//Mapa del archivo en memoria
-	Search map[string]int64 
-	//Array del archivo en memoria
-	Index []string
 }
 
 type spaceDisk struct{
@@ -240,23 +225,6 @@ func (obj *Space ) OSpace(name string)*spaceFile  {
 	return nil
 }
 
-
-/*
-func (obj *Space ) ReNameSpace(name string)*Space {
-
-	if len(name) == 0 {
-
-		log.Fatalln("Nombre de archivo vacio en: ", obj.Dir, obj.Extension)
-
-	}
-
-	NewFile := *obj
-	NewFile.Name = name
-	NewFile.url = NewFile.Dir + NewFile.Name + "." + NewFile.Extension
-
-	return &NewFile
-}
-*/
 
 
 

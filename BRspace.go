@@ -42,7 +42,7 @@ func (sp *spaceFile) BRspace (typeBuff FileTypeBuffer,startLine int64,endLine in
 
 	if  *sp.SizeFileLine < endLine {
 		
-		log.Fatalln("Error de buffer archivo: ",sp.Url , " Linea final: ",endLine  , " Numero de lineas del archivo: ",sp.SizeFileLine)
+		log.Fatalln("Error de buffer archivo: ",sp.Url , " Linea final: ",endLine  , " Numero de lineas del archivo: ", *sp.SizeFileLine)
 		
 	}
 

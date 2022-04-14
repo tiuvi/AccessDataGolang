@@ -15,7 +15,6 @@ type WBuffer struct {
 	*spaceFile
 	Line int64
 	ColumnName string
-	SizeLine  int64
 	typeBuff FileTypeBuffer
 
 	Buffer *[]byte
@@ -27,26 +26,7 @@ type WBuffer struct {
 
 func (sp *spaceFile) BWspaceBuff(line int64 ,columnName string, buff []byte)(*WBuffer){
 
-
-
-
-	if sp.IndexSizeColumns != nil {
-
-		_, found := sp.IndexSizeColumns[columnName]
-		if !found {
-			
-			if sp.IndexSizeFields != nil {
-	
-				_, found := sp.IndexSizeFields[columnName]
-				if !found {
-		
-					log.Fatalln("Bspace.go - 222; funcion: BWspaceBuff" +
-					"La columna: " + columnName + " no existe en ese archivo",sp.Url)
-					return nil
-				}
-			}
-		}
-	}
+	sp.check(columnName, "Archivo: BWspace.go ; Funcion: BWspaceBuff")
 
 	return &WBuffer{
 		spaceFile: sp,

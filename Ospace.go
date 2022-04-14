@@ -150,36 +150,6 @@ func (obj *Space ) ospaceCompilationFile()bool {
 	}
 	
 
-	//sram: fichero que sincroniza un archivo de n lineas
-	//con un mapa en la memoria ram asociando valor linea -> n linea
-	if obj.Extension == "sram"{
-
-		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
-		obj.FileNativeType = RamSearch | obj.FileNativeType
-		obj.compilation = true
-		return true
-	}
-	
-
-	//iram: archivo que sincroniza un archivo de n lineas 
-	//con un array en la memoria asociando n lineas -> n valores
-	if obj.Extension == "iram"{
-		
-		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
-		obj.FileNativeType |= RamIndex
-		obj.compilation = true
-		return true
-	}
-
-	if obj.Extension == "bram" {
-
-		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
-		obj.FileNativeType |= RamIndex | RamSearch
-		obj.compilation = true
-		return true
-	}
-
-
 	//bdisk: Lista de bit en un archivo disk
 	if obj.Extension == "bitlist" {
 
@@ -190,7 +160,10 @@ func (obj *Space ) ospaceCompilationFile()bool {
 		return true
 	}
 
-	log.Fatalln("Error de copilacion, Ospace.go; funcion: ospaceCompilationFile ; Linea:193", obj.Dir)
+log.Println(obj.Extension)
+
+	log.Fatalln("Archivo: Ospace.go; Funcion: ospaceCompilationFile ; Linea:193 ;" +
+	"No se han encontrado coincidencias de archivos con esas extensiones.", obj.Dir)
 	return false
 }
 
@@ -372,15 +345,29 @@ func (obj *spaceFile ) ospaceAtomicUpdateSizeFileLine()int64 {
 	var line int64
 	size, err := obj.File.Seek(0, 2)
 	if err != nil {
+
 		log.Println(err)
+
 	}
+
 	if size > 0 {
 
 		size -= obj.lenFields 
 
 	}
 
-	line = (size / obj.SizeLine)
+	if size  % obj.SizeLine == 0 {
+
+		line = (size / obj.SizeLine)
+
+	}
+
+
+	if size  % obj.SizeLine != 0 {
+
+		line = (size / obj.SizeLine) + 1
+		
+	}
 
 	if CheckFileCoding(obj.FileCoding , Bit) {
 		if line > 0 {
@@ -395,63 +382,7 @@ func (obj *spaceFile ) ospaceAtomicUpdateSizeFileLine()int64 {
 	return line -1
 }
 
-func (sF *spaceFile) ospaceCompilationFileRamSearch() {
-
-	sF.FileNativeType |= RamSearch
-
-	var field string
-	for val, ind := range sF.IndexSizeColumns {
-
-		if ind[0] == 0 {
-
-			field = val
-			break
-		}
-	}
-
-	mapColumn := sF.BRspace( BuffMap, 0, *sF.SizeFileLine  , field)
-	mapColumn.Rspace()
-
-	sF.Search = make(map[string]int64)
-
-	var x int64
-	for x = 0 ; x <= *sF.SizeFileLine; x++{
-		
-		sF.Search[ string( mapColumn.BufferMap[field][x] ) ] = x
-		
-		
-	}
-
-}
 
 
 
 
-func (sF *spaceFile ) ospaceCompilationFileRamIndex() {
-
-	sF.FileNativeType |= RamIndex
-
-	var field string
-
-	for val, ind := range sF.IndexSizeColumns {
-
-		if ind[0] == 0 {
-
-			field = val
-			break
-		}
-	}
-
-	mapColumn := sF.BRspace(BuffMap,0, *sF.SizeFileLine, field)
-	mapColumn.Rspace()
-
-	sF.Index = make([]string ,0)
-	
-	var x int64
-	for x = 0 ; x <= *sF.SizeFileLine; x++{
-		
-		sF.Index = append(sF.Index, string( mapColumn.BufferMap[field][x] ))
-
-	}
-
-}
