@@ -3,254 +3,11 @@ package bd
 import (
 	"bytes"
 	"log"
-	"os"
 )
 
-/*
-if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
-
-	return
-}
-
-if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
-
-	return
-}
-
-if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
-
-}
-*/
 
 
-func (buf *RBuffer) OneColumnSpace(){
-	
-	var err error
-	startLine := buf.StartLine
-	endLine   := buf.EndLine
-
-
-	//Primer caso cuando solo hay que leer una linea.
-	if (endLine - startLine ) == 1 {
-
-
-		if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
-
-	
-		
-			//Leemos una sola linea
-			_ , err = buf.File.ReadAt(buf.Buffer , buf.lenFields + startLine * buf.SizeLine )
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			//Limpiamos espacios en blanco
-			buf.Buffer = bytes.Trim(buf.Buffer , " ")
-
-			//Activamos PostFormat si existe
-			if buf.Hooker != nil {
-				
-				buf.hookerPostFormatPointer(&buf.Buffer ,buf.ColName)
-
-			}
-
-			//Cerramos el script y pasamos datos por referencia.
-			return
-		}
-
-
-		if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
-
-			var colName string
-			for val := range buf.BufferMap{
-		
-				colName = val		
-			
-			}
-
-			//Leemos una sola linea
-			_ , err = buf.File.ReadAt(buf.Buffer ,buf.lenFields + startLine * buf.SizeLine )
-			if err != nil {
-				log.Println(err)
-
-			}
-
-			//Limpiamos el buffer de espacios
-			buf.Buffer = bytes.Trim(buf.Buffer , " ")
-
-			//Activamos PostFormat si existe
-			if buf.Hooker != nil {
-				
-				buf.hookerPostFormatPointer(&buf.Buffer ,colName)
-
-			}
-
-			//Pasamos el buffer por el canal
-			buf.Channel <- RChanBuf{startLine,colName,buf.Buffer}
-
-			//Cerramos el canal.
-			close(buf.Channel)
-			return
-		
-		}
-
-		if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
-
-			//Leemos una sola linea en el buffer del mapa
-			//La razon de esto es que es mas eficiente que usar el otro buffer.
-			bufMapFile := &buf.BufferMap["buffer"][0]
-			_ , err = buf.File.ReadAt(*bufMapFile , buf.lenFields + startLine * buf.SizeLine )
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			//Reccorremos los valores que nos han pedido
-			for val := range buf.BufferMap {
-
-				//Si el valor es buffer, nos lo saltamos
-				if val == "buffer" {
-					continue
-				}
-
-				//Anexamos el valor al mapa
-				buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim((*bufMapFile) , " "))
-			
-				//Activamos PostFormat si existe
-				if buf.Hooker !=nil {
-
-					bufferMap  := &buf.BufferMap[val][len(buf.BufferMap[val])-1]
-					buf.hookerPostFormatPointer(bufferMap, val)
-		
-				}
-				 
-			}
-
-			//No lo borro para que se pueda reutilizar en multiples lecturas.
-			//delete(buf.BufferMap,"buffer")
-			return
-		}
-	}
-
-
-
-
-	
-	//Segundo caso cuando hay que leer mas de una linea
-	if (endLine - startLine) > 1 {
-
-		if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
-
-			log.Fatalln("No se puede leer multiples lineas en un buffer de bytes.")
-			return
-		}
-
-
-		if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
-
-			var colName string
-			for val := range buf.BufferMap{
-		
-				colName = val		
-			
-			}
-
-			for startLine < endLine {
-
-				//El buffer por referencia crea errores en los canales
-				buf.NewChanBuffer()
-				//Leemos una sola linea
-				_ , err = buf.File.ReadAt(buf.Buffer ,buf.lenFields + startLine * buf.SizeLine )
-				if err != nil {
-					log.Println(err)
-
-				}
-
-				//Limpiamos el buffer de espacios
-				buf.Buffer = bytes.Trim(buf.Buffer , " ")
-
-				
-				//Activamos PostFormat si existe
-				if buf.Hooker != nil {
-				
-					buf.hookerPostFormatPointer(&buf.Buffer ,colName)
-
-				}
-				
-				buf.Channel <- RChanBuf{startLine,colName,buf.Buffer}
-
-				startLine += 1
-				
-			}
-			//Cerramos el canal.
-			close(buf.Channel)
-			return
-		}
-		
-
-
-		if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
-		
-			if buf.BufferMap["buffer"] == nil {
-				log.Fatalln("No se puede reciclar un buffer de mapa multilinea y multicolumna")
-				return
-			}
-
-			bufMapFile := &buf.BufferMap["buffer"][0]
-			_ , err = buf.File.ReadAt(*bufMapFile , buf.lenFields + startLine * buf.SizeLine )
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			for startLine < endLine {
-		
-				startLine += 1
-		
-				for val := range buf.BufferMap {
-	
-					if val == "buffer" {
-							continue
-						}
-		
-					buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim((*bufMapFile)[:buf.SizeLine] , " "))
-	
-					//Activamos PostFormat si existe
-					if buf.Hooker !=nil {
-
-						bufferMap  := &buf.BufferMap[val][len(buf.BufferMap[val])-1]
-						buf.hookerPostFormatPointer(bufferMap, val)
-			
-					}
-	
-					
-				}
-	
-				//Cuando terminamos el bucle hemos terminado de hacer range a
-				//todos los campos de esa linea entonces borramos la linea del buffer.
-				*bufMapFile = (*bufMapFile)[buf.SizeLine:]
-			
-			}
-			//Borramos el buffer
-			delete(buf.BufferMap,"buffer")
-			return
-		}
-
-		
-	}
-
-
-
-	log.Fatalln("Error Grave, Uspace.go ; Rspace.go ; Funcion: OneColumnSpace ;" +
-	"No Hubo coincidencias")
-	return
-	
-}
-
-
-
-func (buf *RBuffer) MultiColumnSpace(){
+func (buf *RBuffer) readByteSpace(){
 
 	var err error
 	startLine := buf.StartLine
@@ -268,7 +25,7 @@ func (buf *RBuffer) MultiColumnSpace(){
 					_ , err = buf.File.ReadAt(buf.Buffer , size[0])
 					if err != nil {
 						log.Println(err)
-						return
+						
 					}
 				}
 			}
@@ -281,7 +38,7 @@ func (buf *RBuffer) MultiColumnSpace(){
 					_ , err = buf.File.ReadAt(buf.Buffer , buf.lenFields + (startLine * buf.SizeLine) + size[0])
 					if err != nil {
 						log.Println(err)
-						return
+						
 					}
 				}
 			}
@@ -399,53 +156,8 @@ func (buf *RBuffer) MultiColumnSpace(){
 }
 
 
-func (buf *RBuffer) FullFileSpace(){
 
-	var err error
-	if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
-	
-		buf.Buffer, err = os.ReadFile(buf.Url)
-		if err != nil {
-
-			buf.Buffer = nil
-			return
-		}
-		return
-	}
-	
-	if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
-	
-		buf.Buffer, err = os.ReadFile(buf.Url)
-		if err != nil {
-
-			buf.Channel <- RChanBuf{0 , "file", nil}
-			close(buf.Channel)
-			return
-		}
-		buf.Channel <- RChanBuf{0 , "file", buf.Buffer}
-		close(buf.Channel)
-		return
-
-	}
-	
-	if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
-
-		buf.BufferMap["buffer"][0], err = os.ReadFile(buf.Url)
-		if err != nil {
-
-			buf.BufferMap["buffer"][0] = []byte{}
-			return
-		}
-		return
-	}
-
-	log.Fatalln("Error Grave, Uspace.go ; Rspace.go ; Funcion: FullFileSpace ;" +
-	"No Hubo coincidencias")
-	return
-}
-
-
-func (buf *RBuffer) ListBitSpace(){
+func (buf *RBuffer) readBitSpace() {
 
 	if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
 
@@ -569,15 +281,3 @@ func (buf *RBuffer) ListBitSpace(){
 	return
 }
 
-func (buf *RBuffer) ReadEmptyDirSpace(){
-
-	var err error
-	//buf.BufferMap["buffer"][0], err = os.ReadFile(sp.Name + "/" +  strconv.FormatInt( buf.StartLine ,10) + sp.Extension)
-	buf.BufferMap["buffer"][0], err = os.ReadFile(buf.Url)
-	if err != nil {
-
-		buf.BufferMap["buffer"][0] = []byte{}
-
-	}
-
-}

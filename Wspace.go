@@ -3,13 +3,10 @@ package bd
 import (
 	"bytes"
 	"log"
-
-//	"os"
 	"sync/atomic"
-	//	"time"
 )
 
-func (buf *WBuffer) WriteColumnSpace()int64{
+func (buf *WBuffer) writeByteSpace()int64{
 
 	if CheckFileTypeBuffer(buf.typeBuff , BuffMap ){
 
@@ -151,8 +148,6 @@ func (buf *WBuffer) WriteColumnSpace()int64{
 		}
 		
 		
-		log.Println("Tamaño linea:" ,buf.Line,buf.SizeLine,  (buf.SizeLine * buf.Line))
-		log.Println("Tamaño linea:" , buf.lenFields + (buf.SizeLine * buf.Line) + buf.IndexSizeColumns[val][0])
 		buf.File.WriteAt(*buf.Buffer, buf.lenFields + (buf.SizeLine * buf.Line) + buf.IndexSizeColumns[val][0])
 	
 		
@@ -207,7 +202,7 @@ func (buf *WBuffer) WriteColumnSpace()int64{
 }
 
 
-func (buf *WBuffer) WriteListBitSpace()int64{
+func (buf *WBuffer) writeBitSpace()int64{
 	
 	if CheckFileTypeBuffer(buf.typeBuff , BuffMap ){
 
@@ -278,54 +273,3 @@ func (buf *WBuffer) WriteListBitSpace()int64{
 	return buf.Line
 }
 
-
-
-
-/*
-func (sp *spaceFile) WriteEmptyDirSpace(buf *WBuffer){
-
-	var err error
-	var value []byte
-	var found bool
-
-	_ , found = column["newBuffer"]
-	if found {
-
-		//sp.File, err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
-		sp.File, err = os.OpenFile(sp.Url , os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
-		if err != nil {
-
-			log.Print(err)
-		
-		}
-	}
-
-	value , found = column["appendBuffer"]
-	if found {
-
-		//sp.File, err = os.OpenFile(sp.Name + strconv.FormatInt(line,10) + sp.Extension , os.O_RDWR | os.O_APPEND, 0666)
-		sp.File, err = os.OpenFile(sp.Url , os.O_RDWR | os.O_APPEND, 0666)
-		if err != nil {
-
-			log.Print(err)
-		
-		}
-		if _, err := sp.File.Write(value); 
-		err != nil {
-
-			log.Print(err)
-	
-		}
-	}
-
-	_ , found = column["endBuffer"]
-	if found {
-
-		defer sp.File.Close()
-
-	}
-
-
-
-}
-*/
