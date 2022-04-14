@@ -1,66 +1,120 @@
 package bd
 
 import (
-	"log"
+//	"log"
 )
+
+
+
+type SpaceSGMStr struct  {
+	*spaceFile
+	col string
+	Map map[string]int64
+}
 
 //SGMapStringLineInit: Sincroniza un mapa superglobal con un archivo.
 //#bd/ramSync/SGMstringLine
-func (sF *spaceFile) SGMapStringLineInit(name string,mapStr map[string]int64)map[string]int64{
+func (sF *spaceFile) SGMapStringLineInit(colName string)*SpaceSGMStr {
 
-	if mapStr == nil {
 
-		mapStr = make(map[string]int64)
-	
+	sF.check(colName , "Archivo: ramSync.go ; Funcion: SGMstringLine")
+
+	SGMS := &SpaceSGMStr{
+		spaceFile: sF,
+		col: colName,
+		Map: make(map[string]int64),
 	}
+	
+	sF.Lock()
+	defer sF.Unlock()
 
-	sF.check(name , "Archivo: ramSync.go ; Funcion: SGMstringLine")
-
-	mapColumn := sF.BRspace( BuffMap, 0, *sF.SizeFileLine  , name)
+	mapColumn := SGMS.BRspace( BuffMap, 0, *sF.SizeFileLine  , colName)
 	mapColumn.Rspace()
 
 	var x int64
 	for x = 0 ; x <= *sF.SizeFileLine; x++{
 
 
-		mapStr[ string( mapColumn.BufferMap[name][x] ) ] = x
+		SGMS.Map[ string( mapColumn.BufferMap[colName][x] ) ] = x
 		
 	}
 
-	return mapStr
+	return SGMS
 }
 
-//SGMapStringLineUpd: Actualiza un mapa superglobal
-//#bd/ramSync/SGMstringLineUpd
-func (WBuf *WBuffer)SGMapStringLineUpd(mapStr map[string]int64)(int64, bool){
+func (SGMS *SpaceSGMStr) SGMapStringLineRead(bufferBytes *[]byte)bool {
+	
+	
+	if SGMS.Hooker != nil {
 
-
-	if WBuf.typeBuff != BuffBytes {
-
-		log.Fatalln("Sincronizacion de ram compatible unicamente con buffer de bytes.")
+		SGMS.hookerPreFormatPointer(bufferBytes , SGMS.col)
 
 	}
 
-	WBuf.Lock()
-	defer WBuf.Unlock()
-	log.Println(mapStr)
-	_ , found := mapStr[string(*WBuf.Buffer)]
-	if !found {
+	SGMS.spaceTrimPointer(bufferBytes)
 
-		line := WBuf.Wspace()
+	valueStr := string(*bufferBytes)
 
-		if WBuf.Hooker != nil {
+	SGMS.RLock()
+	defer SGMS.RUnlock()
 
-			WBuf.hookerPostFormatPointer(WBuf.Buffer, WBuf.ColumnName)
+	_ , found := SGMS.Map[valueStr]
+	if found {
+
+		return true
+
+	}
+
+	return false
+}
+
+
+
+//SGMapStringLineUpd: Actualiza un mapa superglobal
+//#bd/ramSync/SGMstringLineUpd
+func (SGMS *SpaceSGMStr)SGMapStringLineUpd(line int64 , bufferBytes *[]byte)(int64, bool){
+
+
+	if SGMS.Hooker != nil {
+
+		SGMS.hookerPreFormatPointer(bufferBytes , SGMS.col)
+
+	}
+
+    WBuf := SGMS.BWspaceBuff(line, SGMS.col,*bufferBytes)
+	strBuffer := string(*bufferBytes)
+
+	SGMS.Lock()
+	defer SGMS.Unlock()
+
+	if line == -1 {
+
+		_ , found := SGMS.Map[strBuffer]
+		if !found {
+	
+			line := WBuf.Wspace()
+	
+			WBuf.spaceTrimPointer(WBuf.Buffer)
+	
+			SGMS.Map[strBuffer] = line
+		
+			return line, true
 	
 		}
 
+	}
+
+	if line > -1 {
+
+		delete(SGMS.Map , strBuffer)
+
+		line := WBuf.Wspace()
+	
 		WBuf.spaceTrimPointer(WBuf.Buffer)
 
-		mapStr[string(*WBuf.Buffer)] = line
+		SGMS.Map[strBuffer] = line
 	
 		return line, true
-
 	}
 
 	return -1 ,false

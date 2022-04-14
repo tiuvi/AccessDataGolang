@@ -2,9 +2,7 @@ package bd
 
 import(
 	"log"
-	"os"
 	"time"
-	"sync/atomic"
 )
 
 
@@ -39,6 +37,12 @@ func (obj *Space ) ospaceCompilationFile()bool {
 	}
 
 	if _ , found := obj.IndexSizeColumns["buffer"]; found {
+
+		log.Fatalln("La palabra buffer esta reservada para el programa.", obj.Dir, obj.IndexSizeColumns)
+
+	}
+
+	if _ , found := obj.IndexSizeFields["buffer"]; found {
 
 		log.Fatalln("La palabra buffer esta reservada para el programa.", obj.Dir, obj.IndexSizeColumns)
 
@@ -121,48 +125,26 @@ func (obj *Space ) ospaceCompilationFile()bool {
 	
 
 	
-	//Lectura de archivos monocolumna
-	if obj.lenColumns == 1 && obj.Extension == "odac" {
+	//Lectura de archivos de byte
+	if  obj.Extension == DacByte {
 
-		if obj.lenColumns > 1 {
-
-			log.Fatalln("As iniciado un archivo de una columna con multiples columnas", obj.Dir,obj.IndexSizeColumns)
-
-		}
-
-		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
+		obj.FileCoding = Byte
 		obj.compilation = true
 		return true
 	}
 
-	//Si el archivo es multicolumna, contamos las columnas.
-	if obj.lenColumns > 1 && obj.Extension == "mdac"{
-
-		if obj.lenColumns == 1 {
-
-			log.Fatalln("As iniciado un archivo de un multicolumna con una columna", obj.Dir,obj.IndexSizeColumns)
-
-		}
-
-		obj.ospaceCompilationFileUpdateColumn(obj.lenColumns)
-		obj.compilation = true
-		return true
-	}
-	
 
 	//bdisk: Lista de bit en un archivo disk
-	if obj.Extension == "bitlist" {
+	if obj.Extension == DacBit {
 
 		obj.SizeLine        = 1
 		obj.FileCoding      = Bit
-		obj.FileTipeBit     = ListBit
 		obj.compilation = true
 		return true
 	}
 
-log.Println(obj.Extension)
 
-	log.Fatalln("Archivo: Ospace.go; Funcion: ospaceCompilationFile ; Linea:193 ;" +
+	log.Fatalln("Archivo: Ospace.go; Funcion: ospaceCompilationFile ; Linea:150 ;" +
 	"No se han encontrado coincidencias de archivos con esas extensiones.", obj.Dir)
 	return false
 }
@@ -252,137 +234,5 @@ func (obj *Space ) ospacePermDisk(name string)*spaceFile{
 	return spacef
 
 }
-
-
-
-
-
-func (obj *Space ) ospaceDirectory(name string){
-
-
-	url := obj.Dir + name + "." + obj.Extension
-
-	_ , err := os.Stat(url)
-	if err != nil {
-
-		log.Println("Crea una funcion de creacion de directorios.")
-
-	}
-
-	return
-/*
-	if infoDir.IsDir() {
-
-		obj.FileTypeDir = EmptyDir
-		return
-	}
-	*/
-
-}
-
-
-
-
-
-
-
-
-
-
-
-func (obj *Space ) ospaceCompilationFileUpdateColumn(LenIndexSizeColumns int64) {
-
-		//Lectura de archivos monocolumna
-		if LenIndexSizeColumns == 1 {
-
-			obj.FileCoding = Byte
-			obj.FileTipeByte = OneColumn
-			return
-		}
-	
-		//Si el archivo es multicolumna, contamos las columnas.
-		if LenIndexSizeColumns > 1 {
-	
-			obj.FileCoding = Byte
-			obj.FileTipeByte = MultiColumn
-			return
-		}
-
-}
-
-
-
-func (obj *Space )newSpaceFile(url string)*spaceFile{
-
-		var err error
-		//Creamos una nueva referencia a spaceFile
-		spacef := new(spaceFile)
-
-		//Abrimos el archivo
-		spacef.File, err = os.OpenFile(url , os.O_RDWR | os.O_CREATE, 0666)
-		if err != nil {
-			//Migrar los errores de archivo a un log de archivo
-			log.Println("Error al abrir o crear el archivo.", err)
-		}
-
-		spacef.Space = obj
-		//Url pasada como valor dir + name + extension -> name dinamico
-		spacef.Url = url
-		//Iniciamos un puntero a SizeFileLine manejado atomicamente por
-		//un contador atomico
-		spacef.SizeFileLine = new(int64)
-		//Iniciamos el contador atomico
-		atomic.StoreInt64(spacef.SizeFileLine, spacef.ospaceAtomicUpdateSizeFileLine())
-		//Guardamos nuestro puntero de estructura space en el mapa global DiskFile
-		
-
-
-	return spacef
-}
-
-func (obj *spaceFile ) ospaceAtomicUpdateSizeFileLine()int64 {
-	
-	var line int64
-	size, err := obj.File.Seek(0, 2)
-	if err != nil {
-
-		log.Println(err)
-
-	}
-
-	if size > 0 {
-
-		size -= obj.lenFields 
-
-	}
-
-	if size  % obj.SizeLine == 0 {
-
-		line = (size / obj.SizeLine)
-
-	}
-
-
-	if size  % obj.SizeLine != 0 {
-
-		line = (size / obj.SizeLine) + 1
-		
-	}
-
-	if CheckFileCoding(obj.FileCoding , Bit) {
-		if line > 0 {
-
-			line *= 8 
-
-		}
-	
-
-	}
-
-	return line -1
-}
-
-
-
 
 

@@ -1,10 +1,5 @@
 package bd
 
-//Actualizacion de archivos, api rest
-//Diferenciar el acceso entre datos privados y publicos
-//id , user , token
-//Siguiente paso imprimir una respuesta
-
 import (
 	"log"
 	"os"
@@ -29,29 +24,10 @@ type FileCoding int
 const(
 	Bit FileCoding = iota + 1
 	Byte
-	Dir
 )
 
-//Diferenciar archivos de una sola columna, de los archivos multicolumna
-type FileTipeByte int
-const(
-	OneColumn FileTipeByte = iota + 1
-	MultiColumn
-	FullFile
-)
 
-//Actualmente solo para lista de bits
-type FileTipeBit int
-const(
-	ListBit FileTipeBit = iota + 1
-)
 
-type FileTypeDir int
-const(
-	EmptyDir FileTypeDir = iota + 1
-)
-
-type Hook string 
 const(
 	Preformat  = "preformat"
 	Postformat = "postformat"
@@ -60,22 +36,15 @@ const(
 
 
 const(
-	//Archivo mono cololmna especial para guardar un solo valor
-	Odac  = "odac"
 	//Archivo multicolumna especial para guardar varios valores
-	Mdac  = "mdac"
+	DacByte string  = "dacByte"
 	//Lista de bit con dos estados posibles verdadero y falso
-	BitList  = "bitlist"
-	
-	EmptyFolder = "dir"
+	DacBit string   = "dacBit"
 )
 
 var extensionFile = map[string]string{
-	//Archivos
-	Odac:     "Archivo mono cololmna especial para guardar un solo valor",
-	Mdac:     "Archivo multicolumna especial para guardar varios valores",
-	BitList:  "Lista de bit con dos estados posibles verdadero y falso",
-	EmptyFolder: 	  "Crea un directorio vacio",
+	DacByte:     "Archivo que incluye fields y columnas de bytes",
+	DacBit:      "Archivo que incluye fields y una lista de bits",
 }
 
 type Space struct  {
@@ -101,9 +70,7 @@ type Space struct  {
 	Hooker map[string]func(*[]byte)
 	
 	FileCoding   FileCoding
-	FileTipeByte FileTipeByte
-	FileTipeBit  FileTipeBit
-	FileTypeDir  FileTypeDir
+
 	compilation bool
 
 }
@@ -119,9 +86,15 @@ type spaceFile struct {
 	sync.RWMutex
 }
 
+
 type spaceDisk struct{
 	DiskFile map[string]*spaceFile
 	sync.RWMutex
+}
+
+type deferFileInfo struct {
+	Name string
+	Time time.Time
 }
 
 type spaceDeferDisk struct {
@@ -130,10 +103,6 @@ type spaceDeferDisk struct {
 	sync.RWMutex
 }
 
-type deferFileInfo struct {
-	Name string
-	Time time.Time
-}
 
 type spacePermDisk struct{
 	PermDisk map[string]*spaceFile
@@ -144,10 +113,7 @@ type spacePermDisk struct{
 
 
 
-var extensionDir = map[string]string{
-	//Directorios
-	"dir":"Gestiona una carpeta como si fuera un unico archivo",
-}
+
 
 func NewDac(){
 
@@ -159,24 +125,6 @@ func NewDac(){
 
 }
 
-
-
-
-//Iniciamos el objeto Ospace
-
-//Todos los datos se organizan por numero de linea, este numero de linea
-// es inmutable, en caso de querer borrar simplemente se deja vacio y 
-//se rellenara mas adelante con otro dato.
-
-//Tenemos dos tipos de organizacion de datos una unica columna asignada
-//a una fila y multiples columnas asociadas a una fila
-
-// Tenemos 4 tipos de archivos Ramsearch, Ramindex, PermDisk, DeferDisk y Disk
-// Dependiendo de si el archivo permanece abierto y si necesita
-//sincronizacion con ram.
-
-//Retocar funcion para una ejecucion diferente en tiempo de copilacion y tiempo de
-//ejecucion
 
 
 func (obj *Space ) OSpaceInit()bool  {
@@ -195,30 +143,29 @@ func (obj *Space ) OSpace(name string)*spaceFile  {
 	}
 
 
-		if len(name) == 0 {
+	if len(name) == 0 {
 
-			log.Fatalln("Nombre de archivo vacio en: ", obj.Dir, obj.Extension)
-	
-		}
+		log.Fatalln("Nombre de archivo vacio en: ", obj.Dir, obj.Extension)
 
+	}
 
 
 	if CheckFileNativeType(obj.FileNativeType, Disk ){
 
 		return obj.ospaceDisk(name)
 
-	} else 	if CheckFileNativeType(obj.FileNativeType, DeferDisk ){
+	} 
+
+	if CheckFileNativeType(obj.FileNativeType, DeferDisk ){
 
 		return obj.ospaceDeferDisk(name)
 
-	} else if CheckFileNativeType(obj.FileNativeType, PermDisk ){
+	} 
+
+	if CheckFileNativeType(obj.FileNativeType, PermDisk ){
 
 		return obj.ospacePermDisk(name)
 
-	} else if CheckFileNativeType(obj.FileNativeType, Directory ){
-
-		obj.ospaceDirectory(name)
-		return nil
 	}
 
 	log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", obj.Dir,obj.Extension)
@@ -241,36 +188,6 @@ func CheckFileNativeType(base FileNativeType, compare FileNativeType)(bool){
 }
 
 func CheckFileCoding(base FileCoding, compare FileCoding)(bool){
-
-	if (base & compare) != 0 {
-
-		return true
-
-	}
-	return false
-}
-
-func CheckFileTipeBit(base FileTipeBit, compare FileTipeBit)(bool){
-
-	if (base & compare) != 0 {
-
-		return true
-
-	}
-	return false
-}
-
-func CheckFileTipeByte(base FileTipeByte, compare FileTipeByte)(bool){
-
-	if (base & compare) != 0 {
-
-		return true
-
-	}
-	return false
-}
-
-func CheckFileTypeDir(base FileTypeDir, compare FileTypeDir)(bool){
 
 	if (base & compare) != 0 {
 

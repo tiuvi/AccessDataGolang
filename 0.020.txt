@@ -1,32 +1,34 @@
-- Separar los buffers de lectura de los buffers de escritura en dos archivos.
+HECHO - Separar los buffers de lectura de los buffers de escritura en dos archivos.
 
-- Nueva organizacion de espacios
+HECHO - Nueva organizacion de espacios
 
-    space     -> inicia el espacio en tiempo de iniciacion (copilacion)
+        space     -> inicia el espacio en tiempo de iniciacion (copilacion)
 
-    spacefile -> Se inicia tanto en copilación como en ejecucion, muchos spacefile
-    pueden tener por ejemplo un solo space.
+        spacefile -> Se inicia tanto en copilación como en ejecucion, muchos spacefile
+        pueden tener por ejemplo un solo space.
 
-    Rbuffer,Wbuffer -> Se inicia tanto en copilación (canales) + archivos permanentes
-    tanto en ejecución , un spacefile puede tener muchos buferes que funcionan 
-    en concurrencia y en paralelo ya que crean siempre nuevas referencias.
+        Rbuffer,Wbuffer -> Se inicia tanto en copilación (canales) + archivos permanentes
+        tanto en ejecución , un spacefile puede tener muchos buferes que funcionan 
+        en concurrencia y en paralelo ya que crean siempre nuevas referencias.
 
-    Estos spacios sirven para poder organizarse en diferentes paquetes, se puede
-    crear un paquete de iniciacion, diferentes paquetes donde se tengan los spacefile
-    y luego otros paquetes en los que se resuelvan los spacefile con bufferes.
+        Estos spacios sirven para poder organizarse en diferentes paquetes, se puede
+        crear un paquete de iniciacion, diferentes paquetes donde se tengan los spacefile
+        y luego otros paquetes en los que se resuelvan los spacefile con bufferes.
 
-    Todo esto da simplicidad a la aplicación no necesitando hacer referencias a 
-    otros paquetes.
+        Todo esto da simplicidad a la aplicación no necesitando hacer referencias a 
+        otros paquetes.
 
-    -TAMBIEN SE HA ELIMINADO NAME Y URL DE LAS FUNCIONES DE COPILACION, AHORA ESTAN EN
-    SPACEFILE QUE SE GUARDA EN LOS MAPAS SUPERGLOBALES.
+        -TAMBIEN SE HA ELIMINADO NAME Y URL DE LAS FUNCIONES DE COPILACION, AHORA ESTAN EN
+        SPACEFILE QUE SE GUARDA EN LOS MAPAS SUPERGLOBALES.
 
-    -EL CAMPO NAME NO EXISTE ES UNA VARIABLE QUE SE INICIA EN TIEMPO DE EJECUCION, CREANDO
-    UN NUEVO SPACEFILE. REUTILIZANDO DIR Y EXTENSION.
+        -EL CAMPO NAME NO EXISTE ES UNA VARIABLE QUE SE INICIA EN TIEMPO DE EJECUCION, CREANDO
+        UN NUEVO SPACEFILE. REUTILIZANDO DIR Y EXTENSION.
 
 
-- Eliminar la funcion read onecolumn por ser redundante y no aportar 
-una mejora de rendimiento.
+HECHO - Eliminar todas las funciones menos byte y bit
+
+HECHO - Eliminar la funcion read onecolumn por ser redundante y no aportar 
+        una mejora de rendimiento.
     EXPLICACION
     - La mejora de rendimiento vino por varios factores, ocultos cuando se hizo
     la funcion.
@@ -37,22 +39,12 @@ una mejora de rendimiento.
     - El uso de variables por referencia de mapas en vez del propio 
     mapa para hacer las cosas.
 
-
-
-    
-
-- Optimizar indexsizefield y indexsizecolumn
-    1 - Si es nil haz algo si no continua.
-    2 - Optimizar la funcion de lectura de indexsizecolumn para que sea comun 
-    a todas las demas .
-
-- Soporte para escritura por rangos y lectura por rangos para los
-indexsizefields.
+HECHO - Tirar error en el buffer de bytes de lectura si se piden varias lineas.
 
 
 
+- Añadir postformat opcional en el buffer de lectura
 
-- Tirar error en el buffer de bytes de lectura si se piden varias lineas.
 
 - Implementacion de mapas sincronizados por ram
     Primer mapa string | int64
@@ -62,21 +54,36 @@ indexsizefields.
     - Mover funciones de sincronizacion de ram a un archivo propio.
 
 
+    INDEXSIZEFIELD IMPORTANTE
+
+        - Falta por añadir indexsize field a las funciones de lectura
+
+        - Optimizar indexsizefield y indexsizecolumn
+            1 - Si es nil haz algo si no continua.
+            2 - Optimizar la funcion de lectura de indexsizecolumn e indexsizefield
+             para que sea comun a todas las demas .
+
+        - Soporte para escritura por rangos y lectura por rangos para los
+        indexsizefields.
+
+        - Añadir indexsizefields dinamicos en tiempo de ejecución, puede ser dentro de la 
+        biblioteca como fuera.
 
 
-- Posible otimizacion eliminar el padding con espacios dejar que la funcion writeat
+ - Posible otimizacion eliminar el padding con espacios dejar que la funcion writeat
     escriba nulos y ver si al leer ese buffer y pasarlo a string luego hay que limpiar
     esos bytes nulos.
 
 - Crear los return buffer , envuelven la funcion read para regresar el valor de un tipo.
 
-- Añadir indexsizefields dinamicos en tiempo de ejecución, puede ser dentro de la 
-biblioteca como fuera.
 
-Rescribir las variables publicas, quitando las variables que no necesariamente se necesiten
+-Rescribir las variables publicas, quitando las variables que no necesariamente se necesiten
 ser accesibles fuera del paquete.
 
 -Añadir versiones a los archivos, de tal modo que se pueda Añadir
 modificaciones, sin tener que actualizar si no actualizacion por uso,
 cuando se usa se modifica directamente a la siguiente version.
 
+- Implementar funciones que muestren los datos para iniciar un space o un file en cualquier otro servidor
+cuando se detecte la extension dacbyte o dacbit, el servidor podra pedir los datos del space para recrearlo.
+- crear funcion que pueda recrear un spacio desde un archivo.

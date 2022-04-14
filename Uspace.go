@@ -33,13 +33,13 @@ func (buf *RBuffer)Rspace (){
 	if CheckFileCoding(buf.FileCoding , Bit){
 
 		buf.readBitSpace()
-	
+		return
 	}
 
 	if CheckFileCoding(buf.FileCoding , Byte){
 
-		buf.readByteSpace()
-
+		 buf.readByteSpace()
+		 return
 	}
 
 	log.Fatalln("Error Grave, Uspace.go ; Funcion: Rspace ;" +
