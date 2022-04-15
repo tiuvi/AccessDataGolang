@@ -27,6 +27,7 @@ type RBuffer struct {
 	SizeLine  int64
 	ColName   string
 	typeBuff  FileTypeBuffer
+	PostFormat bool
 
 	Buffer []byte
 	BufferMap    map[string][][]byte
@@ -35,7 +36,7 @@ type RBuffer struct {
 
 
 //Inicia el numero de columnas en una tabla
-func (sp *spaceFile) BRspace (typeBuff FileTypeBuffer,startLine int64,endLine int64,data ...string )(buf *RBuffer){
+func (sp *spaceFile) BRspace (typeBuff FileTypeBuffer,PostFormat bool, startLine int64,endLine int64,data ...string )(buf *RBuffer){
 	 
 
 	var lenData int64 = int64(len(data))
@@ -61,10 +62,12 @@ func (sp *spaceFile) BRspace (typeBuff FileTypeBuffer,startLine int64,endLine in
 
 	buf = &RBuffer{
 		spaceFile: sp,
+		typeBuff:typeBuff,
+		PostFormat:PostFormat,
 		StartLine: startLine,
 		EndLine:   endLine + 1,
 		SizeLine: sp.SizeLine,
-		typeBuff:typeBuff,
+	
 	}
 
 
@@ -147,7 +150,7 @@ func (buf *RBuffer) NewChanBuffer (){
 	buf.Buffer = make([]byte ,buf.SizeLine)
 }
 
-
+/*
 //Migrar searchbit al buffer read normal
 func (sp *Space) NewSearchBitSpace(line int64, data ...string )(buf *RBuffer){
 
@@ -161,6 +164,7 @@ func (sp *Space) NewSearchBitSpace(line int64, data ...string )(buf *RBuffer){
 
 	return
 }
+*/
 
 func CheckFileTypeBuffer(base FileTypeBuffer, compare FileTypeBuffer)(bool){
 
@@ -172,16 +176,5 @@ func CheckFileTypeBuffer(base FileTypeBuffer, compare FileTypeBuffer)(bool){
 	return false
 }
 
-/*
-//Test Funcion
-func ReadChanBuffer(resp http.ResponseWriter, req *http.Request, buffer Buffer){
 
-
-	for chanBufer := range buffer.Channel {
-
-		resp.Write([]byte("Range chanBuffer: "+ string(chanBufer.Buffer) + "<br><br>" ) )
-
-	}
-}
-*/
 

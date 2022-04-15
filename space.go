@@ -109,23 +109,13 @@ type spacePermDisk struct{
 	sync.RWMutex
 }
 
-
-
-
-
-
-
 func NewDac(){
-
-	log.Println("-----",  "New DAc"  ,"-----")
 
 	go dacTimerCloserDeferFile()
 	
 	go dacTimerCloserDiskFile()
 
 }
-
-
 
 func (obj *Space ) OSpaceInit()bool  {
 

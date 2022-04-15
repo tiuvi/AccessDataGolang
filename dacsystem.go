@@ -6,6 +6,7 @@ import(
 )
 
 
+
 //Timer que cierra cuando hay mas de 10 000 archivos abiertos
 //Maximos archivos Ubuntu 1 048 576 Files  --  700 MB Ram 
 func dacTimerCloserDeferFile(){

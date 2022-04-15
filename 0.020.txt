@@ -43,10 +43,10 @@ HECHO - Tirar error en el buffer de bytes de lectura si se piden varias lineas.
 
 
 
-- Añadir postformat opcional en el buffer de lectura
+HECHO - Añadir postformat opcional en el buffer de lectura
 
 
-- Implementacion de mapas sincronizados por ram
+HECHO - Implementacion de mapas sincronizados por ram
     Primer mapa string | int64
     - implementarlo en el buffer
     - sincronizacion de mapas para cualquier columna.
@@ -87,3 +87,6 @@ cuando se usa se modifica directamente a la siguiente version.
 - Implementar funciones que muestren los datos para iniciar un space o un file en cualquier otro servidor
 cuando se detecte la extension dacbyte o dacbit, el servidor podra pedir los datos del space para recrearlo.
 - crear funcion que pueda recrear un spacio desde un archivo.
+
+
+- Añadir archivo de log de inicio de todos los archivos , seguimiento de errores y demas..

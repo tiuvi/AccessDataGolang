@@ -8,56 +8,80 @@ import (
 
 type SpaceSGMStr struct  {
 	*spaceFile
-	col string
+	colName string
 	Map map[string]int64
 }
 
-//SGMapStringLineInit: Sincroniza un mapa superglobal con un archivo.
-//#bd/ramSync/SGMstringLine
+//SGMapStringLineInit: Sincroniza un mapa string/int64 superglobal con un archivo.
+//#bd/ramSync/SGMapStringLineInit
 func (sF *spaceFile) SGMapStringLineInit(colName string)*SpaceSGMStr {
 
-
+	//Revisamos que la columna sea un indexfield o un indexcolumn
 	sF.check(colName , "Archivo: ramSync.go ; Funcion: SGMstringLine")
 
+	//Creamos un puntero a la estructura.
 	SGMS := &SpaceSGMStr{
 		spaceFile: sF,
-		col: colName,
+		colName: colName,
 		Map: make(map[string]int64),
 	}
 	
+	//Activamos candados de lectura y escritura.
 	sF.Lock()
 	defer sF.Unlock()
 
-	mapColumn := SGMS.BRspace( BuffMap, 0, *sF.SizeFileLine  , colName)
+	//Leemos el fichero completo y desactivamos postformat.
+	//Estos datos son preformateados.
+	mapColumn := SGMS.BRspace( BuffMap, false ,  0, *sF.SizeFileLine  , colName)
 	mapColumn.Rspace()
 
+	//Guardamos el fichero en un mapa
 	var x int64
 	for x = 0 ; x <= *sF.SizeFileLine; x++{
+		
+		mapString := string( mapColumn.BufferMap[colName][x])
 
+		if mapString == ""  {
+			
+			continue
 
-		SGMS.Map[ string( mapColumn.BufferMap[colName][x] ) ] = x
+		}
+
+		SGMS.Map[mapString] = x
 		
 	}
 
 	return SGMS
 }
 
+
+
+
+//SGMapStringLineRead: Lee un elemento y devuelve si existe o no con un boleano.
+//#bd/ramSync/SGMapStringLineRead
 func (SGMS *SpaceSGMStr) SGMapStringLineRead(bufferBytes *[]byte)bool {
 	
-	
+	//Preformateamos los datos para que mantenga la concordancia con el archivo.
 	if SGMS.Hooker != nil {
 
-		SGMS.hookerPreFormatPointer(bufferBytes , SGMS.col)
+		SGMS.hookerPreFormatPointer(bufferBytes , SGMS.colName)
 
 	}
 
+	//Aplicamos los padding del archivo.
+	SGMS.spacePaddingPointer(bufferBytes , SGMS.colName )
+
+	//Borramos los espacios a la derecha
 	SGMS.spaceTrimPointer(bufferBytes)
 
+	//Transformamos a string
 	valueStr := string(*bufferBytes)
 
+	//Añadimos un bloqueo de lectura
 	SGMS.RLock()
 	defer SGMS.RUnlock()
 
+	//Si existe devolvemos true si no false.
 	_ , found := SGMS.Map[valueStr]
 	if found {
 
@@ -70,31 +94,41 @@ func (SGMS *SpaceSGMStr) SGMapStringLineRead(bufferBytes *[]byte)bool {
 
 
 
-//SGMapStringLineUpd: Actualiza un mapa superglobal
-//#bd/ramSync/SGMstringLineUpd
+//SGMapStringLineUpd: Actualiza el archivo y el mapa superglobal, unicamente campos unicos
+//si no retorna false la funcion.
+//#bd/ramSync/SGMapStringLineUpd
 func (SGMS *SpaceSGMStr)SGMapStringLineUpd(line int64 , bufferBytes *[]byte)(int64, bool){
 
-
+	//preformat para el mapa
 	if SGMS.Hooker != nil {
 
-		SGMS.hookerPreFormatPointer(bufferBytes , SGMS.col)
+		SGMS.hookerPreFormatPointer(bufferBytes , SGMS.colName)
 
 	}
 
-    WBuf := SGMS.BWspaceBuff(line, SGMS.col,*bufferBytes)
+	//Aplicamos los padding del archivo.
+	SGMS.spacePaddingPointer(bufferBytes , SGMS.colName )
+
+	//Borramos los espacios a la derecha
+	SGMS.spaceTrimPointer(bufferBytes)
+
+	//Transformamos a string
 	strBuffer := string(*bufferBytes)
 
+	//Creamos el buffer de escritura
+    WBuf := SGMS.BWspaceBuff(line, SGMS.colName,*bufferBytes)
+
+	//creamos los bloqueos
 	SGMS.Lock()
 	defer SGMS.Unlock()
 
+	//Si la linea es -1  buscamos en el mapa, creamos una nueva entrada y una nueva linea en el archivo.
 	if line == -1 {
 
 		_ , found := SGMS.Map[strBuffer]
 		if !found {
 	
 			line := WBuf.Wspace()
-	
-			WBuf.spaceTrimPointer(WBuf.Buffer)
 	
 			SGMS.Map[strBuffer] = line
 		
@@ -104,14 +138,17 @@ func (SGMS *SpaceSGMStr)SGMapStringLineUpd(line int64 , bufferBytes *[]byte)(int
 
 	}
 
+	//Si la linea es > -1 actualizamos la linea y el mapa
 	if line > -1 {
 
-		delete(SGMS.Map , strBuffer)
+		//Primero leemos el fichero y borramos esa linea del mapa
+		BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)
+		BuffBytes.Rspace()
+		delete(SGMS.Map , string(BuffBytes.Buffer))
 
+		//Despues escribimos la nueva linea en el archivo
 		line := WBuf.Wspace()
-	
-		WBuf.spaceTrimPointer(WBuf.Buffer)
-
+		//Añadimos esa linea al mapa tambien
 		SGMS.Map[strBuffer] = line
 	
 		return line, true
@@ -120,101 +157,21 @@ func (SGMS *SpaceSGMStr)SGMapStringLineUpd(line int64 , bufferBytes *[]byte)(int
 	return -1 ,false
 }
 
-/*
-func (obj *spaceFile ) Rmapspace(str_write string)(value int64, found bool){
 
-	if int64(len(str_write)) > obj.SizeLine{
+//SGMapStringLineDel: Borramos un elemento del archivo y del mapa
+//#bd/ramSync/SGMapStringLineDel
+func (SGMS *SpaceSGMStr)SGMapStringLineDel(line int64 ) {
 
-		str_write = str_write[:obj.SizeLine]
+	//Creamos un buffer de lectura y leemos el numero de linea
+	BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)
+	BuffBytes.Rspace()
 
-	}
-	
-	if obj.Hooker != nil {
+	//Borramos ese numero de linea del mapa
+	delete(SGMS.Map , string(BuffBytes.Buffer))
 
-		bufferByte := []byte(str_write)
-		obj.hookerPreFormatPointer(&bufferByte, Preformat)
-		str_write = string(bufferByte)
-	}
-
-
-	obj.RLock()
-	value, found = obj.Search[str_write]
-	obj.RUnlock()
-	return
-}
-*/
-
-
-
-
-
-
-
-/*
-
-func (sF *spaceFile ) ospaceCompilationFileRamIndex() {
-
-	sF.FileNativeType |= RamIndex
-
-	var field string
-
-	for val, ind := range sF.IndexSizeColumns {
-
-		if ind[0] == 0 {
-
-			field = val
-			break
-		}
-	}
-
-	mapColumn := sF.BRspace(BuffMap,0, *sF.SizeFileLine, field)
-	mapColumn.Rspace()
-
-	sF.Index = make([]string ,0)
-	
-	var x int64
-	for x = 0 ; x <= *sF.SizeFileLine; x++{
-		
-		sF.Index = append(sF.Index, string( mapColumn.BufferMap[field][x] ))
-
-	}
+	//borramos la linea enviando un byte null de escritura.
+	WBuf := SGMS.BWspaceBuff(line, SGMS.colName, []byte{})
+	WBuf.Wspace()
 
 }
 
-//#bd/corerealtime
-func (obj *spaceFile ) updateRamIndex(str_write []byte, line int64){
-
-	str := string(bytes.Trim(str_write, " "))
-
-	lenIndex := int64(len(obj.Index))
-	lineAdd  := line + 1
-	if  lenIndex <= lineAdd {
-		
-		for lenIndex <= lineAdd {
-
-			obj.Index = append(obj.Index, "")
-			lenIndex = lenIndex + 1
-		}
-		
-	} 
-
-	obj.Index[line] = str
-
-}
-
-
-func (obj *spaceFile ) Rindexspace(line int64)(value string, found bool){
-
-	if  int64(len(obj.Index) ) > line {
-
-		value, found = obj.Index[line] , true
-
-	} else {
-
-		value, found = "", false
-	}
-
-	return
-}
-
-*/

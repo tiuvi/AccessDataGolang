@@ -48,7 +48,7 @@ func (buf *RBuffer) readByteSpace(){
 			buf.Buffer = bytes.Trim(buf.Buffer , " ")
 
 			//Activamos PostFormat si existe
-			if buf.Hooker != nil {
+			if buf.Hooker != nil && buf.PostFormat == true {
 				
 				buf.hookerPostFormatPointer(&buf.Buffer ,buf.ColName)
 
@@ -83,7 +83,7 @@ func (buf *RBuffer) readByteSpace(){
 
 				
 				//Activamos PostFormat si existe
-				if buf.Hooker != nil {
+				if buf.Hooker != nil && buf.PostFormat == true {
 				
 					buf.hookerPostFormatPointer(&value ,val)
 
@@ -131,7 +131,7 @@ func (buf *RBuffer) readByteSpace(){
 				buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim((*bufMapFile)[  buf.IndexSizeColumns[val][0] : buf.IndexSizeColumns[val][1]  ], " "))
 				
 				//Activamos PostFormat si existe
-					if buf.Hooker !=nil {
+					if buf.Hooker !=nil && buf.PostFormat == true {
 
 						bufferMap  := &buf.BufferMap[val][len(buf.BufferMap[val])-1]
 						buf.hookerPostFormatPointer(bufferMap, val)
