@@ -6,7 +6,7 @@ import (
 
 )
 
-
+//Tipos de buffer para las funciones de lectura y escritura.
 type FileTypeBuffer int64
 const(
 	BuffMap FileTypeBuffer = 1 << iota
@@ -14,17 +14,22 @@ const(
 	BuffBytes
 )
 
+//canal del buffer de lectura.
 type RChanBuf struct{
 	Line int64
 	ColName string
 	Buffer 	[]byte
 }
 
+//Buffer de lectura compatible con multiples lineas y fieldas.
+//El buffer solo puede leer una columna o fields tampoco es compatible con multples lineas.
+//Buffer map es compatible con multiples lineas, fields y columnas
+//El canal de buffer es compatible con mutiples lineas fields y columnas.
 type RBuffer struct {
 	*spaceFile
 	StartLine int64
 	EndLine   int64
-	SizeLine  int64
+	rangeBytes int64
 	ColName   string
 	typeBuff  FileTypeBuffer
 	PostFormat bool
@@ -35,8 +40,10 @@ type RBuffer struct {
 }
 
 
-//Inicia el numero de columnas en una tabla
-func (sp *spaceFile) BRspace (typeBuff FileTypeBuffer,PostFormat bool, startLine int64,endLine int64,data ...string )(buf *RBuffer){
+//BRspace: crea un buffer de lectura, se puede elegir si añadir el postformat de los campos.
+//Las lineas estan precalculadas inicio 0 - fin - 0 equivale a la linea 0, 0 - 1 equivale a la linea 0 y 1.
+//data son los fields y las columnas que se desean.
+func (sp *spaceFile) BRspace(typeBuff FileTypeBuffer,PostFormat bool, startLine int64,endLine int64, rangeBytes int64, data ...string )(buf *RBuffer){
 	 
 
 	var lenData int64 = int64(len(data))
@@ -66,8 +73,7 @@ func (sp *spaceFile) BRspace (typeBuff FileTypeBuffer,PostFormat bool, startLine
 		PostFormat:PostFormat,
 		StartLine: startLine,
 		EndLine:   endLine + 1,
-		SizeLine: sp.SizeLine,
-	
+		rangeBytes: rangeBytes,
 	}
 
 
@@ -81,7 +87,9 @@ func (sp *spaceFile) BRspace (typeBuff FileTypeBuffer,PostFormat bool, startLine
 		}
 
 		for _, colname := range data {
-			
+
+			sp.check(colname, "Archivo: BRspace.go ; Funcion: BRspace")
+
 			buf.ColName = colname
 
 			if sp.IndexSizeFields != nil {
@@ -111,9 +119,11 @@ func (sp *spaceFile) BRspace (typeBuff FileTypeBuffer,PostFormat bool, startLine
 
 		buf.BufferMap = make(map[string][][]byte)
 
-		for _, value := range data {
-		
-			buf.BufferMap[value] = nil
+		for _, colname := range data {
+
+			sp.check(colname, "Archivo: BRspace.go ; Funcion: BRspace")
+
+			buf.BufferMap[colname] = nil
 		}
 	
 		buf.Buffer = make([]byte ,sp.SizeLine)
@@ -127,9 +137,12 @@ func (sp *spaceFile) BRspace (typeBuff FileTypeBuffer,PostFormat bool, startLine
 
 		buf.BufferMap = make(map[string][][]byte)
 
-		for _, value := range data {
-	 
-			buf.BufferMap[value] = make([][]byte ,0)
+		for _, colname := range data {
+
+			sp.check(colname, "Archivo: BRspace.go ; Funcion: BRspace")
+
+			buf.BufferMap[colname] = make([][]byte ,0)
+
 		}
 	 
 		buf.BufferMap["buffer"]    = make([][]byte ,1)

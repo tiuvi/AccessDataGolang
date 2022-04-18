@@ -1,7 +1,6 @@
 package bd
 
 import (
-	"bytes"
 	"log"
 )
 
@@ -16,7 +15,6 @@ func (buf *RBuffer) readByteSpace(){
 
 		if CheckBit(int64(buf.typeBuff), int64(BuffBytes) ){
 
-
 			if buf.IndexSizeFields != nil {
 
 				size, found := buf.IndexSizeFields[buf.ColName]
@@ -27,6 +25,7 @@ func (buf *RBuffer) readByteSpace(){
 						log.Println(err)
 						
 					}
+
 				}
 			}
 
@@ -43,9 +42,13 @@ func (buf *RBuffer) readByteSpace(){
 				}
 			}
 	
-		
-			//Limpiamos espacios en blanco
-			buf.Buffer = bytes.Trim(buf.Buffer , " ")
+			//Limpiamos el buffer de espacios
+			if buf.PostFormat == true {
+
+				buf.spaceTrimPointer(&buf.Buffer)
+
+			}
+
 
 			//Activamos PostFormat si existe
 			if buf.Hooker != nil && buf.PostFormat == true {
@@ -61,44 +64,159 @@ func (buf *RBuffer) readByteSpace(){
 
 	if CheckBit(int64(buf.typeBuff), int64(BuffChan) ){
 
-		for startLine < endLine {
 
-			//El buffer por referencia crea errores en los canales
-			buf.NewChanBuffer()
-			//Leemos una sola linea
-			_ , err = buf.File.ReadAt(buf.Buffer , buf.lenFields + startLine * buf.SizeLine)
-			if err != nil {
+		if buf.IndexSizeFields != nil {
 
-				log.Println(err)
-
-			}
-
-			for val := range buf.BufferMap {
+			for colName := range buf.BufferMap {
 			
-				value := make([]byte,0)
-				value = append(buf.Buffer[buf.IndexSizeColumns[val][0]:buf.IndexSizeColumns[val][1]])
-	
-				//Limpiamos el buffer de espacios
-				value = bytes.Trim(value , " ")
+				size, found := buf.IndexSizeFields[colName]
+				if found {
 
-				
-				//Activamos PostFormat si existe
-				if buf.Hooker != nil && buf.PostFormat == true {
-				
-					buf.hookerPostFormatPointer(&value ,val)
+					sizeTotal := size[1] - size[0]
+
+
+					if buf.rangeBytes < sizeTotal && buf.rangeBytes > 0 {
+						
+						totalRangue := sizeTotal / buf.rangeBytes
+						restoRangue := sizeTotal % buf.rangeBytes
+
+						var x int64
+						for x = 0 ; x < totalRangue; x++ {
+
+							fieldBuffer := make([]byte, buf.rangeBytes)
+							_ , err = buf.File.ReadAt(fieldBuffer , size[0] + (buf.rangeBytes * x) )
+							if err != nil {
+								log.Println(err)
+								
+							}
+
+							//Limpiamos el buffer de espacios
+							if buf.PostFormat == true {
+
+								buf.spaceTrimPointer(&fieldBuffer)
+
+							}
+							
+							//Activamos PostFormat si existe
+							if buf.Hooker != nil && buf.PostFormat == true {
+							
+								buf.hookerPostFormatPointer(&fieldBuffer ,colName)
+
+							}
+
+							buf.Channel <- RChanBuf{x ,colName,fieldBuffer}
+						}
+			
+						
+						if restoRangue != 0 {
+
+			
+							fieldBuffer := make([]byte, restoRangue)
+
+							_ , err = buf.File.ReadAt(fieldBuffer , size[0] + (buf.rangeBytes * x) )
+							if err != nil {
+
+								log.Println(err)
+								
+							}
+
+							//Limpiamos el buffer de espacios
+							if buf.PostFormat == true {
+
+								buf.spaceTrimPointer(&fieldBuffer)
+
+							}
+							
+							//Activamos PostFormat si existe
+							if buf.Hooker != nil && buf.PostFormat == true {
+							
+								buf.hookerPostFormatPointer(&fieldBuffer ,colName)
+
+							}
+
+							buf.Channel <- RChanBuf{x ,colName,fieldBuffer}
+						}	
+					}
+
+
+					if buf.rangeBytes >= sizeTotal || buf.rangeBytes <= 0 {
+
+						fieldBuffer := make([]byte, size[1] - size[0])
+						_ , err = buf.File.ReadAt(fieldBuffer , size[0])
+						if err != nil {
+							log.Println(err)
+							
+						}
+	
+						//Limpiamos el buffer de espacios
+						if buf.PostFormat == true {
+
+							buf.spaceTrimPointer(&fieldBuffer)
+
+						}
+						
+						//Activamos PostFormat si existe
+						if buf.Hooker != nil && buf.PostFormat == true {
+						
+							buf.hookerPostFormatPointer(&fieldBuffer ,colName)
+
+						}
+
+						buf.Channel <- RChanBuf{0 ,colName,fieldBuffer}
+	
+					}
+				}
+			}
+		}
+
+		if buf.IndexSizeColumns != nil {
+
+			for startLine < endLine {
+
+				//El buffer por referencia crea errores en los canales
+				buf.NewChanBuffer()
+				//Leemos una sola linea
+				_ , err = buf.File.ReadAt(buf.Buffer , buf.lenFields + startLine * buf.SizeLine)
+				if err != nil {
+
+					log.Println(err)
 
 				}
-				
-				
-				buf.Channel <- RChanBuf{startLine,val,value}
 
-				
+				for colName := range buf.BufferMap {
+
+					size, found := buf.IndexSizeColumns[colName]
+					if found {
+
+						bufferChan := make([]byte, (size[1] - size[0])  )
+						bufferChan  = buf.Buffer[size[0]:size[1]]
+			
+						//Limpiamos el buffer de espacios
+						if buf.PostFormat == true {
+		
+							buf.spaceTrimPointer(&bufferChan)
+
+						}
+						
+						//Activamos PostFormat si existe
+						if buf.Hooker != nil && buf.PostFormat == true {
+						
+							buf.hookerPostFormatPointer(&bufferChan ,colName)
+
+						}
+						
+						
+						buf.Channel <- RChanBuf{startLine,colName,bufferChan}
+					}
+
+				}
+
+
+				startLine += 1
 			}
-
-
-			startLine += 1
 		}
-	
+
+
 		//Cerramos el canal.
 		close(buf.Channel)
 
@@ -108,44 +226,75 @@ func (buf *RBuffer) readByteSpace(){
 	if CheckBit(int64(buf.typeBuff), int64(BuffMap) ){
 
 	
-
-		bufMapFile := &buf.BufferMap["buffer"][0]
-		_ , err = buf.File.ReadAt(*bufMapFile , buf.lenFields + startLine * buf.SizeLine )
-		if err != nil {
-			log.Println("Error: ",err)
-			//return
-		}
-
-		for startLine < endLine {
+		if buf.IndexSizeFields != nil {
+			for colName := range buf.BufferMap {
 			
-			startLine += 1
+				size, found := buf.IndexSizeFields[colName]
+				if found {
+					_ = size
 
-			for val := range buf.BufferMap {
-
-
-
-				if val == "buffer" {
-					continue
 				}
+			}
+		}
+		
+		if buf.IndexSizeColumns != nil {
 
-				buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim((*bufMapFile)[  buf.IndexSizeColumns[val][0] : buf.IndexSizeColumns[val][1]  ], " "))
+			bufMapFile := &buf.BufferMap["buffer"][0]
+			_ , err = buf.File.ReadAt(*bufMapFile , buf.lenFields + startLine * buf.SizeLine )
+			if err != nil {
+				log.Println("Error: ",err)
+				//return
+			}
+
+			for startLine < endLine {
 				
-				//Activamos PostFormat si existe
-					if buf.Hooker !=nil && buf.PostFormat == true {
+				startLine += 1
 
-						bufferMap  := &buf.BufferMap[val][len(buf.BufferMap[val])-1]
-						buf.hookerPostFormatPointer(bufferMap, val)
-						
+				for colName := range buf.BufferMap {
+
+
+					if colName == "buffer" {
+
+						continue
+
 					}
 
+					size, found := buf.IndexSizeColumns[colName]
+					if found {
+
+						//buf.BufferMap[val] = append(buf.BufferMap[val], bytes.Trim((*bufMapFile)[  buf.IndexSizeColumns[val][0] : buf.IndexSizeColumns[val][1]  ], " "))
+					
+						//Limpiamos el buffer de espacios
+						buf.BufferMap[colName] = append(buf.BufferMap[colName],  (*bufMapFile)[size[0]:size[1]] )
+						
+						
+						
+					
+						//Limpiamos el buffer de espacios
+						if buf.PostFormat == true {
+
+							buf.spaceTrimPointer(&buf.BufferMap[colName][len(buf.BufferMap[colName])-1])
+
+						}
+					
+						//Activamos PostFormat si existe
+						if buf.Hooker !=nil && buf.PostFormat == true {
+
+							buf.hookerPostFormatPointer(&buf.BufferMap[colName][len(buf.BufferMap[colName])-1], colName)
+							
+						}
+
+					}
+				}
+			
+				//End bucle
+				*bufMapFile = (*bufMapFile)[ buf.SizeLine:]
 			}
-		
-			//End bucle
-			*bufMapFile = (*bufMapFile)[ buf.SizeLine:]
-		
-		}
 	
-		delete(buf.BufferMap,"buffer")
+			delete(buf.BufferMap,"buffer")
+		}
+
+
 		return
 	}
 

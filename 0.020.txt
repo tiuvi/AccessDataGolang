@@ -56,37 +56,36 @@ HECHO - Implementacion de mapas sincronizados por ram
 
     INDEXSIZEFIELD IMPORTANTE
 
-        - Falta por añadir indexsize field a las funciones de lectura
+    HECHO - 1 - Crear funcion de lectura de rangos para indexsizefield
+            2 - Crear una funcion comun de lectura de rangos en el core
+            3 - Usar esa funcion para dar soporte a todas las funciones de lectura.
+            5 - Crear un funcion comun de lectura para indexsizecolumn
+            4 - Optimizar todas las funciones de lectura.
+                REVISAR - Si es nil haz algo si no continua.
+                REVISAR - Precalcular campos que no necesitan ser calculados mas de una vez.
+                REVISAR - posibles errores.
+            5 - Migrar a la nueva funcion trim en el core.
 
-        - Optimizar indexsizefield y indexsizecolumn
-            1 - Si es nil haz algo si no continua.
-            2 - Optimizar la funcion de lectura de indexsizecolumn e indexsizefield
-             para que sea comun a todas las demas .
-
-        - Soporte para escritura por rangos y lectura por rangos para los
-        indexsizefields.
-
-        - Añadir indexsizefields dinamicos en tiempo de ejecución, puede ser dentro de la 
-        biblioteca como fuera.
-
-
- - Posible otimizacion eliminar el padding con espacios dejar que la funcion writeat
-    escriba nulos y ver si al leer ese buffer y pasarlo a string luego hay que limpiar
-    esos bytes nulos.
-
-- Crear los return buffer , envuelven la funcion read para regresar el valor de un tipo.
+            6 - Migracion global a bytes nulos en vez de espacios.
 
 
--Rescribir las variables publicas, quitando las variables que no necesariamente se necesiten
-ser accesibles fuera del paquete.
-
--Añadir versiones a los archivos, de tal modo que se pueda Añadir
-modificaciones, sin tener que actualizar si no actualizacion por uso,
-cuando se usa se modifica directamente a la siguiente version.
-
-- Implementar funciones que muestren los datos para iniciar un space o un file en cualquier otro servidor
-cuando se detecte la extension dacbyte o dacbit, el servidor podra pedir los datos del space para recrearlo.
-- crear funcion que pueda recrear un spacio desde un archivo.
+FUNCIONALIDAD - Soporte para escritura por rangos 
 
 
-- Añadir archivo de log de inicio de todos los archivos , seguimiento de errores y demas..
+
+OPTIMIZACION - Rescribir las variables publicas, quitando las variables que no necesariamente se necesiten
+                ser accesibles fuera del paquete.
+
+IDEA - SubPaquete para gestionar indexsizefields dinamicos en tiempo de ejecución.
+IDEA - SubPaquete que envuelva las funciones de lectura para tipar los resultados.
+IDEA - Añadir versiones a los archivos, de tal modo que se pueda Añadir modificaciones, sin tener que actualizar 
+        si no actualizacion por uso, cuando se usa se modifica directamente a la siguiente version.
+
+IDEA - SubPaquete que gestione log y errores, usando el sistema dac.
+        Añadir archivo de log de inicio de todos los archivos , seguimiento de errores y demas..
+
+IDEA - SubPaquete funciones que muestren los datos para iniciar un space o un file en cualquier otro servidor
+        cuando se detecte la extension dacbyte o dacbit, el servidor podra pedir los datos del space para recrearlo.
+     - crear funcion que pueda recrear un spacio desde un archivo.
+
+

@@ -340,3 +340,16 @@ func (sP *Space) check(name string, err string){
 	}
 
 }
+
+
+
+
+//WriteIndexSizeField: Escribe los fields en los archivos.
+//#bd/core.go
+func (sF *RBuffer) readIndexSizeField(columnName string,buff *[]byte ){
+
+
+	
+
+
+}
