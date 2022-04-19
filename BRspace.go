@@ -29,12 +29,16 @@ type RBuffer struct {
 	*spaceFile
 	StartLine int64
 	EndLine   int64
-	rangeBytes int64
+
 	ColName   string
 	typeBuff  FileTypeBuffer
 	PostFormat bool
 
-	Buffer []byte
+	Rangue int64 
+	TotalRangue int64 
+	RangeBytes int64
+
+	Buffer *[]byte
 	BufferMap    map[string][][]byte
 	Channel chan RChanBuf
 }
@@ -43,7 +47,7 @@ type RBuffer struct {
 //BRspace: crea un buffer de lectura, se puede elegir si añadir el postformat de los campos.
 //Las lineas estan precalculadas inicio 0 - fin - 0 equivale a la linea 0, 0 - 1 equivale a la linea 0 y 1.
 //data son los fields y las columnas que se desean.
-func (sp *spaceFile) BRspace(typeBuff FileTypeBuffer,PostFormat bool, startLine int64,endLine int64, rangeBytes int64, data ...string )(buf *RBuffer){
+func (sp *spaceFile) BRspace(typeBuff FileTypeBuffer,PostFormat bool, startLine int64,endLine int64,  data ...string )(buf *RBuffer){
 	 
 
 	var lenData int64 = int64(len(data))
@@ -73,7 +77,9 @@ func (sp *spaceFile) BRspace(typeBuff FileTypeBuffer,PostFormat bool, startLine 
 		PostFormat:PostFormat,
 		StartLine: startLine,
 		EndLine:   endLine + 1,
-		rangeBytes: rangeBytes,
+		
+		TotalRangue: 1,
+		Rangue: 0,
 	}
 
 
@@ -95,8 +101,8 @@ func (sp *spaceFile) BRspace(typeBuff FileTypeBuffer,PostFormat bool, startLine 
 			if sp.IndexSizeFields != nil {
 				size, found := sp.IndexSizeFields[buf.ColName]
 				if found {
-
-					buf.Buffer = make([]byte ,size[1] - size[0])
+					 buf.Buffer = new([]byte)
+					*buf.Buffer = make([]byte ,size[1] - size[0])
 					return
 				}
 			}
@@ -104,8 +110,8 @@ func (sp *spaceFile) BRspace(typeBuff FileTypeBuffer,PostFormat bool, startLine 
 			if sp.IndexSizeColumns != nil {
 				size, found := sp.IndexSizeColumns[buf.ColName]
 				if found {
-					
-					buf.Buffer = make([]byte ,size[1] - size[0])
+					 buf.Buffer = new([]byte)
+					*buf.Buffer = make([]byte ,size[1] - size[0])
 					return
 				}
 			}
@@ -125,8 +131,8 @@ func (sp *spaceFile) BRspace(typeBuff FileTypeBuffer,PostFormat bool, startLine 
 
 			buf.BufferMap[colname] = nil
 		}
-	
-		buf.Buffer = make([]byte ,sp.SizeLine)
+		buf.Buffer = new([]byte)
+		*buf.Buffer = make([]byte ,sp.SizeLine)
 		buf.Channel =  make(chan RChanBuf,1)
 
 		return
@@ -159,8 +165,8 @@ func (sp *spaceFile) BRspace(typeBuff FileTypeBuffer,PostFormat bool, startLine 
 //Si no se crea un buffer nuevo antes de cada envio el buffer falla al intentar
 //pasarlo por referencia
 func (buf *RBuffer) NewChanBuffer (){
-
-	buf.Buffer = make([]byte ,buf.SizeLine)
+	 buf.Buffer = new([]byte)
+	*buf.Buffer = make([]byte ,buf.SizeLine)
 }
 
 /*

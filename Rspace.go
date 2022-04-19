@@ -20,11 +20,8 @@ func (buf *RBuffer) readByteSpace(){
 				size, found := buf.IndexSizeFields[buf.ColName]
 				if found {
 
-					_ , err = buf.File.ReadAt(buf.Buffer , size[0])
-					if err != nil {
-						log.Println(err)
-						
-					}
+					buf.TotalRangue, buf.Buffer = buf.readIndexSizeFieldPointer(buf.ColName, size)
+					return
 
 				}
 			}
@@ -33,19 +30,20 @@ func (buf *RBuffer) readByteSpace(){
 
 				size, found := buf.IndexSizeColumns[buf.ColName]
 				if found {
-				
-					_ , err = buf.File.ReadAt(buf.Buffer , buf.lenFields + (startLine * buf.SizeLine) + size[0])
+
+					_ , err = buf.File.ReadAt(*buf.Buffer , buf.lenFields + (startLine * buf.SizeLine) + size[0])
 					if err != nil {
 						log.Println(err)
 						
 					}
+					
 				}
 			}
 	
 			//Limpiamos el buffer de espacios
 			if buf.PostFormat == true {
 
-				buf.spaceTrimPointer(&buf.Buffer)
+				buf.spaceTrimPointer(buf.Buffer)
 
 			}
 
@@ -53,7 +51,7 @@ func (buf *RBuffer) readByteSpace(){
 			//Activamos PostFormat si existe
 			if buf.Hooker != nil && buf.PostFormat == true {
 				
-				buf.hookerPostFormatPointer(&buf.Buffer ,buf.ColName)
+				buf.hookerPostFormatPointer(buf.Buffer ,buf.ColName)
 
 			}
 
@@ -71,99 +69,19 @@ func (buf *RBuffer) readByteSpace(){
 			
 				size, found := buf.IndexSizeFields[colName]
 				if found {
-
-					sizeTotal := size[1] - size[0]
-
-
-					if buf.rangeBytes < sizeTotal && buf.rangeBytes > 0 {
-						
-						totalRangue := sizeTotal / buf.rangeBytes
-						restoRangue := sizeTotal % buf.rangeBytes
-
-						var x int64
-						for x = 0 ; x < totalRangue; x++ {
-
-							fieldBuffer := make([]byte, buf.rangeBytes)
-							_ , err = buf.File.ReadAt(fieldBuffer , size[0] + (buf.rangeBytes * x) )
-							if err != nil {
-								log.Println(err)
-								
-							}
-
-							//Limpiamos el buffer de espacios
-							if buf.PostFormat == true {
-
-								buf.spaceTrimPointer(&fieldBuffer)
-
-							}
-							
-							//Activamos PostFormat si existe
-							if buf.Hooker != nil && buf.PostFormat == true {
-							
-								buf.hookerPostFormatPointer(&fieldBuffer ,colName)
-
-							}
-
-							buf.Channel <- RChanBuf{x ,colName,fieldBuffer}
-						}
-			
-						
-						if restoRangue != 0 {
-
-			
-							fieldBuffer := make([]byte, restoRangue)
-
-							_ , err = buf.File.ReadAt(fieldBuffer , size[0] + (buf.rangeBytes * x) )
-							if err != nil {
-
-								log.Println(err)
-								
-							}
-
-							//Limpiamos el buffer de espacios
-							if buf.PostFormat == true {
-
-								buf.spaceTrimPointer(&fieldBuffer)
-
-							}
-							
-							//Activamos PostFormat si existe
-							if buf.Hooker != nil && buf.PostFormat == true {
-							
-								buf.hookerPostFormatPointer(&fieldBuffer ,colName)
-
-							}
-
-							buf.Channel <- RChanBuf{x ,colName,fieldBuffer}
-						}	
-					}
-
-
-					if buf.rangeBytes >= sizeTotal || buf.rangeBytes <= 0 {
-
-						fieldBuffer := make([]byte, size[1] - size[0])
-						_ , err = buf.File.ReadAt(fieldBuffer , size[0])
-						if err != nil {
-							log.Println(err)
-							
-						}
 	
-						//Limpiamos el buffer de espacios
-						if buf.PostFormat == true {
+					var fieldBuffer *[]byte
+					
+					buf.Rangue      = 0
+					buf.TotalRangue = 1
 
-							buf.spaceTrimPointer(&fieldBuffer)
+					for buf.Rangue < buf.TotalRangue {
 
-						}
-						
-						//Activamos PostFormat si existe
-						if buf.Hooker != nil && buf.PostFormat == true {
-						
-							buf.hookerPostFormatPointer(&fieldBuffer ,colName)
+						buf.TotalRangue, fieldBuffer = buf.readIndexSizeFieldPointer(colName, size)
 
-						}
+						buf.Channel <- RChanBuf{buf.Rangue ,colName,*fieldBuffer}
 
-						buf.Channel <- RChanBuf{0 ,colName,fieldBuffer}
-	
+						buf.Rangue++
 					}
 				}
 			}
@@ -176,7 +94,7 @@ func (buf *RBuffer) readByteSpace(){
 				//El buffer por referencia crea errores en los canales
 				buf.NewChanBuffer()
 				//Leemos una sola linea
-				_ , err = buf.File.ReadAt(buf.Buffer , buf.lenFields + startLine * buf.SizeLine)
+				_ , err = buf.File.ReadAt(*buf.Buffer , buf.lenFields + startLine * buf.SizeLine)
 				if err != nil {
 
 					log.Println(err)
@@ -189,7 +107,7 @@ func (buf *RBuffer) readByteSpace(){
 					if found {
 
 						bufferChan := make([]byte, (size[1] - size[0])  )
-						bufferChan  = buf.Buffer[size[0]:size[1]]
+						bufferChan  = (*buf.Buffer)[size[0]:size[1]]
 			
 						//Limpiamos el buffer de espacios
 						if buf.PostFormat == true {
@@ -231,8 +149,22 @@ func (buf *RBuffer) readByteSpace(){
 			
 				size, found := buf.IndexSizeFields[colName]
 				if found {
-					_ = size
+				
+					var fieldBuffer *[]byte
 
+					buf.Rangue      = 0
+					buf.TotalRangue = 1
+
+					for buf.Rangue < buf.TotalRangue {
+
+						buf.TotalRangue, fieldBuffer = buf.readIndexSizeFieldPointer(colName, size)
+					
+						buf.BufferMap[colName]       = append(buf.BufferMap[colName],  *fieldBuffer )
+						
+						buf.Rangue++
+
+					}
+					
 				}
 			}
 		}
@@ -315,7 +247,7 @@ func (buf *RBuffer) readBitSpace() {
 			size, found := buf.IndexSizeFields[buf.ColName]
 			if found {
 			
-				_ , err := buf.File.ReadAt(buf.Buffer , size[0])
+				_ , err := buf.File.ReadAt(*buf.Buffer , size[0])
 				if err != nil {
 					log.Println(err)
 					return
@@ -337,7 +269,7 @@ func (buf *RBuffer) readBitSpace() {
 		_ , err := buf.File.ReadAt(bufferBit ,buf.lenFields + byteLine)
 		if err !=nil {
 
-			buf.Buffer = []byte("off")
+			*buf.Buffer = []byte("off")
 			return
 		}
 
@@ -347,11 +279,11 @@ func (buf *RBuffer) readBitSpace() {
 
 		if turn {
 
-			buf.Buffer = []byte("on")
+			*buf.Buffer = []byte("on")
 
 		}else{
 
-			buf.Buffer = []byte("off")
+			*buf.Buffer = []byte("off")
 
 		}
 		return

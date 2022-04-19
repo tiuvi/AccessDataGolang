@@ -346,10 +346,116 @@ func (sP *Space) check(name string, err string){
 
 //WriteIndexSizeField: Escribe los fields en los archivos.
 //#bd/core.go
-func (sF *RBuffer) readIndexSizeField(columnName string,buff *[]byte ){
+func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 )(int64, *[]byte){
+
+	fieldBuffer := new([]byte)
+
+	sizeTotal := size[1] - size[0]
+
+	if buf.RangeBytes < sizeTotal && buf.RangeBytes > 0 {
+		
+		totalRangue := sizeTotal / buf.RangeBytes
+		restoRangue := sizeTotal % buf.RangeBytes
 
 
-	
+
+		log.Println( "rangue: ", buf.Rangue , "totalRangueAfter: " , totalRangue)
+
+		if buf.Rangue < totalRangue {
+
+			*fieldBuffer = make([]byte, buf.RangeBytes)
+			_ , err := buf.File.ReadAt(*fieldBuffer , size[0] + (buf.RangeBytes * buf.Rangue) )
+			if err != nil {
+				log.Println(err)
+				
+			}
+
+			//Limpiamos el buffer de espacios
+			if buf.PostFormat == true {
+
+				buf.spaceTrimPointer(fieldBuffer)
+
+			}
+			
+			//Activamos PostFormat si existe
+			if buf.Hooker != nil && buf.PostFormat == true {
+			
+				buf.hookerPostFormatPointer(fieldBuffer ,colName)
+
+			}
+
+			if restoRangue != 0 {
+			
+				totalRangue += 1
+			}
+
+			return totalRangue , fieldBuffer
+
+			
+		}
+
+		
+		if  buf.Rangue == totalRangue && restoRangue != 0 {
 
 
+			*fieldBuffer = make([]byte, restoRangue)
+
+			_ , err := buf.File.ReadAt(*fieldBuffer , size[0] + (buf.RangeBytes * buf.Rangue) )
+			if err != nil {
+
+				log.Println(err)
+				
+			}
+
+			//Limpiamos el buffer de espacios
+			if buf.PostFormat == true {
+
+				buf.spaceTrimPointer(fieldBuffer)
+
+			}
+			
+			//Activamos PostFormat si existe
+			if buf.Hooker != nil && buf.PostFormat == true {
+			
+				buf.hookerPostFormatPointer(fieldBuffer ,colName)
+
+			}
+
+			totalRangue += 1
+			
+
+			return totalRangue , fieldBuffer
+
+		}	
+	}
+
+
+	if buf.RangeBytes >= sizeTotal || buf.RangeBytes <= 0 {
+
+		*fieldBuffer = make([]byte, size[1] - size[0])
+		_ , err := buf.File.ReadAt(*fieldBuffer , size[0])
+		if err != nil {
+			log.Println(err)
+			
+		}
+
+		//Limpiamos el buffer de espacios
+		if buf.PostFormat == true {
+
+			buf.spaceTrimPointer(fieldBuffer)
+
+		}
+		
+		//Activamos PostFormat si existe
+		if buf.Hooker != nil && buf.PostFormat == true {
+		
+			buf.hookerPostFormatPointer(fieldBuffer ,colName)
+
+		}
+
+
+		return 0 , fieldBuffer
+	}
+
+	return -1 , &[]byte{}
 }

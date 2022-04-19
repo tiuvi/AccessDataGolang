@@ -57,8 +57,10 @@ HECHO - Implementacion de mapas sincronizados por ram
     INDEXSIZEFIELD IMPORTANTE
 
     HECHO - 1 - Crear funcion de lectura de rangos para indexsizefield
-            2 - Crear una funcion comun de lectura de rangos en el core
-            3 - Usar esa funcion para dar soporte a todas las funciones de lectura.
+    HECHO - 2 - Crear una funcion comun de lectura de rangos en el core
+        
+            3 - Usar esa funcion para dar soporte a todas las funciones de lectura. (FALTA BITS)
+
             5 - Crear un funcion comun de lectura para indexsizecolumn
             4 - Optimizar todas las funciones de lectura.
                 REVISAR - Si es nil haz algo si no continua.

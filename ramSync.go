@@ -32,7 +32,7 @@ func (sF *spaceFile) SGMapStringLineInit(colName string)*SpaceSGMStr {
 
 	//Leemos el fichero completo y desactivamos postformat.
 	//Estos datos son preformateados.
-	mapColumn := SGMS.BRspace( BuffMap, false ,  0, *sF.SizeFileLine  ,0, colName)
+	mapColumn := SGMS.BRspace( BuffMap, false ,  0, *sF.SizeFileLine  , colName)
 	mapColumn.Rspace()
 
 
@@ -146,13 +146,13 @@ func (SGMS *SpaceSGMStr)SGMapStringLineUpd(line int64 , bufferBytes *[]byte)(int
 	if line > -1 {
 
 		//Primero leemos el fichero y borramos esa linea del mapa
-		BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  ,0, SGMS.colName)
+		BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)
 		BuffBytes.Rspace()
 
 		//Borramos los espacios a la derecha
-		SGMS.spaceTrimPointer(&BuffBytes.Buffer)
+		SGMS.spaceTrimPointer(BuffBytes.Buffer)
 
-		delete(SGMS.Map , string(BuffBytes.Buffer))
+		delete(SGMS.Map , string(*BuffBytes.Buffer))
 
 		//Despues escribimos la nueva linea en el archivo
 		line := WBuf.Wspace()
@@ -171,14 +171,14 @@ func (SGMS *SpaceSGMStr)SGMapStringLineUpd(line int64 , bufferBytes *[]byte)(int
 func (SGMS *SpaceSGMStr)SGMapStringLineDel(line int64 ) {
 
 	//Creamos un buffer de lectura y leemos el numero de linea
-	BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  ,0, SGMS.colName)
+	BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)
 	BuffBytes.Rspace()
 
 	//Borramos los espacios a la derecha
-	SGMS.spaceTrimPointer(&BuffBytes.Buffer)
+	SGMS.spaceTrimPointer(BuffBytes.Buffer)
 
 	//Borramos ese numero de linea del mapa
-	delete(SGMS.Map , string(BuffBytes.Buffer))
+	delete(SGMS.Map , string(*BuffBytes.Buffer))
 
 	//borramos la linea enviando un byte null de escritura.
 	WBuf := SGMS.BWspaceBuff(line, SGMS.colName, &[]byte{})
