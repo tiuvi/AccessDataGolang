@@ -17,7 +17,7 @@ type SpaceSGMStr struct  {
 func (sF *spaceFile) SGMapStringLineInit(colName string)*SpaceSGMStr {
 
 	//Revisamos que la columna sea un indexfield o un indexcolumn
-	sF.check(colName , "Archivo: ramSync.go ; Funcion: SGMstringLine")
+	sF.checkColFil(colName , "Archivo: ramSync.go ; Funcion: SGMstringLine")
 
 	//Creamos un puntero a la estructura.
 	SGMS := &SpaceSGMStr{
@@ -32,9 +32,10 @@ func (sF *spaceFile) SGMapStringLineInit(colName string)*SpaceSGMStr {
 
 	//Leemos el fichero completo y desactivamos postformat.
 	//Estos datos son preformateados.
-	mapColumn := SGMS.BRspace( BuffMap, false ,  0, *sF.SizeFileLine  , colName)
-	mapColumn.Rspace()
+	//mapColumn := SGMS.BRspace( BuffMap, false ,  0, *sF.SizeFileLine  , colName)
+	//mapColumn.Rspace()
 
+	mapColumn := SGMS.GetAllLines(colName)
 
 	//Guardamos el fichero en un mapa
 	var x int64
@@ -146,8 +147,10 @@ func (SGMS *SpaceSGMStr)SGMapStringLineUpd(line int64 , bufferBytes *[]byte)(int
 	if line > -1 {
 
 		//Primero leemos el fichero y borramos esa linea del mapa
-		BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)
-		BuffBytes.Rspace()
+		//BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)
+		//BuffBytes.Rspace()
+
+		BuffBytes := SGMS.GetOneLine(SGMS.colName , line)
 
 		//Borramos los espacios a la derecha
 		SGMS.spaceTrimPointer(BuffBytes.Buffer)
@@ -171,8 +174,9 @@ func (SGMS *SpaceSGMStr)SGMapStringLineUpd(line int64 , bufferBytes *[]byte)(int
 func (SGMS *SpaceSGMStr)SGMapStringLineDel(line int64 ) {
 
 	//Creamos un buffer de lectura y leemos el numero de linea
-	BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)
-	BuffBytes.Rspace()
+	//BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)
+	//BuffBytes.Rspace()
+	BuffBytes := SGMS.GetOneLine(SGMS.colName , line)
 
 	//Borramos los espacios a la derecha
 	SGMS.spaceTrimPointer(BuffBytes.Buffer)

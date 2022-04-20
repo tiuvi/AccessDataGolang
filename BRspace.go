@@ -26,165 +26,182 @@ type RChanBuf struct{
 //Buffer map es compatible con multiples lineas, fields y columnas
 //El canal de buffer es compatible con mutiples lineas fields y columnas.
 type RBuffer struct {
-	*spaceFile
-	StartLine int64
-	EndLine   int64
+	check bool
 
-	ColName   string
-	typeBuff  FileTypeBuffer
+	*spaceFile
+	typeBuff   FileTypeBuffer
 	PostFormat bool
 
-	Rangue int64 
-	TotalRangue int64 
-	RangeBytes int64
+	StartLine  int64
+	EndLine    int64
+	ColName    *[]string
 
-	Buffer *[]byte
+	Rangue      int64 
+	TotalRangue int64 
+	RangeBytes  int64
+
+	FieldBuffer *[]byte
+	Buffer      *[]byte
 	BufferMap    map[string][][]byte
-	Channel chan RChanBuf
+	Channel      chan RChanBuf
 }
 
+
+func (sF *spaceFile)NewBRspace(typeBuff FileTypeBuffer)(buf *RBuffer){
+
+	return &RBuffer{
+			spaceFile: sF,
+			typeBuff:typeBuff,
+	}
+}
+
+func (RB *RBuffer)CheckBRspace(active bool){
+
+	RB.check = active
+}
+
+func (RB *RBuffer)PostFormatBRspace(active bool){
+
+	RB.PostFormat = active
+}
+
+func (RB *RBuffer)OneLineBRspace(line int64){
+
+	if RB.check && *RB.SizeFileLine < line {
+		
+		log.Fatalln("Error de buffer archivo: ",RB.Url , " Linea final: ",line  , " Numero de lineas del archivo: ", *RB.SizeFileLine)
+		
+	}
+
+	RB.StartLine = line
+	RB.EndLine   = line + 1
+}
+
+func (RB *RBuffer)MultiLineBRspace(startLine int64,endLine int64){
+
+	if RB.check && *RB.SizeFileLine < endLine {
+		
+		log.Fatalln("Error de buffer archivo: ",RB.Url , " Linea final: ",endLine  , " Numero de lineas del archivo: ", *RB.SizeFileLine)
+		
+	}
+
+	RB.StartLine = startLine
+	RB.EndLine   = endLine + 1
+}
+
+func (RB *RBuffer)AllLinesBRspace(){
+
+	RB.StartLine = 0
+	RB.EndLine   = *RB.SizeFileLine + 1
+}
+
+func (RB *RBuffer)RangeBytesBRspace(RangeBytes int64){
+
+	RB.RangeBytes  = RangeBytes
+	RB.TotalRangue = 1
+	RB.Rangue      = 0
+}
 
 //BRspace: crea un buffer de lectura, se puede elegir si añadir el postformat de los campos.
 //Las lineas estan precalculadas inicio 0 - fin - 0 equivale a la linea 0, 0 - 1 equivale a la linea 0 y 1.
 //data son los fields y las columnas que se desean.
-func (sp *spaceFile) BRspace(typeBuff FileTypeBuffer,PostFormat bool, startLine int64,endLine int64,  data ...string )(buf *RBuffer){
+func (RB *RBuffer)BRspace(data ...string ){
 	 
+	if RB.check {
 
-	var lenData int64 = int64(len(data))
+		if  int64(len(data)) > RB.lenColumns + RB.lenFields {
 
-	if  *sp.SizeFileLine < endLine {
+			log.Fatalln("Error el archivo solo tiene: ",RB.lenColumns + RB.lenFields,"columnas y campos",RB.Url   )
 		
-		log.Fatalln("Error de buffer archivo: ",sp.Url , " Linea final: ",endLine  , " Numero de lineas del archivo: ", *sp.SizeFileLine)
-		
-	}
-
-
-	if lenData > sp.lenColumns + sp.lenFields {
-
-		log.Fatalln("Error el archivo solo tiene: ",sp.lenColumns + sp.lenFields,"columnas y campos",sp.Url   )
+		}
 	
-	}
-
-	if lenData == 0 {
-
-		log.Fatalln("No se puede enviar un buffer vacio en:",sp.Url   )
+		if  len(data) == 0 {
 	
-	}
-
-	buf = &RBuffer{
-		spaceFile: sp,
-		typeBuff:typeBuff,
-		PostFormat:PostFormat,
-		StartLine: startLine,
-		EndLine:   endLine + 1,
+			log.Fatalln("No se puede enviar un buffer vacio en:",RB.Url   )
 		
-		TotalRangue: 1,
-		Rangue: 0,
+		}
+
+		if CheckFileTypeBuffer(RB.typeBuff, BuffBytes ){
+
+			if RB.check && len(data) > 1 {
+	
+				log.Fatalln("El Buffer de Bytes solo es compatible con un unico campo.",RB.Url   )
+			
+			}
+		}
+
+		for _, colname := range data {
+
+			if RB.check {
+
+				RB.checkColFil(colname, "Archivo: BRspace.go ; Funcion: BRspace")
+			}
+		}
+
 	}
 
+	RB.ColName = &data
 
 	//Buffer de bytes
-	if CheckFileTypeBuffer(typeBuff, BuffBytes ){
+	if CheckFileTypeBuffer(RB.typeBuff, BuffBytes ){
 
-		if lenData > 1 {
+	
+		if RB.IndexSizeFields != nil {
+			_, found := RB.IndexSizeFields[(*RB.ColName)[0]]
+			if found {
+				RB.FieldBuffer = new([]byte)
+				return
+			}
+		}
 
-			log.Fatalln("El Buffer de Bytes solo es compatible con un unico campo.",sp.Url   )
+		if RB.IndexSizeColumns != nil {
+			size, found := RB.IndexSizeColumns[(*RB.ColName)[0]]
+			if found {
+				RB.Buffer = new([]byte)
+				*RB.Buffer = make([]byte ,size[1] - size[0])
+				return
+			}
+		}
 		
-		}
-
-		for _, colname := range data {
-
-			sp.check(colname, "Archivo: BRspace.go ; Funcion: BRspace")
-
-			buf.ColName = colname
-
-			if sp.IndexSizeFields != nil {
-				size, found := sp.IndexSizeFields[buf.ColName]
-				if found {
-					 buf.Buffer = new([]byte)
-					*buf.Buffer = make([]byte ,size[1] - size[0])
-					return
-				}
-			}
-
-			if sp.IndexSizeColumns != nil {
-				size, found := sp.IndexSizeColumns[buf.ColName]
-				if found {
-					 buf.Buffer = new([]byte)
-					*buf.Buffer = make([]byte ,size[1] - size[0])
-					return
-				}
-			}
-		}
-
-		log.Fatalln("Buffer de Bytes sin coincidencias de campos o columnas.",sp.Url   )
 		return
 	}
 	
-	if CheckFileTypeBuffer(typeBuff, BuffChan){
 
-		buf.BufferMap = make(map[string][][]byte)
+	if CheckFileTypeBuffer(RB.typeBuff, BuffChan){
 
-		for _, colname := range data {
-
-			sp.check(colname, "Archivo: BRspace.go ; Funcion: BRspace")
-
-			buf.BufferMap[colname] = nil
-		}
-		buf.Buffer = new([]byte)
-		*buf.Buffer = make([]byte ,sp.SizeLine)
-		buf.Channel =  make(chan RChanBuf,1)
+		RB.FieldBuffer = new([]byte)
+		RB.Buffer      = new([]byte)
+		*RB.Buffer     = make([]byte ,RB.SizeLine)
+		RB.Channel     =  make(chan RChanBuf,1)
 
 		return
 	}
 	
-	if CheckFileTypeBuffer(typeBuff, BuffMap ){
 
+	if CheckFileTypeBuffer(RB.typeBuff, BuffMap ){
 
-		buf.BufferMap = make(map[string][][]byte)
+		RB.FieldBuffer  = new([]byte)
 
-		for _, colname := range data {
+		RB.BufferMap    = make(map[string][][]byte)
+		RB.BufferMap["buffer"]    = make([][]byte ,1)
+		RB.BufferMap["buffer"][0] = make([]byte ,RB.SizeLine * (RB.EndLine - RB.StartLine ))
 
-			sp.check(colname, "Archivo: BRspace.go ; Funcion: BRspace")
-
-			buf.BufferMap[colname] = make([][]byte ,0)
-
-		}
-	 
-		buf.BufferMap["buffer"]    = make([][]byte ,1)
-		buf.BufferMap["buffer"][0] = make([]byte ,sp.SizeLine * (buf.EndLine - buf.StartLine ))
 		return
 	}
 
-
-	log.Fatalln("Buffer flags definidas incorrectamente: ",typeBuff)
-   	return
 }
 
 //Funcion de soporte para la lectura y posterior envio de datos en un canal.
 //Si no se crea un buffer nuevo antes de cada envio el buffer falla al intentar
 //pasarlo por referencia
 func (buf *RBuffer) NewChanBuffer (){
+
 	 buf.Buffer = new([]byte)
 	*buf.Buffer = make([]byte ,buf.SizeLine)
+
 }
 
-/*
-//Migrar searchbit al buffer read normal
-func (sp *Space) NewSearchBitSpace(line int64, data ...string )(buf *RBuffer){
-
-	buf = &RBuffer{
-		StartLine: line,
-		BufferMap: make(map[string][][]byte),
-	}
-
-	buf.BufferMap["buffer"]    = make([][]byte , 1)
-	buf.BufferMap["buffer"][0] = make([]byte   , 1)
-
-	return
-}
-*/
-
+//Revisa el tipo de buffer y devuelve true o false dependiendo de si hay coincidencia.
 func CheckFileTypeBuffer(base FileTypeBuffer, compare FileTypeBuffer)(bool){
 
 	if (base & compare) != 0 {
@@ -192,7 +209,9 @@ func CheckFileTypeBuffer(base FileTypeBuffer, compare FileTypeBuffer)(bool){
 		return true
 
 	}
+
 	return false
+
 }
 
 

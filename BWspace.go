@@ -30,7 +30,7 @@ type WBuffer struct {
 //Esta funcion usa una referencia de bytes para escribir en un archivo.
 func (sp *spaceFile) BWspaceBuff(line int64 ,columnName string, bufferBytes *[]byte)(*WBuffer){
 
-	sp.check(columnName, "Archivo: BWspace.go ; Funcion: BWspaceBuff")
+	sp.checkColFil(columnName, "Archivo: BWspace.go ; Funcion: BWspaceBuff")
 
 	return &WBuffer{
 		spaceFile: sp,
@@ -47,7 +47,7 @@ func (sp *spaceFile) BWspaceBuffMap(line int64 , bufferMap map[string][]byte)(*W
 
 	for columnName := range bufferMap {
 	
-		sp.check(columnName, "Archivo: BWspace.go ; Funcion: BWspaceBuffMap")
+		sp.checkColFil(columnName, "Archivo: BWspace.go ; Funcion: BWspaceBuffMap")
 
 	}
 
@@ -77,7 +77,7 @@ func (sp *spaceFile)BWChanBuf()(*WBuffer){
 func (WBuffer *WBuffer)BWspaceSendchan(line int64, columnName string , bufferChan *[]byte)int64{
 
 
-	WBuffer.check(columnName, "Archivo: BWspace.go ; Funcion: BWspaceSendchan")
+	WBuffer.checkColFil(columnName, "Archivo: BWspace.go ; Funcion: BWspaceSendchan")
 
 	//Actualización de campos sin lineas.
 	if line != -2 {

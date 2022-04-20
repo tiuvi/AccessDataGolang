@@ -58,14 +58,26 @@ HECHO - Implementacion de mapas sincronizados por ram
 
     HECHO - 1 - Crear funcion de lectura de rangos para indexsizefield
     HECHO - 2 - Crear una funcion comun de lectura de rangos en el core
-        
-            3 - Usar esa funcion para dar soporte a todas las funciones de lectura. (FALTA BITS)
+    HECHO - 3 - Usar esa funcion para dar soporte a todas las funciones de lectura. 
 
-            5 - Crear un funcion comun de lectura para indexsizecolumn
+    IRREALIZABLE - 5 - Crear un funcion comun de lectura para indexsizecolumn
+
             4 - Optimizar todas las funciones de lectura.
+
+                HECHO - Conversion a punteros para obtener el tercer estado NIL.
+                HECHO - Corregido CheckFileTypeBuffer en las funciones de lectura.
+                HECHO - Añadir otimizacion de si se ha creado el puntero, y crear un puntero solo
+                        si es un canal.
+
+                HECHO - Ahora los bufferes field crean un puntero mientras, que la funcion de lectura administra el tamaño.
+                HECHO - Partir la funcion brspace en funciones mas pequeñas para iniciar la estructura.
+           
+
                 REVISAR - Si es nil haz algo si no continua.
                 REVISAR - Precalcular campos que no necesitan ser calculados mas de una vez.
                 REVISAR - posibles errores.
+                REVISAR - bufferes de las columnas.
+
             5 - Migrar a la nueva funcion trim en el core.
 
             6 - Migracion global a bytes nulos en vez de espacios.

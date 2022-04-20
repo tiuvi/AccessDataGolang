@@ -297,7 +297,7 @@ func (sp *spaceFile)columnSpacePadding(colName string, buf *[]byte){
 
 //check: revisa las columnas y los fields haber si existen como columna si no existe da error fatal.
 //#core.go/check
-func (sP *Space) check(name string, err string){
+func (sP *Space) checkColFil(name string, err string){
 
 	mensaje := err + " ; La columna o field: " + name + " no existe en el archivo ; " + sP.Dir
 
@@ -346,25 +346,32 @@ func (sP *Space) check(name string, err string){
 
 //WriteIndexSizeField: Escribe los fields en los archivos.
 //#bd/core.go
-func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 )(int64, *[]byte){
+func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 ){
 
-	fieldBuffer := new([]byte)
+	if CheckFileTypeBuffer(buf.typeBuff , BuffChan ){
+
+		buf.FieldBuffer = new([]byte)
+
+	}
 
 	sizeTotal := size[1] - size[0]
 
 	if buf.RangeBytes < sizeTotal && buf.RangeBytes > 0 {
 		
-		totalRangue := sizeTotal / buf.RangeBytes
+		buf.TotalRangue = sizeTotal / buf.RangeBytes
 		restoRangue := sizeTotal % buf.RangeBytes
 
 
+		if buf.Rangue < buf.TotalRangue {
 
-		log.Println( "rangue: ", buf.Rangue , "totalRangueAfter: " , totalRangue)
+			if len(*buf.FieldBuffer) != int(buf.RangeBytes) {
 
-		if buf.Rangue < totalRangue {
+				*buf.FieldBuffer = make([]byte, buf.RangeBytes)
 
-			*fieldBuffer = make([]byte, buf.RangeBytes)
-			_ , err := buf.File.ReadAt(*fieldBuffer , size[0] + (buf.RangeBytes * buf.Rangue) )
+			}
+			
+
+			_ , err := buf.File.ReadAt(*buf.FieldBuffer , size[0] + (buf.RangeBytes * buf.Rangue) )
 			if err != nil {
 				log.Println(err)
 				
@@ -373,34 +380,32 @@ func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 )(in
 			//Limpiamos el buffer de espacios
 			if buf.PostFormat == true {
 
-				buf.spaceTrimPointer(fieldBuffer)
+				buf.spaceTrimPointer(buf.FieldBuffer)
 
 			}
 			
 			//Activamos PostFormat si existe
 			if buf.Hooker != nil && buf.PostFormat == true {
 			
-				buf.hookerPostFormatPointer(fieldBuffer ,colName)
+				buf.hookerPostFormatPointer(buf.FieldBuffer ,colName)
 
 			}
 
 			if restoRangue != 0 {
 			
-				totalRangue += 1
+				buf.TotalRangue += 1
 			}
 
-			return totalRangue , fieldBuffer
 
-			
 		}
 
 		
-		if  buf.Rangue == totalRangue && restoRangue != 0 {
+		if  buf.Rangue == buf.TotalRangue && restoRangue != 0 {
 
 
-			*fieldBuffer = make([]byte, restoRangue)
+			*buf.FieldBuffer = make([]byte, restoRangue)
 
-			_ , err := buf.File.ReadAt(*fieldBuffer , size[0] + (buf.RangeBytes * buf.Rangue) )
+			_ , err := buf.File.ReadAt(*buf.FieldBuffer , size[0] + (buf.RangeBytes * buf.Rangue) )
 			if err != nil {
 
 				log.Println(err)
@@ -410,30 +415,28 @@ func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 )(in
 			//Limpiamos el buffer de espacios
 			if buf.PostFormat == true {
 
-				buf.spaceTrimPointer(fieldBuffer)
+				buf.spaceTrimPointer(buf.FieldBuffer)
 
 			}
 			
 			//Activamos PostFormat si existe
 			if buf.Hooker != nil && buf.PostFormat == true {
 			
-				buf.hookerPostFormatPointer(fieldBuffer ,colName)
+				buf.hookerPostFormatPointer(buf.FieldBuffer ,colName)
 
 			}
 
-			totalRangue += 1
+			buf.TotalRangue += 1
 			
-
-			return totalRangue , fieldBuffer
-
 		}	
 	}
 
 
 	if buf.RangeBytes >= sizeTotal || buf.RangeBytes <= 0 {
 
-		*fieldBuffer = make([]byte, size[1] - size[0])
-		_ , err := buf.File.ReadAt(*fieldBuffer , size[0])
+		*buf.FieldBuffer = make([]byte, size[1] - size[0])
+
+		_ , err := buf.File.ReadAt(*buf.FieldBuffer , size[0])
 		if err != nil {
 			log.Println(err)
 			
@@ -442,20 +445,18 @@ func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 )(in
 		//Limpiamos el buffer de espacios
 		if buf.PostFormat == true {
 
-			buf.spaceTrimPointer(fieldBuffer)
+			buf.spaceTrimPointer(buf.FieldBuffer)
 
 		}
 		
 		//Activamos PostFormat si existe
 		if buf.Hooker != nil && buf.PostFormat == true {
 		
-			buf.hookerPostFormatPointer(fieldBuffer ,colName)
+			buf.hookerPostFormatPointer(buf.FieldBuffer ,colName)
 
 		}
-
-
-		return 0 , fieldBuffer
+	
 	}
 
-	return -1 , &[]byte{}
+
 }
