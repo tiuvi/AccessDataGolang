@@ -68,15 +68,18 @@ HECHO - Implementacion de mapas sincronizados por ram
                 HECHO - Corregido CheckFileTypeBuffer en las funciones de lectura.
                 HECHO - Añadir otimizacion de si se ha creado el puntero, y crear un puntero solo
                         si es un canal.
-
                 HECHO - Ahora los bufferes field crean un puntero mientras, que la funcion de lectura administra el tamaño.
                 HECHO - Partir la funcion brspace en funciones mas pequeñas para iniciar la estructura.
-           
+                HECHO - Si es nil haz algo si no continua.
+                HECHO - Precalcular campos que no necesitan ser calculados mas de una vez.
+                HECHO - posibles errores.
+                HECHO - bufferes de las columnas.
 
-                REVISAR - Si es nil haz algo si no continua.
-                REVISAR - Precalcular campos que no necesitan ser calculados mas de una vez.
-                REVISAR - posibles errores.
-                REVISAR - bufferes de las columnas.
+                HECHO - quitar -2 buf line funcion de lectura.
+                IRREALIZABLE - Añadir contabilizador atomico de bits
+               HECHO - Añadir multicolumnas a la lista de bits LECTURA
+                     - Añadir multicolumnas a la lista de bits ESCRITURA
+                     - revisar el calculo de sizeline bit
 
             5 - Migrar a la nueva funcion trim en el core.
 

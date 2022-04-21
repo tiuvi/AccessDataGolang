@@ -48,7 +48,8 @@ var extensionFile = map[string]string{
 }
 
 type Space struct  {
-
+	
+	check bool
 	//Indica el estado del archivo en la aplicacion
 	FileNativeType FileNativeType
 	//Propiedades comunes a todos los archivos

@@ -26,8 +26,7 @@ type RChanBuf struct{
 //Buffer map es compatible con multiples lineas, fields y columnas
 //El canal de buffer es compatible con mutiples lineas fields y columnas.
 type RBuffer struct {
-	check bool
-
+	
 	*spaceFile
 	typeBuff   FileTypeBuffer
 	PostFormat bool

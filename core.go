@@ -348,11 +348,12 @@ func (sP *Space) checkColFil(name string, err string){
 //#bd/core.go
 func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 ){
 
-	if CheckFileTypeBuffer(buf.typeBuff , BuffChan ){
+	if CheckFileTypeBuffer(buf.typeBuff , BuffChan ) {
 
 		buf.FieldBuffer = new([]byte)
 
 	}
+
 
 	sizeTotal := size[1] - size[0]
 
