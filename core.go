@@ -357,7 +357,7 @@ func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 ){
 
 	sizeTotal := size[1] - size[0]
 
-	if buf.RangeBytes < sizeTotal && buf.RangeBytes > 0 {
+	if  buf.RangeBytes < sizeTotal && buf.RangeBytes > 0 {
 		
 		buf.TotalRangue = sizeTotal / buf.RangeBytes
 		restoRangue := sizeTotal % buf.RangeBytes

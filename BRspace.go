@@ -25,19 +25,26 @@ type RChanBuf struct{
 //El buffer solo puede leer una columna o fields tampoco es compatible con multples lineas.
 //Buffer map es compatible con multiples lineas, fields y columnas
 //El canal de buffer es compatible con mutiples lineas fields y columnas.
+type Lines struct{
+	StartLine  int64
+	EndLine    int64
+}
+
+type Rangues struct {
+	Rangue      int64 
+	TotalRangue int64 
+	RangeBytes  int64
+}
+
 type RBuffer struct {
 	
 	*spaceFile
 	typeBuff   FileTypeBuffer
 	PostFormat bool
-
-	StartLine  int64
-	EndLine    int64
 	ColName    *[]string
 
-	Rangue      int64 
-	TotalRangue int64 
-	RangeBytes  int64
+	*Lines
+	*Rangues
 
 	FieldBuffer *[]byte
 	Buffer      *[]byte
@@ -71,7 +78,7 @@ func (RB *RBuffer)OneLineBRspace(line int64){
 		log.Fatalln("Error de buffer archivo: ",RB.Url , " Linea final: ",line  , " Numero de lineas del archivo: ", *RB.SizeFileLine)
 		
 	}
-
+	RB.Lines = new(Lines)
 	RB.StartLine = line
 	RB.EndLine   = line + 1
 }
@@ -83,22 +90,84 @@ func (RB *RBuffer)MultiLineBRspace(startLine int64,endLine int64){
 		log.Fatalln("Error de buffer archivo: ",RB.Url , " Linea final: ",endLine  , " Numero de lineas del archivo: ", *RB.SizeFileLine)
 		
 	}
-
+	RB.Lines = new(Lines)
 	RB.StartLine = startLine
 	RB.EndLine   = endLine + 1
 }
 
 func (RB *RBuffer)AllLinesBRspace(){
 
+	RB.Lines = new(Lines)
 	RB.StartLine = 0
 	RB.EndLine   = *RB.SizeFileLine + 1
 }
 
-func (RB *RBuffer)RangeBytesBRspace(RangeBytes int64){
 
+func (RB *RBuffer)NoRangeFieldsBRspace(){
+	
+	RB.Rangues = new(Rangues)
+	RB.RangeBytes  = 0
+	RB.TotalRangue = 1
+	RB.Rangue      = 0
+}
+
+func (RB *RBuffer)RangeFieldsBRspace(RangeBytes int64){
+	
+	RB.Rangues = new(Rangues)
 	RB.RangeBytes  = RangeBytes
 	RB.TotalRangue = 1
 	RB.Rangue      = 0
+}
+
+func (RB *RBuffer)CalcRangeFieldBRspace(field string, RangeBytes int64)*int64{
+	
+	if RB.IndexSizeFields != nil {
+
+		size, found := RB.IndexSizeFields[field]
+		if found {
+
+			sizeTotal   := size[1] - size[0]
+			if  RangeBytes < sizeTotal && RangeBytes > 0 {
+
+				TotalRangue := sizeTotal / RB.RangeBytes
+				restoRangue := sizeTotal % RB.RangeBytes
+				if restoRangue != 0 {
+
+					TotalRangue += 1
+				}
+				return &TotalRangue
+			}
+		}
+	}
+	return nil
+}
+
+func (RB *RBuffer)isField(field string)bool{
+
+	if RB.IndexSizeFields != nil {
+
+		_, found := RB.IndexSizeFields[field]
+		if found {
+
+			return true	
+		}
+	}
+
+	return false
+}
+	
+func (RB *RBuffer)isColumn(column string)bool{
+
+	if RB.IndexSizeColumns != nil {
+
+		_, found := RB.IndexSizeColumns[column]
+		if found {
+
+			return true	
+		}
+	}
+
+	return false
 }
 
 //BRspace: crea un buffer de lectura, se puede elegir si añadir el postformat de los campos.
@@ -106,6 +175,7 @@ func (RB *RBuffer)RangeBytesBRspace(RangeBytes int64){
 //data son los fields y las columnas que se desean.
 func (RB *RBuffer)BRspace(data ...string ){
 	 
+
 	if RB.check {
 
 		if  int64(len(data)) > RB.lenColumns + RB.lenFields {
@@ -145,60 +215,64 @@ func (RB *RBuffer)BRspace(data ...string ){
 	if CheckFileTypeBuffer(RB.typeBuff, BuffBytes ){
 
 	
-		if RB.IndexSizeFields != nil {
+		if RB.IndexSizeFields != nil && RB.Rangues != nil {
+
 			_, found := RB.IndexSizeFields[(*RB.ColName)[0]]
 			if found {
-				RB.FieldBuffer = new([]byte)
-				return
+
+				RB.FieldBuffer = new([]byte)	
 			}
 		}
 
-		if RB.IndexSizeColumns != nil {
+		if RB.IndexSizeColumns != nil  && RB.Lines != nil {  
+
 			size, found := RB.IndexSizeColumns[(*RB.ColName)[0]]
 			if found {
+
 				RB.Buffer = new([]byte)
 				*RB.Buffer = make([]byte ,size[1] - size[0])
-				return
 			}
 		}
-		
 		return
 	}
 	
 
 	if CheckFileTypeBuffer(RB.typeBuff, BuffChan){
 
-		RB.FieldBuffer = new([]byte)
-		RB.Buffer      = new([]byte)
-		*RB.Buffer     = make([]byte ,RB.SizeLine)
-		RB.Channel     =  make(chan RChanBuf,1)
+		if RB.IndexSizeFields != nil && RB.Rangues != nil {
 
+			RB.FieldBuffer = new([]byte)
+		}
+
+		if RB.IndexSizeColumns != nil  && RB.Lines != nil {  
+
+			RB.Buffer      = new([]byte)
+			*RB.Buffer     = make([]byte ,RB.SizeLine)
+			RB.Channel     =  make(chan RChanBuf,1)
+		}
 		return
 	}
 	
 
 	if CheckFileTypeBuffer(RB.typeBuff, BuffMap ){
 
-		RB.FieldBuffer  = new([]byte)
-
 		RB.BufferMap    = make(map[string][][]byte)
-		RB.BufferMap["buffer"]    = make([][]byte ,1)
-		RB.BufferMap["buffer"][0] = make([]byte ,RB.SizeLine * (RB.EndLine - RB.StartLine ))
 
+		if RB.IndexSizeFields != nil && RB.Rangues != nil {
+
+			RB.FieldBuffer  = new([]byte)
+		}
+
+		if RB.IndexSizeColumns != nil  && RB.Lines != nil {  
+
+			RB.BufferMap["buffer"]    = make([][]byte ,1)
+			RB.BufferMap["buffer"][0] = make([]byte ,RB.SizeLine * (RB.EndLine - RB.StartLine ))
+		}
 		return
 	}
-
 }
 
-//Funcion de soporte para la lectura y posterior envio de datos en un canal.
-//Si no se crea un buffer nuevo antes de cada envio el buffer falla al intentar
-//pasarlo por referencia
-func (buf *RBuffer) NewChanBuffer (){
 
-	 buf.Buffer = new([]byte)
-	*buf.Buffer = make([]byte ,buf.SizeLine)
-
-}
 
 //Revisa el tipo de buffer y devuelve true o false dependiendo de si hay coincidencia.
 func CheckFileTypeBuffer(base FileTypeBuffer, compare FileTypeBuffer)(bool){

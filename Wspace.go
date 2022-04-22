@@ -219,7 +219,7 @@ func (buf *WBuffer) writeBitSpace()int64{
 				
 			}
 	
-			_ , found := buf.IndexSizeColumns[colName]
+			size , found := buf.IndexSizeColumns[colName]
 			if found {
 
 				if buf.Line == -1 {
@@ -244,7 +244,7 @@ func (buf *WBuffer) writeBitSpace()int64{
 				bufferBit := make([]byte , 1 )
 				
 
-				_ , err := buf.File.ReadAt(bufferBit , buf.lenFields + byteLine)
+				_ , err := buf.File.ReadAt(bufferBit , buf.lenFields + byteLine + size[0])
 				if err != nil{
 
 					bufferBit = []byte{0}
@@ -263,7 +263,7 @@ func (buf *WBuffer) writeBitSpace()int64{
 					writeBit(bitLine ,false , bufferBit )
 				}
 				
-				buf.File.WriteAt(bufferBit, buf.lenFields + byteLine )	
+				buf.File.WriteAt(bufferBit, buf.lenFields + byteLine + size[0] )	
 				
 			}
 		}

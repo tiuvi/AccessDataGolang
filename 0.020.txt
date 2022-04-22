@@ -79,14 +79,24 @@ HECHO - Implementacion de mapas sincronizados por ram
                 IRREALIZABLE - Añadir contabilizador atomico de bits
                HECHO - Añadir multicolumnas a la lista de bits LECTURA
                      - Añadir multicolumnas a la lista de bits ESCRITURA
-                     - revisar el calculo de sizeline bit
+                IRREALIZABLE - revisar el calculo de sizeline bit
+
+
+            OPTIMIZAR READ LINEBIT
+                Podria hacer una trampa y añadir un bucle
+                Si linebit es 1 Compruebo el dos y sumo 1 a buff.line
+                y cuando sea 7 romper esa optimizacion y que continue con el primer bucle de leer el byte del archivo
+
 
             5 - Migrar a la nueva funcion trim en el core.
 
             6 - Migracion global a bytes nulos en vez de espacios.
 
+    INDEXSIZEFIELD ESCRITURA POR RANGOS IMPORTANTE
 
-FUNCIONALIDAD - Soporte para escritura por rangos 
+        FUNCIONALIDAD - Soporte para escritura por rangos 
+
+
 
 
 

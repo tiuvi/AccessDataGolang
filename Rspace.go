@@ -12,17 +12,17 @@ func (buf *RBuffer) readByteSpace(){
 	
 	if CheckFileTypeBuffer(buf.typeBuff , BuffBytes ){
 
-		if buf.IndexSizeFields != nil {
+		if buf.IndexSizeFields != nil && buf.Rangues != nil {
 
 			size, found := buf.IndexSizeFields[(*buf.ColName)[0]]
 			if found {
 
 				buf.readIndexSizeFieldPointer((*buf.ColName)[0], size)
-				return
+		
 			}
 		}
 
-		if buf.IndexSizeColumns != nil {
+		if buf.IndexSizeColumns != nil  && buf.Lines != nil {
 
 			size, found := buf.IndexSizeColumns[(*buf.ColName)[0]]
 			if found {
@@ -47,9 +47,7 @@ func (buf *RBuffer) readByteSpace(){
 					buf.hookerPostFormatPointer(buf.Buffer ,(*buf.ColName)[0])
 
 				}
-				return
-			}
-			
+			}	
 		}
 		return
 	}
@@ -58,7 +56,7 @@ func (buf *RBuffer) readByteSpace(){
 	if CheckFileTypeBuffer(buf.typeBuff , BuffChan ){
 
 
-		if buf.IndexSizeFields != nil {
+		if buf.IndexSizeFields != nil && buf.Rangues != nil {
 
 			for _ , colName := range (*buf.ColName) {
 			
@@ -80,12 +78,13 @@ func (buf *RBuffer) readByteSpace(){
 			}
 		}
 
-		if buf.IndexSizeColumns != nil {
+		if buf.IndexSizeColumns != nil  && buf.Lines != nil {
 
 			for buf.StartLine < buf.EndLine {
 
 				//El buffer por referencia crea errores en los canales
-				buf.NewChanBuffer()
+				buf.Buffer = new([]byte)
+				*buf.Buffer = make([]byte ,buf.SizeLine)
 				//Leemos una sola linea
 				_ , err = buf.File.ReadAt(*buf.Buffer , buf.lenFields + buf.StartLine * buf.SizeLine)
 				if err != nil {
@@ -134,7 +133,8 @@ func (buf *RBuffer) readByteSpace(){
 	
 	if CheckFileTypeBuffer(buf.typeBuff , BuffMap ){
 
-		if buf.IndexSizeFields != nil {
+		if buf.IndexSizeFields != nil && buf.Rangues != nil {
+
 			for _ , colName := range (*buf.ColName) {
 			
 				size, found := buf.IndexSizeFields[colName]
@@ -143,21 +143,29 @@ func (buf *RBuffer) readByteSpace(){
 					buf.Rangue      = 0
 					buf.TotalRangue = 1
 
+					//Obtimizacion especial para mapas.
 					sizeTotal := size[1] - size[0]
-					TotalRangue := sizeTotal / buf.RangeBytes
-					restoRangue := sizeTotal % buf.RangeBytes
-					if restoRangue != 0 {
+					if  buf.RangeBytes < sizeTotal && buf.RangeBytes > 0 {
 
-						TotalRangue += 1
+						TotalRangue := sizeTotal / buf.RangeBytes
+						restoRangue := sizeTotal % buf.RangeBytes
+						if restoRangue != 0 {
+
+							TotalRangue += 1
+						}
+						buf.BufferMap[colName] = make([][]byte ,TotalRangue)
+
+					} else {
+
+						buf.BufferMap[colName] = make([][]byte , 1)
 					}
-					
-					buf.BufferMap[colName] = make([][]byte ,TotalRangue)
 
 					for buf.Rangue < buf.TotalRangue {
 
 						buf.readIndexSizeFieldPointer(colName, size)
 		
 						buf.BufferMap[colName][buf.Rangue] = append( buf.BufferMap[colName][buf.Rangue],  *buf.FieldBuffer... )
+						//buf.BufferMap[colName][buf.Rangue]   =  *buf.FieldBuffer
 				
 						buf.Rangue++
 
@@ -167,7 +175,8 @@ func (buf *RBuffer) readByteSpace(){
 			}
 		}
 		
-		if buf.IndexSizeColumns != nil {
+		if buf.IndexSizeColumns != nil  && buf.Lines != nil {
+
 
 			bufMapFile := &buf.BufferMap["buffer"][0]
 			_ , err = buf.File.ReadAt(*bufMapFile , buf.lenFields + buf.StartLine * buf.SizeLine )
@@ -234,7 +243,6 @@ func (buf *RBuffer) readByteSpace(){
 			delete(buf.BufferMap,"buffer")
 		}
 
-
 		return
 	}
 
@@ -250,17 +258,16 @@ func (buf *RBuffer) readBitSpace() {
 
 	if CheckFileTypeBuffer(buf.typeBuff , BuffBytes ){
 
-		if buf.IndexSizeFields != nil {
+		if buf.IndexSizeFields != nil && buf.Rangues != nil {
 
 			size, found := buf.IndexSizeFields[(*buf.ColName)[0]]
 			if found {
 
 				buf.readIndexSizeFieldPointer((*buf.ColName)[0], size)
-				return
 			}
 		}
 
-		if buf.IndexSizeColumns != nil {
+		if buf.IndexSizeColumns != nil  && buf.Lines != nil {
 
 			size , found := buf.IndexSizeColumns[(*buf.ColName)[0]]
 			if found {
@@ -291,16 +298,13 @@ func (buf *RBuffer) readBitSpace() {
 
 				}
 			}
-			return
 		}
-
 		return
 	}
 	
 	if CheckFileTypeBuffer(buf.typeBuff , BuffChan ){
 
-
-		if buf.IndexSizeFields != nil {
+		if buf.IndexSizeFields != nil && buf.Rangues != nil {
 
 			for _ , colName := range (*buf.ColName) {
 			
@@ -322,48 +326,52 @@ func (buf *RBuffer) readBitSpace() {
 			}
 		}
 
-		for buf.StartLine < buf.EndLine {
-				
-			for _ , colName := range (*buf.ColName) {
+		if buf.IndexSizeColumns != nil  && buf.Lines != nil {
 
-				size , found := buf.IndexSizeColumns[colName]
-				if found {
+			for buf.StartLine < buf.EndLine {
+					
+				for _ , colName := range (*buf.ColName) {
 
-					var byteLine int64 =  buf.StartLine / 8
-					var bitLine  int64 =  buf.StartLine % 8 
+					size , found := buf.IndexSizeColumns[colName]
+					if found {
+
+						var byteLine int64 =  buf.StartLine / 8
+						var bitLine  int64 =  buf.StartLine % 8 
 
 
-					_ , err := buf.File.ReadAt(*buf.Buffer , buf.lenFields + byteLine + size[0])
-					if err !=nil {
+						_ , err := buf.File.ReadAt(*buf.Buffer , buf.lenFields + byteLine + size[0])
+						if err !=nil {
 
-						buf.Channel <- RChanBuf{buf.StartLine , colName, []byte("off")}
-						close(buf.Channel)
-						return
-					}
+							buf.Channel <- RChanBuf{buf.StartLine , colName, []byte("off")}
+							close(buf.Channel)
+							return
+						}
 
-					turn := readBit(bitLine,*buf.Buffer)
+						turn := readBit(bitLine,*buf.Buffer)
 
-					if turn {
+						if turn {
 
-						buf.Channel <- RChanBuf{buf.StartLine , colName, []byte("on")}
-				
-					}else{
+							buf.Channel <- RChanBuf{buf.StartLine , colName, []byte("on")}
+					
+						}else{
 
-						buf.Channel <- RChanBuf{buf.StartLine , colName, []byte("off")}
-						
+							buf.Channel <- RChanBuf{buf.StartLine , colName, []byte("off")}
+							
+						}
 					}
 				}
+				buf.StartLine++
 			}
-			buf.StartLine++
-		}
 
-		close(buf.Channel)
+			close(buf.Channel)
+		}
 		return
 	}
 	
 	if CheckFileTypeBuffer(buf.typeBuff , BuffMap ){
 
-		if buf.IndexSizeFields != nil {
+		if buf.IndexSizeFields != nil && buf.Rangues != nil {
+
 			for _ , colName := range (*buf.ColName) {
 			
 				size, found := buf.IndexSizeFields[colName]
@@ -373,15 +381,23 @@ func (buf *RBuffer) readBitSpace() {
 					buf.TotalRangue = 1
 
 					sizeTotal := size[1] - size[0]
-					TotalRangue := sizeTotal / buf.RangeBytes
-					restoRangue := sizeTotal % buf.RangeBytes
-					if restoRangue != 0 {
+					if  buf.RangeBytes < sizeTotal && buf.RangeBytes > 0 {
 
-						TotalRangue += 1
+						TotalRangue := sizeTotal / buf.RangeBytes
+						restoRangue := sizeTotal % buf.RangeBytes
+						if restoRangue != 0 {
+
+							TotalRangue += 1
+						}
+
+						buf.BufferMap[colName] = make([][]byte ,TotalRangue)
+
+					} else {
+
+						buf.BufferMap[colName] = make([][]byte ,1)
+
 					}
-
-					buf.BufferMap[colName] = make([][]byte ,TotalRangue)
-
+					
 					for buf.Rangue < buf.TotalRangue {
 
 						buf.readIndexSizeFieldPointer(colName, size)
@@ -396,61 +412,63 @@ func (buf *RBuffer) readBitSpace() {
 			}
 		}
 
-		var mapCount int64
-		bufferBit := &buf.BufferMap["buffer"][0]
 
-		for buf.StartLine < buf.EndLine {
+		if buf.IndexSizeColumns != nil  && buf.Lines != nil {
+
+			var mapCount int64
+			bufferBit := &buf.BufferMap["buffer"][0]
+
+			for buf.StartLine < buf.EndLine {
+					
+				var byteLine int64 =  buf.StartLine / 8
+				var bitLine  int64 =  buf.StartLine % 8 
 				
-			var byteLine int64 =  buf.StartLine / 8
-			var bitLine  int64 =  buf.StartLine % 8 
-			
 
-			for _ , colName := range (*buf.ColName) {
+				for _ , colName := range (*buf.ColName) {
 
 
-				if colName == "buffer" {
+					if colName == "buffer" {
 
-					continue
+						continue
 
+					}
+
+					size , found := buf.IndexSizeColumns[colName]
+					if found {
+
+						if _, found :=  buf.BufferMap[colName]; !found {
+
+							buf.BufferMap[colName] = make([][]byte , (buf.EndLine - buf.StartLine))
+
+						}
+							
+						_ , err := buf.File.ReadAt(*bufferBit , buf.lenFields + byteLine + size[0])
+						if err != nil {
+							
+							buf.BufferMap[colName] = append(buf.BufferMap[colName] , []byte("off"))
+						
+						}
+
+						turn := readBit(bitLine,*bufferBit)
+						
+						if turn {
+
+							//buf.BufferMap[colName][mapCount] = append(buf.BufferMap[colName][mapCount] , []byte("on")...)
+							buf.BufferMap[colName][mapCount] = []byte("on")
+						}else{
+
+							//buf.BufferMap[colName][mapCount] = append(buf.BufferMap[colName][mapCount] , []byte("off")...)
+							buf.BufferMap[colName][mapCount] = []byte("off")
+						}
+					}
 				}
 
-				size , found := buf.IndexSizeColumns[colName]
-				if found {
-
-					if _, found :=  buf.BufferMap[colName]; !found {
-
-						buf.BufferMap[colName] = make([][]byte , (buf.EndLine - buf.StartLine))
-
-					}
-						
-					_ , err := buf.File.ReadAt(*bufferBit , buf.lenFields + byteLine + size[0])
-					if err != nil {
-						
-						buf.BufferMap[colName] = append(buf.BufferMap[colName] , []byte("off"))
-					
-					}
-
-					turn := readBit(bitLine,*bufferBit)
-					
-					if turn {
-
-						//buf.BufferMap[colName][mapCount] = append(buf.BufferMap[colName][mapCount] , []byte("on")...)
-						buf.BufferMap[colName][mapCount] = []byte("on")
-					}else{
-
-						//buf.BufferMap[colName][mapCount] = append(buf.BufferMap[colName][mapCount] , []byte("off")...)
-						buf.BufferMap[colName][mapCount] = []byte("off")
-					}
-				}
+				mapCount++
+				buf.StartLine++
 			}
-
-			mapCount++
-			buf.StartLine++
 		}
-
 		return
 	}
-
 	
 
 	log.Fatalln("Error Grave, Uspace.go ; Rspace.go ; Funcion: ListBitSpace ;" +
