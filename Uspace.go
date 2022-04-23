@@ -4,7 +4,7 @@ package bd
 
 
 
-func (buf *WBuffer) Wspace()int64{
+func (buf *WBuffer) Wspace()*int64{
 
 
 	if CheckFileCoding(buf.FileCoding , Bit){
@@ -19,11 +19,9 @@ func (buf *WBuffer) Wspace()int64{
 		
 	}
 
-
-
 	log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
 	"No Hubo coincidencias FileCoding")
-	return -1
+	return nil
 }
 
 

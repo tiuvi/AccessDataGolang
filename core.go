@@ -136,79 +136,20 @@ func (sp *spaceFile) hookerPostFormatPointer(bufByte *[]byte,colName string){
 
 //spacePaddingPointer: Genera espacios tanto para fields como para columnas.
 //#bd/core.go
-func (sP *Space)spacePaddingPointer(buf *[]byte , colName string){
+func (sP *Space)spacePaddingPointer(buf *[]byte , size [2]int64){
 
 	//Contamos el array de bytes
-	var text_count = int64(len(*buf))
+	textCount  := int64(len(*buf))
+	sizeColumn := size[1] - size[0]
 
+	if textCount < sizeColumn {
 
-	var sizeColumn int64 = 0
-
-	if sP.IndexSizeColumns != nil {
-
-		_, found := sP.IndexSizeColumns[colName]
-		if found {
-
-			sizeColumn = sP.IndexSizeColumns[colName][1] - sP.IndexSizeColumns[colName][0]
-
-		}
-		if !found {
-		
-			if sP.IndexSizeFields != nil {
-
-				_, found := sP.IndexSizeFields[colName]
-				if found {
-
-					sizeColumn = sP.IndexSizeFields[colName][1] - sP.IndexSizeFields[colName][0]
-
-				}
-				if !found {
-		
-					log.Fatalln("Archivo: core.go ; Funcion: spacePaddingPointer ; No hubo coincidencias en fields o columnas para añadir o quitar padding." + sP.Dir)
-				
-				}
-			}
-		}
+		newBuf := make([]byte, sizeColumn)
+		copy(newBuf, *buf)
+		*buf = newBuf
 	}
 
-	if sP.IndexSizeColumns == nil {
-
-		if sP.IndexSizeFields != nil {
-
-			_, found := sP.IndexSizeFields[colName]
-			if found {
-
-				sizeColumn = sP.IndexSizeFields[colName][1] - sP.IndexSizeFields[colName][0]
-
-			}
-			if !found {
-	
-				log.Fatalln("Archivo: core.go ; Funcion: spacePaddingPointer ; No hubo coincidencias en fields o columnas para añadir o quitar padding." + sP.Dir)
-			
-			}
-		}
-	}
-
-	if sP.IndexSizeColumns == nil && sP.IndexSizeFields == nil {
-
-		log.Fatalln("Archivo: core.go ; Funcion: spacePaddingPointer ; El archivo no tiene columnas o campos." + sP.Dir)
-
-	}
-
-	if sizeColumn == 0 {
-
-		log.Fatalln("Archivo: core.go ; Funcion: spacePaddingPointer ; Columnas o campos invalidos para añadir o quitar padding." + sP.Dir)
-
-	}
-
-	if text_count < sizeColumn {
-
-		whitespace := bytes.Repeat( []byte(" ") , int(sizeColumn - text_count)) 
-					
-		*buf = append(*buf ,  whitespace... )
-	}
-
-	if text_count > sizeColumn {
+	if textCount > sizeColumn {
 
 		*buf = (*buf)[:sizeColumn]
 	}
@@ -219,8 +160,8 @@ func (sP *Space)spacePaddingPointer(buf *[]byte , colName string){
 //#bd/core.go
 func (sP *Space)spaceTrimPointer(buf *[]byte){
 
-		//Limpiamos espacios en blanco
-		for len(*buf) > 0 && (*buf)[len(*buf)-1] == 32 {
+		//Limpiamos nulos
+		for len(*buf) > 0 && (*buf)[len(*buf)-1] == 0 {
 
 			*buf = (*buf)[:len(*buf)-1]
 
@@ -232,11 +173,11 @@ func (sP *Space)spaceTrimPointer(buf *[]byte){
 
 //WriteIndexSizeField: Escribe los fields en los archivos.
 //#bd/core.go
-func (sF *spaceFile) WriteIndexSizeField(columnName string,buff *[]byte ){
+func (WB *WBuffer)WriteIndexSizeField(colName string, size [2]int64,rangues WRangues,fieldBuffer *[]byte){
 
-	if sF.Hooker != nil {
+	if WB.Hooker != nil && WB.PreFormat {
 
-		sF.hookerPreFormatPointer(buff, columnName)
+		WB.hookerPreFormatPointer(buffer, columnName)
 
 	}
 
@@ -244,7 +185,7 @@ func (sF *spaceFile) WriteIndexSizeField(columnName string,buff *[]byte ){
 	var text_count = int64(len(*buff))
 	
 	//Obtenemos el campo
-	sizeField , _ := sF.IndexSizeFields[columnName]
+	sizeField , _ := WB.IndexSizeFields[columnName]
 
 	//Obtenermos el valor de las columnas
 	sizeColumn    := sizeField[1] - sizeField[0]
@@ -265,35 +206,12 @@ func (sF *spaceFile) WriteIndexSizeField(columnName string,buff *[]byte ){
 	}
 	
 	
-	sF.File.WriteAt(*buff,   + sizeField[0])
+	WB.File.WriteAt(*buff,   + sizeField[0])
 
 
 }
 
 
-//columnSpacePadding: Da spacios actualmente a la funcion de columns
-//#bd/core.go
-func (sp *spaceFile)columnSpacePadding(colName string, buf *[]byte){
-
-	//Contamos el array de bytes
-	var text_count = int64(len(*buf))
-
-	//Primer caso el texto es menor que el tamaño de la linea
-	//En este caso añadimos un padding de espacios al final
-	sizeColumn := sp.IndexSizeColumns[colName][1] - sp.IndexSizeColumns[colName][0]
-
-	if text_count < sizeColumn {
-
-		whitespace := bytes.Repeat( []byte(" ") , int(sizeColumn - text_count)) 
-					
-		*buf = append(*buf ,  whitespace... )
-	}
-
-	if text_count > sizeColumn {
-
-		*buf = (*buf)[:sizeColumn]
-	}
-}
 
 //check: revisa las columnas y los fields haber si existen como columna si no existe da error fatal.
 //#core.go/check

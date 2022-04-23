@@ -14,6 +14,19 @@ const(
 	BuffBytes
 )
 
+//Revisa el tipo de buffer y devuelve true o false dependiendo de si hay coincidencia.
+func CheckFileTypeBuffer(base FileTypeBuffer, compare FileTypeBuffer)(bool){
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+
+	return false
+
+}
+
 //canal del buffer de lectura.
 type RChanBuf struct{
 	Line int64
@@ -25,12 +38,12 @@ type RChanBuf struct{
 //El buffer solo puede leer una columna o fields tampoco es compatible con multples lineas.
 //Buffer map es compatible con multiples lineas, fields y columnas
 //El canal de buffer es compatible con mutiples lineas fields y columnas.
-type Lines struct{
+type RLines struct{
 	StartLine  int64
 	EndLine    int64
 }
 
-type Rangues struct {
+type RRangues struct {
 	Rangue      int64 
 	TotalRangue int64 
 	RangeBytes  int64
@@ -43,8 +56,8 @@ type RBuffer struct {
 	PostFormat bool
 	ColName    *[]string
 
-	*Lines
-	*Rangues
+	*RLines
+	*RRangues
 
 	FieldBuffer *[]byte
 	Buffer      *[]byte
@@ -52,7 +65,7 @@ type RBuffer struct {
 	Channel      chan RChanBuf
 }
 
-
+//Crea un nuevo espacio de buffer, que es una unica referencia.
 func (sF *spaceFile)NewBRspace(typeBuff FileTypeBuffer)(buf *RBuffer){
 
 	return &RBuffer{
@@ -61,16 +74,19 @@ func (sF *spaceFile)NewBRspace(typeBuff FileTypeBuffer)(buf *RBuffer){
 	}
 }
 
+//Activa o desactiva los errores y chequeos adicionales.
 func (RB *RBuffer)CheckBRspace(active bool){
 
 	RB.check = active
 }
 
+//Activa o desactiva el postformateado de los datos.
 func (RB *RBuffer)PostFormatBRspace(active bool){
 
 	RB.PostFormat = active
 }
 
+//Lee una sola linea de buffer.(Columnas)
 func (RB *RBuffer)OneLineBRspace(line int64){
 
 	if RB.check && *RB.SizeFileLine < line {
@@ -78,11 +94,12 @@ func (RB *RBuffer)OneLineBRspace(line int64){
 		log.Fatalln("Error de buffer archivo: ",RB.Url , " Linea final: ",line  , " Numero de lineas del archivo: ", *RB.SizeFileLine)
 		
 	}
-	RB.Lines = new(Lines)
+	RB.RLines = new(RLines)
 	RB.StartLine = line
 	RB.EndLine   = line + 1
 }
 
+//Lee multiples lineas de buffer.(Columnas)
 func (RB *RBuffer)MultiLineBRspace(startLine int64,endLine int64){
 
 	if RB.check && *RB.SizeFileLine < endLine {
@@ -90,35 +107,38 @@ func (RB *RBuffer)MultiLineBRspace(startLine int64,endLine int64){
 		log.Fatalln("Error de buffer archivo: ",RB.Url , " Linea final: ",endLine  , " Numero de lineas del archivo: ", *RB.SizeFileLine)
 		
 	}
-	RB.Lines = new(Lines)
+	RB.RLines = new(RLines)
 	RB.StartLine = startLine
 	RB.EndLine   = endLine + 1
 }
 
+//Lee todas las lineas de un archivo(Columnas) 
 func (RB *RBuffer)AllLinesBRspace(){
 
-	RB.Lines = new(Lines)
+	RB.RLines = new(RLines)
 	RB.StartLine = 0
 	RB.EndLine   = *RB.SizeFileLine + 1
 }
 
-
+//Lee un field sin rangos.(Campos)
 func (RB *RBuffer)NoRangeFieldsBRspace(){
 	
-	RB.Rangues = new(Rangues)
+	RB.RRangues = new(RRangues)
 	RB.RangeBytes  = 0
 	RB.TotalRangue = 1
 	RB.Rangue      = 0
 }
 
+//Lee un fields por rangos, de manera dinamica.(Campos)
 func (RB *RBuffer)RangeFieldsBRspace(RangeBytes int64){
 	
-	RB.Rangues = new(Rangues)
+	RB.RRangues = new(RRangues)
 	RB.RangeBytes  = RangeBytes
 	RB.TotalRangue = 1
 	RB.Rangue      = 0
 }
 
+//CAlcula el numero de rangos de un field.
 func (RB *RBuffer)CalcRangeFieldBRspace(field string, RangeBytes int64)*int64{
 	
 	if RB.IndexSizeFields != nil {
@@ -142,32 +162,42 @@ func (RB *RBuffer)CalcRangeFieldBRspace(field string, RangeBytes int64)*int64{
 	return nil
 }
 
-func (RB *RBuffer)isField(field string)bool{
+//Verifica si el string, es un campo en ese espacio.
+func (RB *RBuffer)isField(field string)*bool{
 
 	if RB.IndexSizeFields != nil {
 
 		_, found := RB.IndexSizeFields[field]
 		if found {
 
-			return true	
+			exist := true
+			return &exist	
 		}
+
+		exist := false
+		return &exist	
 	}
 
-	return false
+	return nil
 }
 	
-func (RB *RBuffer)isColumn(column string)bool{
+//Verifica si el string, es una columna en ese espacio.
+func (RB *RBuffer)isColumn(column string)*bool{
 
 	if RB.IndexSizeColumns != nil {
 
 		_, found := RB.IndexSizeColumns[column]
 		if found {
 
-			return true	
+			exist := true
+			return &exist	
 		}
+
+		exist := false
+		return &exist	
 	}
 
-	return false
+	return nil
 }
 
 //BRspace: crea un buffer de lectura, se puede elegir si añadir el postformat de los campos.
@@ -215,7 +245,7 @@ func (RB *RBuffer)BRspace(data ...string ){
 	if CheckFileTypeBuffer(RB.typeBuff, BuffBytes ){
 
 	
-		if RB.IndexSizeFields != nil && RB.Rangues != nil {
+		if RB.IndexSizeFields != nil && RB.RRangues != nil {
 
 			_, found := RB.IndexSizeFields[(*RB.ColName)[0]]
 			if found {
@@ -224,7 +254,7 @@ func (RB *RBuffer)BRspace(data ...string ){
 			}
 		}
 
-		if RB.IndexSizeColumns != nil  && RB.Lines != nil {  
+		if RB.IndexSizeColumns != nil  && RB.RLines != nil {  
 
 			size, found := RB.IndexSizeColumns[(*RB.ColName)[0]]
 			if found {
@@ -239,12 +269,12 @@ func (RB *RBuffer)BRspace(data ...string ){
 
 	if CheckFileTypeBuffer(RB.typeBuff, BuffChan){
 
-		if RB.IndexSizeFields != nil && RB.Rangues != nil {
+		if RB.IndexSizeFields != nil && RB.RRangues != nil {
 
 			RB.FieldBuffer = new([]byte)
 		}
 
-		if RB.IndexSizeColumns != nil  && RB.Lines != nil {  
+		if RB.IndexSizeColumns != nil  && RB.RLines != nil {  
 
 			RB.Buffer      = new([]byte)
 			*RB.Buffer     = make([]byte ,RB.SizeLine)
@@ -258,12 +288,12 @@ func (RB *RBuffer)BRspace(data ...string ){
 
 		RB.BufferMap    = make(map[string][][]byte)
 
-		if RB.IndexSizeFields != nil && RB.Rangues != nil {
+		if RB.IndexSizeFields != nil && RB.RRangues != nil {
 
 			RB.FieldBuffer  = new([]byte)
 		}
 
-		if RB.IndexSizeColumns != nil  && RB.Lines != nil {  
+		if RB.IndexSizeColumns != nil  && RB.RLines != nil {  
 
 			RB.BufferMap["buffer"]    = make([][]byte ,1)
 			RB.BufferMap["buffer"][0] = make([]byte ,RB.SizeLine * (RB.EndLine - RB.StartLine ))
@@ -274,18 +304,7 @@ func (RB *RBuffer)BRspace(data ...string ){
 
 
 
-//Revisa el tipo de buffer y devuelve true o false dependiendo de si hay coincidencia.
-func CheckFileTypeBuffer(base FileTypeBuffer, compare FileTypeBuffer)(bool){
 
-	if (base & compare) != 0 {
-
-		return true
-
-	}
-
-	return false
-
-}
 
 
 

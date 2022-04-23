@@ -54,8 +54,10 @@ HECHO - Implementacion de mapas sincronizados por ram
     - Mover funciones de sincronizacion de ram a un archivo propio.
 
 
-    INDEXSIZEFIELD IMPORTANTE
+INDEXSIZEFIELD IMPORTANTE
 
+    INDEXSIZEFIELD LECTURA POR RANGOS
+    
     HECHO - 1 - Crear funcion de lectura de rangos para indexsizefield
     HECHO - 2 - Crear una funcion comun de lectura de rangos en el core
     HECHO - 3 - Usar esa funcion para dar soporte a todas las funciones de lectura. 
@@ -82,29 +84,54 @@ HECHO - Implementacion de mapas sincronizados por ram
                 IRREALIZABLE - revisar el calculo de sizeline bit
 
 
-            OPTIMIZAR READ LINEBIT
+            IRREALIZABLE - OPTIMIZAR READ LINEBIT
                 Podria hacer una trampa y añadir un bucle
                 Si linebit es 1 Compruebo el dos y sumo 1 a buff.line
                 y cuando sea 7 romper esa optimizacion y que continue con el primer bucle de leer el byte del archivo
 
+            HECHO - Migrar a la nueva funcion trim en el core.
 
-            5 - Migrar a la nueva funcion trim en el core.
+    INDEXSIZEFIELD ESCRITURA POR RANGOS Y OPTIMIZACION
 
-            6 - Migracion global a bytes nulos en vez de espacios.
-
-    INDEXSIZEFIELD ESCRITURA POR RANGOS IMPORTANTE
+        HECHO - REvisar envio de nulos a la funcion de escritura para borrar
+        HECHO - Tres estados de line para verificar si la escritura va ser por columnas o por fields
+        HECHO - Tres estados de rangue para verficar si la escritura va ser por columnas o por fields
+         HECHO  - Añadir soporte para check
 
         FUNCIONALIDAD - Soporte para escritura por rangos 
+        - Nuevo buffer fieldBuffer
+        - Planteamiento hecho falta crear la funcion que acepte rango y actualizar los tres buffers y la 
+        funcion de escritura de bits, unificando todo.
+
+        FUNCIONALIDAD - Crear la funcion de escribir por rangos o escribir sin rangos de forma dinamica.
+
+        OPTIMIZACION - Separar las funciones de buffbytes , buffchan , buffmap y añadir las funciones de agregar
+        linea, agregar rangos... etc
+
+        OPTIMIZACION - Dos funciones de enviar datos por canal una para rangos y otra para lineas usando la misma estructura
+        y ademas compatibles entre si.
+
+        OPTIMIZACION - Eliminar -2 en agregar fields.
+        ORGANIZACION - Eliminar -1 y crear una funcion de nueva linea que abstraiga del concepto de enviar linea -1.
+
+        FUNCIONALIDAD - Añadir a writeBitSpace buffer de bytes, bufferchan y soporte para fields por rangos en todas sus
+        variaciones
+        FUNCIONALIDAD - Que abstraiga de crear un buffer de bit que sea on y off, y lo cree automaticamente.
 
 
+FUNCIONALIDAD -  Ver como se va a gestionar la creacion de carpetas para los archivos en los spacios.
 
-
+OPTIMIZACION - Migracion global a bytes nulos en vez de espacios.
 
 OPTIMIZACION - Rescribir las variables publicas, quitando las variables que no necesariamente se necesiten
                 ser accesibles fuera del paquete.
 
+
+
 IDEA - SubPaquete para gestionar indexsizefields dinamicos en tiempo de ejecución.
+
 IDEA - SubPaquete que envuelva las funciones de lectura para tipar los resultados.
+
 IDEA - Añadir versiones a los archivos, de tal modo que se pueda Añadir modificaciones, sin tener que actualizar 
         si no actualizacion por uso, cuando se usa se modifica directamente a la siguiente version.
 
@@ -115,4 +142,21 @@ IDEA - SubPaquete funciones que muestren los datos para iniciar un space o un fi
         cuando se detecte la extension dacbyte o dacbit, el servidor podra pedir los datos del space para recrearlo.
      - crear funcion que pueda recrear un spacio desde un archivo.
 
+IDEA - SubPaquete Tunelizacion de archivo:
+            Usar el preformate y el postformat para crear un flujo o analisis de datos de archivos.
+
+                Ejemplo 1
+                preformat -> archivo1 -> postformat -> preformat -> archivo2 -> postformat.
+
+                Ejemplo2
+                        preformat -> archivo1 -> postformat
+                        preformat -> archivo2 -> postformat
+                        preformat -> archivo3 -> postformat
+                          archivo1 ,archivo2 ,archivo3 -> preformat -> archivo4 -> postformat.
+
+IDEA - Añadir funciones de copiar un espacio en un nuevo espacio con mas columnas , mas fields o eliminando
+columnas o campos de manera mas facil y rapida, y haciendo un rename al final.
+
+IDEA - Añadir funciones de busqueda de archivos y listado de archivos en spacio, para operar en muchos ficheros
+como crear grandes actualizaciones por ejemplo o analisis de datos , o entrenar IA.
 
