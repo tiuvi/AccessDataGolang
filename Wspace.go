@@ -30,16 +30,16 @@ func (WB *WBuffer) writeByteSpace()*int64{
 			size , found := WB.IndexSizeColumns[WB.ColumnName]
 			if found {
 
-		
-				if WB.Line == -1 {
+				line := WB.Line
+				if line == -1 {
 			
-					WB.Line = atomic.AddInt64(WB.SizeFileLine, 1)
+					line = atomic.AddInt64(WB.SizeFileLine, 1)
 			
 				}
 			
-				if WB.Line > *WB.SizeFileLine {
+				if line > *WB.SizeFileLine {
 			
-					atomic.AddInt64(WB.SizeFileLine, WB.Line - *WB.SizeFileLine )
+					atomic.AddInt64(WB.SizeFileLine, line - *WB.SizeFileLine )
 					
 				}
 
@@ -51,13 +51,13 @@ func (WB *WBuffer) writeByteSpace()*int64{
 				
 				WB.spacePaddingPointer(WB.Buffer , size)
 
-				_ , err := WB.File.WriteAt(*WB.Buffer , WB.lenFields + (WB.SizeLine * WB.Line) + size[0])
+				_ , err := WB.File.WriteAt(*WB.Buffer , WB.lenFields + (WB.SizeLine * line) + size[0])
 				if err != nil{
 
 					log.Println("Error de buffer en Wspace")
 
 				}
-				return &WB.Line
+				return &line
 			}
 		}
 		return nil
@@ -81,22 +81,24 @@ func (WB *WBuffer) writeByteSpace()*int64{
 
 		if WB.IndexSizeColumns != nil  && WB.WLines != nil { 
 
+			line := WB.Line
 			//Añade una linea.
-			if WB.Line == -1 {
+			if line == -1 {
 		
-				WB.Line = atomic.AddInt64(WB.SizeFileLine, 1)
+				line = atomic.AddInt64(WB.SizeFileLine, 1)
 		
 			}
 			//Añade lineas hasta llegar a la linea indicada.
-			if WB.Line > *WB.SizeFileLine {
+			if line > *WB.SizeFileLine {
 		
-				atomic.AddInt64(WB.SizeFileLine, WB.Line - *WB.SizeFileLine )
+				atomic.AddInt64(WB.SizeFileLine, line - *WB.SizeFileLine )
 				
 			}
 			
+		
 			//ind -> index val -> valor
 			for colName , bufBytes := range WB.BufferMap {
-				
+
 				//value-> valor found -> Encontrado en el mapa
 				size, found := WB.IndexSizeColumns[colName]
 				//Si no encontramos la columna seguimos con el ciclo for
@@ -109,15 +111,15 @@ func (WB *WBuffer) writeByteSpace()*int64{
 					
 					WB.spacePaddingPointer(&bufBytes , size)
 					
-					_ , err := WB.File.WriteAt(bufBytes, WB.lenFields + (WB.SizeLine * WB.Line) + size[0])
+					_ , err := WB.File.WriteAt(bufBytes, WB.lenFields + (WB.SizeLine * line) + size[0])
 					if err != nil{
 
 						log.Println("Error de buffer en Wspace")
 	
 					}
-					return &WB.Line
 				}
 			}
+			return &line
 		}
 	}
 
@@ -128,12 +130,12 @@ func (WB *WBuffer) writeByteSpace()*int64{
 
 		for CHAN := range WB.Channel {
 
+
 			if WB.IndexSizeFields != nil && CHAN.WRangues != nil {
 
 				size, found := WB.IndexSizeFields[CHAN.ColName]
 				if found {
 					
-			
 					WB.WriteIndexSizeField(CHAN.ColName,size,*CHAN.WRangues, &CHAN.Buffer)
 					continue
 				}
@@ -142,7 +144,7 @@ func (WB *WBuffer) writeByteSpace()*int64{
 
 			if WB.IndexSizeColumns != nil  && CHAN.WLines != nil { 
 
-				size, found := WB.IndexSizeFields[CHAN.ColName]
+				size, found := WB.IndexSizeColumns[CHAN.ColName]
 				if found {
 				
 					if WB.Hooker != nil {
@@ -153,8 +155,8 @@ func (WB *WBuffer) writeByteSpace()*int64{
 			
 					WB.spacePaddingPointer(&CHAN.Buffer , size)
 						
-				
-					_, err := WB.File.WriteAt(CHAN.Buffer, WB.lenFields + WB.SizeLine * CHAN.Line + size[0])
+		
+					_, err := WB.File.WriteAt(CHAN.Buffer, WB.lenFields + (WB.SizeLine * CHAN.Line) + size[0])
 					if err != nil{
 
 						log.Println("Error de buffer en Wspace")
@@ -174,76 +176,81 @@ func (WB *WBuffer) writeBitSpace()*int64{
 	
 	if CheckFileTypeBuffer(WB.typeBuff , BuffMap ){
 
-		WB.Lock()
-		defer WB.Unlock()
 
-		for colName, buffer := range WB.BufferMap {
+		if WB.IndexSizeFields != nil && WB.WRangues != nil {
 
-			if WB.IndexSizeFields != nil && WB.WRangues != nil {
-
-				size , found := WB.IndexSizeFields[colName]
+			for columnName, fieldBuffer := range WB.BufferMap {
+		
+				size, found := WB.IndexSizeFields[columnName]
 				if found {
 				
-					WB.WriteIndexSizeField(WB.ColumnName,size,*WB.WRangues,WB.Buffer )
-					continue
-				}
-				
-			}
-	
-			if WB.IndexSizeColumns != nil  && WB.WLines != nil { 
-
-				size , found := WB.IndexSizeColumns[colName]
-				if found {
-
-					if WB.Line == -1 {
-				
-						WB.Line = atomic.AddInt64(WB.SizeFileLine, 1)
-				
-					}
-				
-					if WB.Line > *WB.SizeFileLine {
-				
-						atomic.AddInt64(WB.SizeFileLine, WB.Line - *WB.SizeFileLine )
-						
-					}
-
-
+					WB.WriteIndexSizeField(columnName,size,*WB.WRangues,&fieldBuffer )
 					
-					var byteLine int64 =  WB.Line / 8
-
-						
-					bufferBit := make([]byte , 1 )
-					
-
-					_ , err := WB.File.ReadAt(bufferBit , WB.lenFields + byteLine + size[0])
-					if err != nil{
-
-						bufferBit = []byte{0}
-						err = nil
-					}
-
-
-					var bitLine int64 =  WB.Line - ((WB.Line / 8) * 8)
-
-
-					switch string(buffer) {
-
-					case "on":
-						writeBit(bitLine ,true , bufferBit )
-					case "off":
-						writeBit(bitLine ,false , bufferBit )
-					}
-					
-					_ , err = WB.File.WriteAt(bufferBit, WB.lenFields + byteLine + size[0] )	
-					if err != nil{
-
-						log.Println("Error de buffer en Wspace")
-
-					}
-					return &WB.Line
 				}
 			}
 		}
+
+		
+
+			if WB.IndexSizeColumns != nil  && WB.WLines != nil { 
+
+				line := WB.Line
+				//Añade una linea.
+				if line == -1 {
+			
+					line = atomic.AddInt64(WB.SizeFileLine, 1)
+			
+				}
+				//Añade lineas hasta llegar a la linea indicada.
+				if line > *WB.SizeFileLine {
+			
+					atomic.AddInt64(WB.SizeFileLine, line - *WB.SizeFileLine )
+					
+				}
+
+				for colName, buffer := range WB.BufferMap {
+
+					size , found := WB.IndexSizeColumns[colName]
+					if found {
+
+						WB.Lock()
+						defer WB.Unlock()
+
+						var byteLine int64 =  line / 8
+
+							
+						bufferBit := make([]byte , 1 )
+						
+
+						_ , err := WB.File.ReadAt(bufferBit , WB.lenFields + byteLine + size[0])
+						if err != nil{
+
+							bufferBit = []byte{0}
+							err = nil
+						}
+
+
+						var bitLine int64 =  line - ((line / 8) * 8)
+
+
+						switch string(buffer) {
+
+						case "on":
+							writeBit(bitLine ,true , bufferBit )
+						case "off":
+							writeBit(bitLine ,false , bufferBit )
+						}
+						
+						_ , err = WB.File.WriteAt(bufferBit, WB.lenFields + byteLine + size[0] )	
+						if err != nil{
+
+							log.Println("Error de buffer en Wspace")
+
+						}
+					}
+				}
+				return &line
+			}
 		return nil
 	}
 

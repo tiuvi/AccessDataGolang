@@ -15,7 +15,6 @@ type WLines struct{
 type WRangues struct {
 	Rangue      int64 
 	RangeBytes  int64
-	TotalRangue int64 
 }
 
 //El canal de escritura linea , nombre de columna y el buffer.
@@ -91,8 +90,9 @@ func (WB *WBuffer)PreFormatBRspace(active bool){
 //Escribe una nueva linea en el archivo.
 func (WB *WBuffer)NewLineWBspace(){
 
-	WB.WLines = new(WLines)
-	WB.Line = -1
+	WB.WLines = &WLines{
+		Line: -1,
+	}
 }
 
 //Escribe en un numero determinado de linea.
@@ -103,38 +103,81 @@ func (WB *WBuffer)UpdateLineWBspace(line int64){
 		log.Fatalln("Error no se puede enviar una linea inferior a 0",WB.Url)
 		
 	}
-	WB.WLines = new(WLines)
-	WB.Line = line
+
+	WB.WLines = &WLines{
+		Line: line,
+	}
 }
 
 //Escribe en la siguiente linea
 func (WB *WBuffer)NextLineWBspace(){
 
-	WB.Line += 1
+	*WB.WLines = WLines{
+		Line: WB.Line + 1,
+	}
+
 }
 
-//Añade el formato de los rangos
-func (WB *WBuffer)NewRangeWBspace(RangeBytes int64,TotalRangue int64 ){
 
-	WB.WRangues = new(WRangues)
-	WB.Rangue   =  0       
-	WB.RangeBytes  = RangeBytes
-	WB.TotalRangue = TotalRangue
+//Añade el formato de los rangos
+func (WB *WBuffer)NewRangeWBspace(RangeBytes int64 ){
+
 	
+	WB.WRangues = &WRangues{
+		Rangue:      0,       
+		RangeBytes:  RangeBytes,
+	}	
+}
+
+func (WB *WBuffer)NewNoRangeWBspace(){
+
+	WB.WRangues = &WRangues{
+		Rangue:      0,       
+		RangeBytes:  0,
+	}	
 }
 
 //Escribe en un rango
 func (WB *WBuffer)RangeWBspace(Range int64){
 
-	WB.Rangue   =  Range
+	WB.WRangues = &WRangues{
+		Rangue:      Range,       
+		RangeBytes:  WB.RangeBytes,
+	}
+
+	//WB.Rangue   =  Range
 	
 }
 
 //Escribe en el siguiente rango
 func (WB *WBuffer)NextRangeWBspace(){
 
-	WB.Rangue   +=  1
+	WB.WRangues = &WRangues{
+		Rangue:      WB.Rangue + 1,       
+		RangeBytes:  WB.RangeBytes,
+	}
+	//WB.Rangue   +=  1
 	
+}
+
+//Funcion de soporte para calcular los rangos
+func calcRanges(lenBuffer int64,RangeBytes int64)*int64{
+
+	if lenBuffer < RangeBytes {
+		return nil
+	}
+
+	if RangeBytes <= 0 {
+		return nil
+	}
+
+	TotalRangue := lenBuffer / RangeBytes
+	restoRangue := lenBuffer % RangeBytes
+	if restoRangue != 0 {
+
+		TotalRangue += 1
+	}
+	return &TotalRangue
 }
 
 //CAlcula el tamaño de un campo
@@ -169,9 +212,6 @@ func (WB *WBuffer)CalcSizeColumnBWspace(field string)*int64{
 	return nil
 }
 
-//  if WB.IndexSizeFields != nil && WB.WRangues != nil {
-
-//  if WB.IndexSizeColumns != nil  && WB.WLines != nil {  
 
 func(WB *WBuffer)SendBWspace(columnName string, bufferBytes *[]byte)*int64{
 
@@ -197,34 +237,42 @@ func(WB *WBuffer)SendBWspace(columnName string, bufferBytes *[]byte)*int64{
 
 			}
 
+			log.Println("Buffer",columnName, string(*bufferBytes))
+
 			WB.BufferMap[columnName] = *bufferBytes
 			return nil
 		}
 
 		//Buffer de bytes
 		if CheckFileTypeBuffer(WB.typeBuff, BuffChan ){
-
-			if WB.IndexSizeFields != nil && WB.WRangues != nil {
-
-				WB.Channel <- WChanBuf{nil, WB.WRangues , columnName, *bufferBytes }
-				return nil
+		
+			if WB.IndexSizeFields != nil && WB.WRangues != nil  {
+			
+					WB.Channel <- WChanBuf{nil, WB.WRangues , columnName, *bufferBytes }
+					return nil
+			
 			}
 
 			if WB.IndexSizeColumns != nil  && WB.WLines != nil {  
 			
+			
+				newLine := &WLines{
+					Line:WB.Line,
+				}
 				if WB.Line == -1 {
-		
-					WB.Line = atomic.AddInt64(WB.SizeFileLine, 1)
+					
+					 newLine.Line = atomic.AddInt64(WB.SizeFileLine, 1)
 		
 				}
 		
 				if WB.Line > *WB.SizeFileLine {
 		
-					atomic.AddInt64(WB.SizeFileLine, WB.Line - *WB.SizeFileLine )
+					atomic.AddInt64(WB.SizeFileLine, newLine.Line - *WB.SizeFileLine )
 						
 				}
 
-				WB.Channel <- WChanBuf{WB.WLines, nil , columnName, *bufferBytes }
+
+				WB.Channel <- WChanBuf{newLine , nil , columnName, *bufferBytes }
 				return &WB.Line
 			}
 

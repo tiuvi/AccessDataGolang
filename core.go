@@ -1,7 +1,6 @@
 package bd
 
 import (
-	"bytes"
 	"log"
 )
 
@@ -175,38 +174,47 @@ func (sP *Space)spaceTrimPointer(buf *[]byte){
 //#bd/core.go
 func (WB *WBuffer)WriteIndexSizeField(colName string, size [2]int64,rangues WRangues,fieldBuffer *[]byte){
 
+	rangueTotal := size[1] - size[0]
+	
+	
 	if WB.Hooker != nil && WB.PreFormat {
 
-		WB.hookerPreFormatPointer(buffer, columnName)
+		WB.hookerPreFormatPointer(fieldBuffer, colName)
 
 	}
 
-	//Contamos el array de bytes
-	var text_count = int64(len(*buff))
+
+	if  rangues.RangeBytes < rangueTotal && rangues.RangeBytes > 0 {
 	
-	//Obtenemos el campo
-	sizeField , _ := WB.IndexSizeFields[columnName]
+		rangueFinal := (rangues.Rangue * rangues.RangeBytes) + rangues.RangeBytes
 
-	//Obtenermos el valor de las columnas
-	sizeColumn    := sizeField[1] - sizeField[0]
-	//Primer caso el texto es menor que el tamaño de la linea
-	//En este caso añadimos un padding de espacios al final
+		if rangueFinal <= rangueTotal {
+
+			WB.spacePaddingPointer(fieldBuffer , [2]int64{0 , rangues.RangeBytes})
 	
+		}
+	
+		if rangueFinal > rangueTotal {
+	
+			restRangue := rangues.RangeBytes - (rangueFinal - rangueTotal)
+			if restRangue > 0 {
 
-	if text_count < sizeColumn {
+				WB.spacePaddingPointer(fieldBuffer , [2]int64{0 , restRangue })
+			} 
+			if restRangue <= 0 {
+				return
+			}
+		}
 
-		whitespace := bytes.Repeat( []byte(" ") , int(sizeColumn - text_count)) 
-					
-		*buff = append(*buff ,  whitespace... )
 	}
 
-	if text_count > sizeColumn {
+	if rangues.RangeBytes >= rangueTotal || rangues.RangeBytes <= 0 {
 
-		*buff = (*buff)[:sizeColumn]
+		WB.spacePaddingPointer(fieldBuffer , size)
+
 	}
 	
-	
-	WB.File.WriteAt(*buff,   + sizeField[0])
+	WB.File.WriteAt(*fieldBuffer,   + size[0] + (rangues.Rangue * rangues.RangeBytes))
 
 
 }
