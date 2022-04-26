@@ -41,9 +41,10 @@ Canal de buffer de bits <br>
 Dosmil escrituras ChanBufferBytes en:         	0. 114 776 100 <br>
 Veintemil escrituras ChanBufferBytes en:        1. 365 854 612 <br>
 doscientasmil escrituras ChanBufferBytes en:   12. 303 100 852 <br>
-
+ <br>
 
 Las escrituras en mapas son en dos columnas pero lo escribe en una vez. <br>
+
 Una escrituras MapsBufferBytes en:       0. 000 081 983 <br>
 Mil escrituras MapsBufferBytes en:       0. 078 245 810 <br>
 Diezmil escrituras ChanBufferBytes en:   0. 931 418 163 <br>
