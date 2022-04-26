@@ -237,8 +237,6 @@ func(WB *WBuffer)SendBWspace(columnName string, bufferBytes *[]byte)*int64{
 
 			}
 
-			log.Println("Buffer",columnName, string(*bufferBytes))
-
 			WB.BufferMap[columnName] = *bufferBytes
 			return nil
 		}

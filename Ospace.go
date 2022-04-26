@@ -137,7 +137,6 @@ func (obj *Space ) ospaceCompilationFile()bool {
 	//bdisk: Lista de bit en un archivo disk
 	if obj.Extension == DacBit {
 
-		obj.SizeLine        = 1
 		obj.FileCoding      = Bit
 		obj.compilation = true
 		return true

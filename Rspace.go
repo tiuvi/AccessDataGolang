@@ -279,7 +279,7 @@ func (buf *RBuffer) readBitSpace() {
 
 				*buf.Buffer = (*buf.Buffer)[:1]
 
-				_ , err := buf.File.ReadAt(*buf.Buffer ,buf.lenFields + byteLine + size[0])
+				_ , err := buf.File.ReadAt(*buf.Buffer ,buf.lenFields + (byteLine * buf.SizeLine) + size[0])
 				if err !=nil {
 
 					*buf.Buffer = []byte("off")
@@ -339,12 +339,11 @@ func (buf *RBuffer) readBitSpace() {
 						var bitLine  int64 =  buf.StartLine % 8 
 
 
-						_ , err := buf.File.ReadAt(*buf.Buffer , buf.lenFields + byteLine + size[0])
+						_ , err := buf.File.ReadAt(*buf.Buffer , buf.lenFields + (byteLine * buf.SizeLine) + size[0])
 						if err !=nil {
 
 							buf.Channel <- RChanBuf{buf.StartLine , colName, []byte("off")}
-							close(buf.Channel)
-							return
+					
 						}
 
 						turn := readBit(bitLine,*buf.Buffer)
@@ -442,7 +441,7 @@ func (buf *RBuffer) readBitSpace() {
 
 						}
 							
-						_ , err := buf.File.ReadAt(*bufferBit , buf.lenFields + byteLine + size[0])
+						_ , err := buf.File.ReadAt(*bufferBit , buf.lenFields + (byteLine * buf.SizeLine) + size[0])
 						if err != nil {
 							
 							buf.BufferMap[colName] = append(buf.BufferMap[colName] , []byte("off"))

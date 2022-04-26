@@ -208,40 +208,39 @@ func (WB *WBuffer) writeBitSpace()*int64{
 					
 				}
 
+				var byteLine int64 =  line / 8
+				var bitLine  int64  =  line % 8 
+				bufferBit := make([]byte , 1 )
+				WB.Lock()
+				defer WB.Unlock()
+
+
 				for colName, buffer := range WB.BufferMap {
 
 					size , found := WB.IndexSizeColumns[colName]
 					if found {
 
-						WB.Lock()
-						defer WB.Unlock()
-
-						var byteLine int64 =  line / 8
-
-							
-						bufferBit := make([]byte , 1 )
-						
-
-						_ , err := WB.File.ReadAt(bufferBit , WB.lenFields + byteLine + size[0])
+						_ , err := WB.File.ReadAt(bufferBit , WB.lenFields + (byteLine * WB.SizeLine) + size[0])
 						if err != nil{
 
 							bufferBit = []byte{0}
 							err = nil
 						}
+					
 
-
-						var bitLine int64 =  line - ((line / 8) * 8)
-
+						//log.Printf("Binary Before: %b", bufferBit ) 
 
 						switch string(buffer) {
 
 						case "on":
-							writeBit(bitLine ,true , bufferBit )
+							bufferBit = writeBit(bitLine ,true , bufferBit )
 						case "off":
-							writeBit(bitLine ,false , bufferBit )
+							bufferBit = writeBit(bitLine ,false , bufferBit )
 						}
-						
-						_ , err = WB.File.WriteAt(bufferBit, WB.lenFields + byteLine + size[0] )	
+
+						//log.Printf("Binary After: %b", bufferBit ) 
+
+						_ , err = WB.File.WriteAt(bufferBit, WB.lenFields + (byteLine * WB.SizeLine) + size[0] )	
 						if err != nil{
 
 							log.Println("Error de buffer en Wspace")
@@ -261,22 +260,72 @@ func (WB *WBuffer) writeBitSpace()*int64{
 
 		if WB.IndexSizeFields != nil && WB.WRangues != nil {
 
+
 			size, found := WB.IndexSizeFields[WB.ColumnName]
 			if found {
-				_ = size
 
+				WB.WriteIndexSizeField(WB.ColumnName,size,*WB.WRangues,WB.Buffer )
+				
+				return nil
 			}
+
 		}
 
 		if WB.IndexSizeColumns != nil  && WB.WLines != nil { 
 
 			size , found := WB.IndexSizeColumns[WB.ColumnName]
 			if found {
-				_ = size
 
+				line := WB.Line
+				if line == -1 {
+			
+					line = atomic.AddInt64(WB.SizeFileLine, 1)
+			
+				}
+			
+				if line > *WB.SizeFileLine {
+			
+					atomic.AddInt64(WB.SizeFileLine, line - *WB.SizeFileLine )
+					
+				}
+
+				var byteLine int64 =  line / 8
+				var bitLine  int64  =  line % 8 
+				bufferBit := make([]byte , 1 )
+
+				WB.Lock()
+				defer WB.Unlock()
+				
+				_ , err := WB.File.ReadAt(bufferBit , WB.lenFields + (byteLine * WB.SizeLine) + size[0])
+				if err != nil{
+
+					bufferBit = []byte{0}
+					err = nil
+				}
+			
+
+				//log.Printf("Binary Before: %b", bufferBit ) 
+
+				switch string(*WB.Buffer) {
+
+				case "on":
+					bufferBit = writeBit(bitLine ,true , bufferBit )
+				case "off":
+					bufferBit = writeBit(bitLine ,false , bufferBit )
+				}
+
+			//	log.Printf("Binary After: %b", bufferBit ) 
+
+				_ , err = WB.File.WriteAt(bufferBit, WB.lenFields + (byteLine * WB.SizeLine) + size[0] )	
+				if err != nil{
+
+					log.Println("Error de buffer en Wspace")
+
+				}
+				return &line
 			}
 		}
-
+		return nil
 	}
 
 	//Buffer de bytes
@@ -284,21 +333,53 @@ func (WB *WBuffer) writeBitSpace()*int64{
 	
 		for CHAN := range WB.Channel {
 
+		
 			if WB.IndexSizeFields != nil && CHAN.WRangues != nil {
 
 				size, found := WB.IndexSizeFields[CHAN.ColName]
 				if found {
-					_ = size
-
+					
+					WB.WriteIndexSizeField(CHAN.ColName,size,*CHAN.WRangues, &CHAN.Buffer)
+					continue
 				}
+				
 			}
 
 			if WB.IndexSizeColumns != nil  && CHAN.WLines != nil { 
 
 				size , found := WB.IndexSizeColumns[CHAN.ColName]
 				if found {
-					_ = size
+				
+					var byteLine int64 =  CHAN.Line / 8
+					var bitLine  int64  =  CHAN.Line % 8 
+					bufferBit := make([]byte , 1 )
+					WB.Lock()
+					
+					_ , err := WB.File.ReadAt(bufferBit , WB.lenFields + (byteLine * WB.SizeLine) + size[0])
+					if err != nil{
+	
+						bufferBit = []byte{0}
+						err = nil
+					}
 
+					switch string(CHAN.Buffer) {
+
+						case "on":
+							bufferBit = writeBit(bitLine ,true , bufferBit )
+						case "off":
+							bufferBit = writeBit(bitLine ,false , bufferBit )
+					}
+
+					_, err = WB.File.WriteAt(bufferBit , WB.lenFields + (WB.SizeLine * byteLine) + size[0])
+					if err != nil{
+
+						log.Println("Error de buffer en Wspace")
+
+					}
+
+					WB.Unlock()
+
+					continue
 				}
 			}
 		}
