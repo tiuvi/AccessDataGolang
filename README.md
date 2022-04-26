@@ -18,38 +18,38 @@ Atomización de los datos, puedes tener en un solo archivo un video, los likes d
 Provado con mas de 1000 campos estaticos + 1000 columnas dinamicas.
 
 Si crecen los datos tu velocidad de acceso a ellos no decrece totalmente lineal, ademas compatible en concurrencia y en paralelo.
+ <br> <br>
+buffer de bytes <br>
+Dos escrituras bufferBytes en:           0. 000 044 401 segundos. <br>
+Dosmil escrituras bufferBytes en:        0. 168 038 051 segundos. <br>
+veintemil escrituras bufferBytes en:     0. 463 238 103 segundos. <br>
+doscientasmil escrituras bufferBytes en: 7. 530 359 778 segundos. <br>
+<br>
+buffer de bits <br>
+Dosmil escrituras bufferBytes en:         0. 075 561 161 <br>
+veintemil escrituras bufferBytes en:      1. 246 176 394 <br>
+doscientasmil escrituras bufferBytes en:  7. 409 574 141 <br>
 
-buffer de bytes
-Dos escrituras bufferBytes en:           0. 000 044 401 segundos.
-Dosmil escrituras bufferBytes en:        0. 168 038 051 segundos.
-veintemil escrituras bufferBytes en:     0. 463 238 103 segundos.
-doscientasmil escrituras bufferBytes en: 7. 530 359 778 segundos.
-
-buffer de bits
-Dosmil escrituras bufferBytes en:         0. 075 561 161
-veintemil escrituras bufferBytes en:      1. 246 176 394
-doscientasmil escrituras bufferBytes en:  7. 409 574 141
-
-
-Canal de buffer de bytes
-Dos escrituras ChanBufferBytes en:            0. 000 066 830
-Dosmil escrituras ChanBufferBytes en:         0. 051 327 189
-Veintemil escrituras ChanBufferBytes en:      0. 996 522 694
-doscientasmil escrituras ChanBufferBytes en: 12. 643 067 397
-
-Canal de buffer de bits
-Dosmil escrituras ChanBufferBytes en:        	0. 114 776 100
-Veintemil escrituras ChanBufferBytes en:        1. 365 854 612
-doscientasmil escrituras ChanBufferBytes en:   12. 303 100 852
+<br>
+Canal de buffer de bytes <br>
+Dos escrituras ChanBufferBytes en:            0. 000 066 830 <br>
+Dosmil escrituras ChanBufferBytes en:         0. 051 327 189 <br>
+Veintemil escrituras ChanBufferBytes en:      0. 996 522 694 <br>
+doscientasmil escrituras ChanBufferBytes en: 12. 643 067 397 <br>
+<br>
+Canal de buffer de bits <br>
+Dosmil escrituras ChanBufferBytes en:         	0. 114 776 100 <br>
+Veintemil escrituras ChanBufferBytes en:        1. 365 854 612 <br>
+doscientasmil escrituras ChanBufferBytes en:   12. 303 100 852 <br>
 
 
 Las escrituras en mapas son en dos columnas pero lo escribe en una vez.
-Una escrituras MapsBufferBytes en:       0. 000 081 983
-Mil escrituras MapsBufferBytes en:       0. 078 245 810
-Diezmil escrituras ChanBufferBytes en:   0. 931 418 163
-Cienmil escrituras ChanBufferBytes en:  10 .808 210 071
-
-mapa buffer de bits
-Mil escrituras MapsBufferBytes en:       0. 173 969 542
-Diezmil escrituras ChanBufferBytes en:   1. 930 629 185
-Cienmil escrituras ChanBufferBytes en:  10. 658 817 437
+Una escrituras MapsBufferBytes en:       0. 000 081 983 <br>
+Mil escrituras MapsBufferBytes en:       0. 078 245 810 <br>
+Diezmil escrituras ChanBufferBytes en:   0. 931 418 163 <br>
+Cienmil escrituras ChanBufferBytes en:  10 .808 210 071 <br>
+ <br>
+mapa buffer de bits <br>
+Mil escrituras MapsBufferBytes en:       0. 173 969 542 <br>
+Diezmil escrituras ChanBufferBytes en:   1. 930 629 185 <br>
+Cienmil escrituras ChanBufferBytes en:  10. 658 817 437 <br>
