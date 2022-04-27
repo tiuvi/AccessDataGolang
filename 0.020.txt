@@ -1,5 +1,6 @@
-Lunes - 8:30
-
+Lunes Tarde      - 8:30
+martes madrugada - 3:30
+martes tarde - 4 horas
 
 
 HECHO - Separar los buffers de lectura de los buffers de escritura en dos archivos.
@@ -124,9 +125,22 @@ INDEXSIZEFIELD IMPORTANTE
 
 HECHO - Migracion global a bytes nulos en vez de espacios.
 
-FUNCIONALIDAD -  Ver como se va a gestionar la creacion de carpetas para los archivos en los spacios.
+HECHO -  Ver como se va a gestionar la creacion de carpetas para los archivos en los spacios.
+
+
+FUNCIONALIDAD - SubPaquete que gestione log y errores, usando el sistema dac.
+        Añadir archivo de log de inicio de todos los archivos , seguimiento de errores y demas..
+
+FUNCIONALIDAD - Añadir precalcular campos poniendo el tamañao en un array, tanto para indexsizefield como indexsizecolumn
+
+FUNCIONALIDAD - Crear las funciones de borrado de archivos, directorios, subdirectorios.
+
 
 FUNCIONALIDAD - Que abstraiga de crear un buffer de bit que sea on y off, y lo cree automaticamente.
+
+IDEA - Leer campo y escribir en el como sumar un numero.ç
+IDEA - Funcion que escriba espacios al final
+IDEA - Funcion que escriba saltos de linea al final
 
 IDEA - SubPaquete para gestionar indexsizefields dinamicos en tiempo de ejecución.
 
@@ -135,8 +149,7 @@ IDEA - SubPaquete que envuelva las funciones de lectura para tipar los resultado
 IDEA - Añadir versiones a los archivos, de tal modo que se pueda Añadir modificaciones, sin tener que actualizar 
         si no actualizacion por uso, cuando se usa se modifica directamente a la siguiente version.
 
-IDEA - SubPaquete que gestione log y errores, usando el sistema dac.
-        Añadir archivo de log de inicio de todos los archivos , seguimiento de errores y demas..
+
 
 IDEA - SubPaquete funciones que muestren los datos para iniciar un space o un file en cualquier otro servidor
         cuando se detecte la extension dacbyte o dacbit, el servidor podra pedir los datos del space para recrearlo.

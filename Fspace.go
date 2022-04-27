@@ -5,9 +5,9 @@ import (
 )
 
 /*
-* Funciones de buffer de bytes
+* Funciones de buffer de bytes lectura
 *
- */
+*/
 func (sF *spaceFile)GetOneLine(col string, line int64) *RBuffer {
 
 	RBuf := sF.NewBRspace(BuffBytes)
@@ -18,6 +18,10 @@ func (sF *spaceFile)GetOneLine(col string, line int64) *RBuffer {
 	return RBuf
 }
 
+/*
+* Funciones de buffer de bytes escritura
+*
+*/
 func (sF *spaceFile)SetOneLine(col string, line int64,bufferBytes *[]byte )*int64 {
 
 	RBuf := sF.NewWBspace(BuffBytes)
@@ -38,9 +42,9 @@ func (sF *spaceFile)NewOneLine(col string, bufferBytes *[]byte )*int64 {
 
 
 /*
-* Funciones de buffer de mapas
+* Funciones de buffer de mapas lectura
 *
- */
+*/
 func (sF *spaceFile)GetAllLines(col string) *RBuffer {
 
 	RBuf := sF.NewBRspace(BuffMap)
@@ -50,4 +54,9 @@ func (sF *spaceFile)GetAllLines(col string) *RBuffer {
 
 	return RBuf
 }
+
+/*
+* Funciones de buffer de mapas escritura
+*
+*/
 

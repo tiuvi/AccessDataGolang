@@ -15,7 +15,6 @@ const(
 	Disk FileNativeType = 1 << iota
 	DeferDisk 
 	PermDisk
-	Directory
 )
 
 
@@ -47,9 +46,21 @@ var extensionFile = map[string]string{
 	DacBit:      "Archivo que incluye fields y una lista de bits",
 }
 
+type SpaceErrors struct {
+	//Si fatal close program si no log normales.
+	LogFatalErrors   bool
+	LogConsoleErrors bool
+	LevelsUrl int
+	LogFileError     bool
+
+	LogSpeeds        bool
+}
+
 type Space struct  {
-	
-	check bool
+
+	//TE dice si chequear los archivos y en caso de que si se usa la superglobal SpaceErrors
+	Check bool
+	*SpaceErrors
 	//Indica el estado del archivo en la aplicacion
 	FileNativeType FileNativeType
 	//Propiedades comunes a todos los archivos
@@ -116,6 +127,8 @@ func NewDac(){
 	
 	go dacTimerCloserDiskFile()
 
+	go errorsLog()
+
 }
 
 func (obj *Space ) OSpaceInit()bool  {
@@ -124,7 +137,7 @@ func (obj *Space ) OSpaceInit()bool  {
 
 }
 
-func (obj *Space ) OSpace(name string)*spaceFile  {
+func (obj *Space ) OSpace( name string ,folder... string)*spaceFile  {
 
 
 	if !obj.compilation {
@@ -143,19 +156,19 @@ func (obj *Space ) OSpace(name string)*spaceFile  {
 
 	if CheckFileNativeType(obj.FileNativeType, Disk ){
 
-		return obj.ospaceDisk(name)
+		return obj.ospaceDisk(name, folder)
 
 	} 
 
 	if CheckFileNativeType(obj.FileNativeType, DeferDisk ){
 
-		return obj.ospaceDeferDisk(name)
+		return obj.ospaceDeferDisk(name, folder)
 
 	} 
 
 	if CheckFileNativeType(obj.FileNativeType, PermDisk ){
 
-		return obj.ospacePermDisk(name)
+		return obj.ospacePermDisk(name, folder)
 
 	}
 

@@ -77,7 +77,7 @@ func (sF *spaceFile)NewBRspace(typeBuff FileTypeBuffer)(buf *RBuffer){
 //Activa o desactiva los errores y chequeos adicionales.
 func (RB *RBuffer)CheckBRspace(active bool){
 
-	RB.check = active
+	RB.Check = active
 }
 
 //Activa o desactiva el postformateado de los datos.
@@ -89,7 +89,7 @@ func (RB *RBuffer)PostFormatBRspace(active bool){
 //Lee una sola linea de buffer.(Columnas)
 func (RB *RBuffer)OneLineBRspace(line int64){
 
-	if RB.check && *RB.SizeFileLine < line {
+	if RB.Check && *RB.SizeFileLine < line {
 		
 		log.Fatalln("Error de buffer archivo: ",RB.Url , " Linea final: ",line  , " Numero de lineas del archivo: ", *RB.SizeFileLine)
 		
@@ -102,7 +102,7 @@ func (RB *RBuffer)OneLineBRspace(line int64){
 //Lee multiples lineas de buffer.(Columnas)
 func (RB *RBuffer)MultiLineBRspace(startLine int64,endLine int64){
 
-	if RB.check && *RB.SizeFileLine < endLine {
+	if RB.Check && *RB.SizeFileLine < endLine {
 		
 		log.Fatalln("Error de buffer archivo: ",RB.Url , " Linea final: ",endLine  , " Numero de lineas del archivo: ", *RB.SizeFileLine)
 		
@@ -206,7 +206,7 @@ func (RB *RBuffer)isColumn(column string)*bool{
 func (RB *RBuffer)BRspace(data ...string ){
 	 
 
-	if RB.check {
+	if RB.Check {
 
 		if  int64(len(data)) > RB.lenColumns + RB.lenFields {
 
@@ -222,7 +222,7 @@ func (RB *RBuffer)BRspace(data ...string ){
 
 		if CheckFileTypeBuffer(RB.typeBuff, BuffBytes ){
 
-			if RB.check && len(data) > 1 {
+			if RB.Check && len(data) > 1 {
 	
 				log.Fatalln("El Buffer de Bytes solo es compatible con un unico campo.",RB.Url   )
 			
@@ -231,7 +231,7 @@ func (RB *RBuffer)BRspace(data ...string ){
 
 		for _, colname := range data {
 
-			if RB.check {
+			if RB.Check {
 
 				RB.checkColFil(colname, "Archivo: BRspace.go ; Funcion: BRspace")
 			}

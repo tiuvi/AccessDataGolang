@@ -45,7 +45,7 @@ type WBuffer struct {
 //Activa o desactiva los errores y chequeos adicionales.
 func (WB *WBuffer)CheckWRspace(active bool){
 
-	WB.check = active
+	WB.Check = active
 }
 
 //Crea un nuevo espacio de buffer, que es una unica referencia.
@@ -98,7 +98,7 @@ func (WB *WBuffer)NewLineWBspace(){
 //Escribe en un numero determinado de linea.
 func (WB *WBuffer)UpdateLineWBspace(line int64){
 
-	if WB.check &&  line < 0 {
+	if WB.Check &&  line < 0 {
 		
 		log.Fatalln("Error no se puede enviar una linea inferior a 0",WB.Url)
 		
@@ -215,7 +215,7 @@ func (WB *WBuffer)CalcSizeColumnBWspace(field string)*int64{
 
 func(WB *WBuffer)SendBWspace(columnName string, bufferBytes *[]byte)*int64{
 
-		if WB.check  {
+		if WB.Check  {
 			
 			WB.checkColFil(columnName, "Archivo: BWspace.go ; Funcion: BWspaceBuff")
 		}

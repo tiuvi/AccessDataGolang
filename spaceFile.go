@@ -7,7 +7,9 @@ import(
 )
 
 
-func (obj *Space )newSpaceFile(url string)*spaceFile{
+func (obj *Space )newSpaceFile(folderString string, name string)*spaceFile{
+
+	url := obj.Dir + folderString + name + "." + obj.Extension
 
 	var err error
 	//Creamos una nueva referencia a spaceFile
@@ -18,6 +20,20 @@ func (obj *Space )newSpaceFile(url string)*spaceFile{
 	if err != nil {
 		//Migrar los errores de archivo a un log de archivo
 		log.Println("Error al abrir o crear el archivo.", err)
+
+		if  os.IsNotExist(err) {
+			
+			err = os.MkdirAll(obj.Dir + folderString , 0666)
+			if err != nil {
+				
+				log.Println("Error al crear la carpeta para ese archivo. ", err)
+			}
+			spacef.File, err = os.OpenFile(url , os.O_RDWR | os.O_CREATE, 0666)
+			if err != nil {
+			
+				log.Println("Error al abrir el archivo, Error al crear la carpeta para ese archivo.", err)
+			}
+		}
 	}
 
 	spacef.Space = obj

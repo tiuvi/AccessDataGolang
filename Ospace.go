@@ -3,15 +3,23 @@ package bd
 import(
 	"log"
 	"time"
+	"strings"
 )
-
+var fileName = "Ospace.go"
+var funcName = "ospaceCompilationFile"
 
 func (obj *Space ) ospaceCompilationFile()bool {
 
+
+	if obj.Check {
+
+		obj.SpaceErrors = GlobalError
+		obj.LogNewError(message ,"Errores activados en: ", obj.Dir )
+	}
+
 	if len(obj.Dir) == 0 {
 
-		log.Fatalln("Ruta directorio vacio en: ", obj.Dir, obj.Extension)
-
+		obj.LogNewError(message , "Variable Dir vacia .", obj.Dir )
 	}
 	
 	if len(obj.Extension) == 0 {
@@ -155,16 +163,25 @@ var diskSpace = &spaceDisk{
 	DiskFile: make(map[string]*spaceFile),
 }
 
-//Abrimos el espacio en disco
-func (obj *Space ) ospaceDisk(name string)*spaceFile {
 
-	url := obj.Dir + name + "." + obj.Extension
+
+//Abrimos el espacio en disco
+func (obj *Space ) ospaceDisk( name string, folder []string)*spaceFile {
+	
+	var folderString string
+	if len(folder) > 0 {
+
+		folderString = strings.Join(folder, "/")
+		folderString += "/"
+	}
+	url := obj.Dir + folderString + name + "." + obj.Extension
+
 
 	spacef , found := diskSpace.DiskFile[url]
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
-		spacef = obj.newSpaceFile(url)
+		spacef = obj.newSpaceFile(folderString, name)
 		//Unico bloqueo cuando se abre el archivo para mantener la atomicidad
 		diskSpace.Lock()
 		//Guardamos nuestra referencia al archivo en el mapa
@@ -182,16 +199,22 @@ var deferSpace = &spaceDeferDisk{
 	Info: make([]deferFileInfo,0),
 }
 
-func (obj *Space ) ospaceDeferDisk(name string)*spaceFile{
+func (obj *Space ) ospaceDeferDisk(name string, folder []string)*spaceFile{
 
-	url := obj.Dir + name + "." + obj.Extension
+	var folderString string
+	if len(folder) > 0 {
+
+		folderString = strings.Join(folder, "/")
+		folderString += "/"
+	}
+	url := obj.Dir + folderString + name + "." + obj.Extension
 
 	
 	spacef , found := deferSpace.DeferFile[url]
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
-		spacef = obj.newSpaceFile(url)
+		spacef = obj.newSpaceFile(folderString, name)
 		//Unico bloqueo cuando se abre el archivo para mantener la atomicidad
 		deferSpace.Lock()
 		//Creamos una nueva referencia a spaceFile
@@ -211,15 +234,21 @@ var permSpace = &spacePermDisk{
 	PermDisk: make(map[string]*spaceFile),
 }
 
-func (obj *Space ) ospacePermDisk(name string)*spaceFile{
+func (obj *Space ) ospacePermDisk( name string,folder []string)*spaceFile{
 
-	url := obj.Dir + name + "." + obj.Extension
+	var folderString string
+	if len(folder) > 0 {
+
+		folderString = strings.Join(folder, "/")
+		folderString += "/"
+	}
+	url := obj.Dir + folderString + name + "." + obj.Extension
 
 	spacef , found := permSpace.PermDisk[url]
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
-		spacef = obj.newSpaceFile(url)
+		spacef = obj.newSpaceFile(folderString, name)
 		//Unico bloqueo cuando se abre el archivo para mantener la atomicidad
 		permSpace.Lock()
 		//Creamos una nueva referencia a spaceFile

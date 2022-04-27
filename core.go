@@ -88,7 +88,7 @@ func CheckBit(base int64, compare int64)(bool){
 //hookerPreFormatPointer: Da preformato a la entrada de bytes en los 
 //archivos tanto en columnas como fields.
 //#bd/core.go
-func (sp *spaceFile) hookerPreFormatPointer(bufByte *[]byte,colName string){
+func (sp *spaceFile)hookerPreFormatPointer(bufByte *[]byte,colName string){
 
 	//Preformat por columnas
 	function, exist := sp.Hooker[Preformat + colName]
@@ -112,7 +112,7 @@ func (sp *spaceFile) hookerPreFormatPointer(bufByte *[]byte,colName string){
 //hookerPostFormatPointer: Da postformato a la salida de bytes en los 
 //archivos tanto en columnas como fields.
 //#bd/core.go
-func (sp *spaceFile) hookerPostFormatPointer(bufByte *[]byte,colName string){
+func (sp *spaceFile)hookerPostFormatPointer(bufByte *[]byte,colName string){
 
 	//Postformat por columnas
 	function, exist := sp.Hooker[Postformat + colName]
@@ -218,55 +218,6 @@ func (WB *WBuffer)WriteIndexSizeField(colName string, size [2]int64,rangues WRan
 
 
 }
-
-
-
-//check: revisa las columnas y los fields haber si existen como columna si no existe da error fatal.
-//#core.go/check
-func (sP *Space) checkColFil(name string, err string){
-
-	mensaje := err + " ; La columna o field: " + name + " no existe en el archivo ; " + sP.Dir
-
-	if sP.IndexSizeColumns != nil {
-
-		_, found := sP.IndexSizeColumns[name]
-		if !found {
-		
-			if sP.IndexSizeFields != nil {
-
-				_, found := sP.IndexSizeFields[name]
-				if !found {
-		
-					log.Fatalln(mensaje)
-				
-				}
-				return
-			}
-		}
-	}
-
-	if sP.IndexSizeColumns == nil {
-
-		if sP.IndexSizeFields != nil {
-
-			_, found := sP.IndexSizeFields[name]
-			if !found {
-	
-				log.Fatalln(mensaje)
-			
-			}
-			return
-		}
-	}
-
-	if sP.IndexSizeColumns == nil && sP.IndexSizeFields == nil {
-
-		log.Fatalln("El archivo no tiene columnas o campos que sincronizar." + sP.Dir)
-
-	}
-
-}
-
 
 
 
