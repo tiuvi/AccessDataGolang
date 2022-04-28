@@ -1,5 +1,8 @@
 # AccessDataGolang
 
+Acceso a grupo de telegram, donde subo las actualizaciones del proyecto y donde se puede hablar de todo lo referido a GOLANG.
+https://t.me/happycode_invitacion
+
 Nueva tecnología de acceso a datos, separa la busqueda de datos, del acceso a datos aumentando la velocidad en *100.
 
 Sin inyeccion sql, es totalmente imposible inyectar codificación de cualquier manera ademas tiene un prefiltrado y un 
