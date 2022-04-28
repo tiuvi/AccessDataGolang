@@ -22,31 +22,53 @@ const (
 
 type errorDac string
 const(
+	
+	NewRouteFolder errorDac       =   "newRouteFolder" 
 
-	NewRouteFolder    errorDac   =  "newRouteFolder"
-
-	Message    errorDac   =  "message"
-	MessageCopilation     = "messageCopilation"
+	Message    errorDac           =  "message"
+	MessageCopilation  errorDac   = "messageCopilation"
 
 	Exception  errorDac   =  "exception"
 	Warning    errorDac   =  "warning"
 	Fatal      errorDac   =  "fatal"
+
+	TimeMemory errorDac = "TimeMemoryStat"
 )
+
+type SpaceErrors struct {
+	//Si fatal close program si no log normales.
+	LogFatalErrors   bool
+	LogConsoleErrors bool
+
+	LevelsUrl int
+	LogFileError     bool
+
+	LogTimeUse        bool
+	LogFileTimeUse   bool
+	LogTimeOpenFile bool
+
+	LogMemoryUse     bool
+	LogFileMemoryUse     bool
+
+	SeparatorLog string
+}
 
 var GlobalError = &SpaceErrors{
 	LogFatalErrors:   false,
 	LogConsoleErrors: true,
 
 	LogFileError: true,
-	LevelsUrl:    8 ,
 
 	LogTimeUse :   true,   
 	LogFileTimeUse: true,
+	LogTimeOpenFile: true,
+
 
 	LogMemoryUse:  true,
 	LogFileMemoryUse: true,
 
-	SeparatorLog:  " ",
+	SeparatorLog: " ",
+	LevelsUrl: 8,
 }
 
 var errorLog = &Space{
@@ -122,7 +144,10 @@ func negritaTerminal(str string)string{
 	
 	return strings.Join( []string{"\u001b[01m" ,ColorWhite, "\u001b[40m",   str , Reset} , "")
 }
-func (sP *Space ) uint64ToString(uintData uint64)string {
+
+func (EDAC *ErrorsDac ) uint64ToString(uintData uint64)string {
+
+	
 
 	var uintFormat string
 	uintStr := strconv.FormatUint( uintData, 10) 
@@ -132,17 +157,18 @@ func (sP *Space ) uint64ToString(uintData uint64)string {
 
 	if restuintStr > 0 {
 
-		uintFormat = strings.Join([]string{ uintStr[:restuintStr] , sP.SeparatorLog } , "")
+		uintFormat = strings.Join([]string{ uintStr[:restuintStr] , EDAC.SeparatorLog } , "")
 		uintStr = uintStr[restuintStr:]
-
+	
 	}
 
 	for x := 0; x < divuintStr ; x++{
 		
-		uintFormat += strings.Join([]string{ uintStr[:3] , sP.SeparatorLog } , "")
+		uintFormat += strings.Join([]string{ uintStr[:3] , EDAC.SeparatorLog } , "")
 		uintStr = uintStr[3:]
 
 	}
+
 	return uintFormat
 }
 
@@ -153,20 +179,93 @@ func errorsLog(){
 	memoryLog.OSpaceInit()
 }
 
+type ErrorsDac struct  {
+	*SpaceErrors
+	FileName string
+	TypeError errorDac
+	Url string
+	MessageLog string
 
-func (sP *Space ) LogNewError(typeError errorDac, url string , messageLog string,timeNow ...time.Time){
+	LevelsUrl int
+	SeparatorLog string
+
+	TimeNow *time.Time
+}
+func (sP *Space )ErrorSpaceDefault(typeError errorDac, MessageLog string){
+
+	EDAC := &ErrorsDac {
+		SpaceErrors: sP.SpaceErrors,
+		FileName: "",
+		TypeError: typeError,
+		Url: sP.Dir,
+		MessageLog: MessageLog,
+		LevelsUrl:    sP.LevelsUrl ,
+		SeparatorLog:  sP.SeparatorLog,
+		TimeNow: nil,
+	}
+	EDAC.LogNewError()
+}
+
+func (sP *Space ) LogDeferTimeMemoryDefault(timeNow time.Time){
+
+	EDAC := &ErrorsDac {
+		SpaceErrors: sP.SpaceErrors,
+		FileName: "",
+		TypeError: TimeMemory,
+		Url: sP.Dir,
+		MessageLog: "",
+		LevelsUrl:    sP.LevelsUrl ,
+		SeparatorLog:  sP.SeparatorLog,
+		TimeNow: &timeNow,
+	}
+	EDAC.LogNewError()
+
+}
+
+func (sP *Space )NewErrorSpace(FileName string, typeError errorDac, MessageLog string){
+
+	EDAC := &ErrorsDac {
+		SpaceErrors: sP.SpaceErrors,
+		FileName: FileName,
+		TypeError: typeError,
+		Url: sP.Dir,
+		MessageLog: MessageLog,
+		LevelsUrl:    sP.LevelsUrl ,
+		SeparatorLog:  sP.SeparatorLog,
+		TimeNow: nil,
+	}
+	EDAC.LogNewError()
+}
+
+func (sP *Space ) NewLogDeferTimeMemory(FileName string, timeNow time.Time){
+
+	EDAC := &ErrorsDac {
+		SpaceErrors: sP.SpaceErrors,
+		FileName: FileName,
+		TypeError: TimeMemory,
+		Url: sP.Dir,
+		MessageLog: "",
+		LevelsUrl:    sP.LevelsUrl ,
+		SeparatorLog:  sP.SeparatorLog,
+		TimeNow: &timeNow,
+	}
+	EDAC.LogNewError()
+
+}
+
+func (EDAC *ErrorsDac ) LogNewError(){
 
 	date := time.Now()
 	dateString := date.Format("02/01/2006 15:04:05")
 
 
-	ptr , _, _, _ := runtime.Caller(1)
+	ptr , _, _, _ := runtime.Caller(2)
 	firstFrame := runtime.CallersFrames([]uintptr{ptr})
 	frame, _ := firstFrame.Next()
 	
 	fileString     := frame.File
 	funcNameString := frame.Function
-	urlNameString  := url
+	urlNameString  := EDAC.Url
 	lineStr        := strconv.Itoa(frame.Line)
 
 	fileDir    := strings.Split(frame.File, "/")
@@ -183,26 +282,34 @@ func (sP *Space ) LogNewError(typeError errorDac, url string , messageLog string
 	}
 	
 
-	urlName       := strings.Split(url , "/")
-	if len(urlName) > sP.LevelsUrl {
+	urlName       := strings.Split(EDAC.Url , "/")
+	if len(urlName) > EDAC.LevelsUrl {
 
-		urlNameString = strings.Join(urlName[len(urlName)-sP.LevelsUrl:] , "/")
+		urlNameString = strings.Join(urlName[len(urlName)-EDAC.LevelsUrl:] , "/")
 	}
 
-	if sP.LogFileError && typeError != MessageCopilation && len(timeNow) == 0{
+	if EDAC.LogFileError && EDAC.TypeError != MessageCopilation && EDAC.TimeNow == nil{
+	
+		if len(EDAC.FileName) == 0{
 
-		go WriteNewError(dateString, typeError ,fileString ,funcNameString , lineStr , messageLog , urlNameString )
+			go WriteNewError("message",dateString, EDAC.TypeError ,fileString ,funcNameString , lineStr , EDAC.MessageLog , urlNameString )
 
+		}else{
+
+			go WriteNewError(EDAC.FileName + "Message" ,dateString, EDAC.TypeError ,fileString ,funcNameString , lineStr , EDAC.MessageLog , urlNameString )
+
+		}
+	
 	}
 
 
 	var logString string
 	var nT func(string)string = negritaTerminal
 
-	if (sP.LogFatalErrors || sP.LogConsoleErrors) && len(timeNow) == 0 {
+	if (EDAC.LogFatalErrors || EDAC.LogConsoleErrors) && EDAC.TimeNow == nil {
 
 		var color string
-		switch typeError {
+		switch EDAC.TypeError {
 	
 		case Fatal,MessageCopilation:
 			color = ColorRed
@@ -215,18 +322,18 @@ func (sP *Space ) LogNewError(typeError errorDac, url string , messageLog string
 		}
 
 		logString = strings.Join([]string{ 
-		nT("Fecha:") ," ", dateString ," - ",nT("Tipo de error:"), " " ,color , string(typeError) ,Reset, "\n\r", 
+		nT("Fecha:") ," ", dateString ," - ",nT("Tipo de error:"), " " ,color , string(EDAC.TypeError) ,Reset, "\n\r", 
 		nT("Archivo:"), " "  , fileString ," - ",nT("Funcion:"), " " , funcNameString ," - ",nT("Nº Linea:"), " "  , lineStr ,"\n\r",
 		nT("Ruta DAC:"), " " , urlNameString, "\n\r",
-		nT("Mensaje:"), " " , messageLog, "\n\r" } , "")
+		nT("Mensaje:"), " " , EDAC.MessageLog, "\n\r" } , "")
 	
-		if sP.LogFatalErrors  {
+		if EDAC.LogFatalErrors  {
 
 			log.Fatalln(logString )
 	
 		} 
 	
-		if sP.LogConsoleErrors {
+		if EDAC.LogConsoleErrors {
 		
 			go log.Println(logString)
 		
@@ -240,26 +347,33 @@ func (sP *Space ) LogNewError(typeError errorDac, url string , messageLog string
 	var memSys string
 	var bigObjSize string
 	var gcCount string
-	if (sP.LogMemoryUse || sP.LogFileMemoryUse) && len(timeNow) > 0 {
+	if (EDAC.LogMemoryUse || EDAC.LogFileMemoryUse) && EDAC.TimeNow != nil {
 
 		runtime.ReadMemStats(&memoryStats)
-		allocString = sP.uint64ToString(memoryStats.Alloc)
-		totalAlloc  = sP.uint64ToString(memoryStats.TotalAlloc)
-		memSys      = sP.uint64ToString(memoryStats.Sys)
-		bigObjSize  = sP.uint64ToString(uint64(memoryStats.BySize[60].Size))
-		gcCount     = sP.uint64ToString(uint64(memoryStats.NumGC))
+		allocString = EDAC.uint64ToString(memoryStats.Alloc)
+		totalAlloc  = EDAC.uint64ToString(memoryStats.TotalAlloc)
+		memSys      = EDAC.uint64ToString(memoryStats.Sys)
+		bigObjSize  = EDAC.uint64ToString(uint64(memoryStats.BySize[60].Size))
+		gcCount     = EDAC.uint64ToString(uint64(memoryStats.NumGC))
 	}
 
 	//Log de memoria y archivo de memoria
-	if sP.LogFileMemoryUse && typeError != MessageCopilation && len(timeNow) > 0 {
+	if EDAC.LogFileMemoryUse && EDAC.TypeError != MessageCopilation && EDAC.TimeNow != nil {
 
-		go WriteNewMemoryUse(dateString, fileString ,funcNameString , lineStr , urlNameString, 
-		allocString, totalAlloc,memSys , bigObjSize, gcCount )
+		if len(EDAC.FileName) == 0{
 
+			go WriteNewMemoryUse("memory",dateString, fileString ,funcNameString , lineStr , urlNameString, 
+			allocString, totalAlloc,memSys , bigObjSize, gcCount )
+		}else{
+
+			go WriteNewMemoryUse(EDAC.FileName + "memory",dateString, fileString ,funcNameString , lineStr , urlNameString, 
+			allocString, totalAlloc,memSys , bigObjSize, gcCount )
+		}
+	
 	}
 
 	// For info on each, see: https://golang.org/pkg/runtime/#MemStats
-	if sP.LogMemoryUse && len(timeNow) > 0 {
+	if EDAC.LogMemoryUse && EDAC.TimeNow != nil {
 
 
 		logString := strings.Join([]string{ 
@@ -279,38 +393,49 @@ func (sP *Space ) LogNewError(typeError errorDac, url string , messageLog string
 
 	//Variables para iniciar tanto el log como el archivo.
 	var elapsed int64
-	if (sP.LogFileTimeUse || sP.LogTimeUse) && len(timeNow) > 0  {
+	if (EDAC.LogFileTimeUse || EDAC.LogTimeUse) && EDAC.TimeNow != nil  {
 		
-		elapsed = time.Since(timeNow[0]).Nanoseconds()
+		elapsed = time.Since(*EDAC.TimeNow).Nanoseconds()
 
 	}
 
 	//Log de tiempo transcurrido y archivo de tiempo transcurrido
-	if sP.LogFileTimeUse && typeError != MessageCopilation && len(timeNow) > 0 {
+	if EDAC.LogFileTimeUse && EDAC.TypeError != MessageCopilation && EDAC.TimeNow != nil {
 
-		go WriteNewTimeUse(dateString, fileString ,funcNameString , lineStr , urlNameString, sP.uint64ToString(uint64(elapsed)) )
+		if len(EDAC.FileName) == 0{
 
+			go WriteNewTimeUse("time",dateString, fileString ,funcNameString , lineStr , urlNameString, EDAC.uint64ToString(uint64(elapsed)) )
+
+		}else{
+
+			go WriteNewTimeUse(EDAC.FileName + "Time",dateString, fileString ,funcNameString , lineStr , urlNameString, EDAC.uint64ToString(uint64(elapsed)) )
+
+		}
 	}
 
-	if sP.LogTimeUse && len(timeNow) > 0 {
+	if EDAC.LogTimeUse && EDAC.TimeNow != nil {
 
 		logString := strings.Join([]string{ 
 			nT("Fecha:")               ," ", dateString ," - ",nT("Tipo de error:"), " " , ColorBlue , "timeStats" ,Reset, "\n\r", 
 			nT("Archivo:"), " "  , fileString ," - ",nT("Funcion:"), " " , funcNameString ," - ",nT("Nº Linea:"), " "  , lineStr ,"\n\r",
 			nT("Ruta DAC:"), " " , urlNameString, "\n\r",
-			nT("Tiempo transcurrido:")     ," ", sP.uint64ToString(uint64(elapsed)) ," NanoSegundos.\n\r" } , "")
+			nT("Tiempo transcurrido:")     ," ", EDAC.uint64ToString(uint64(elapsed)) ," NanoSegundos.\n\r" } , "")
 			go log.Println(logString)
 	}
 	
 }
 
 
-func WriteNewTimeUse(date string,fileName string,funcion string, line string, url string , nanosecond string) {
+
+func WriteNewTimeUse(spaceName string, date string,fileName string,funcion string, line string, url string , nanosecond string) {
 
 	var bufferW *WBuffer
 	var file *spaceFile
 
-	file = timeLog.OSpace("time")
+
+	file = timeLog.OSpace(spaceName)
+
+
 	if file != nil {
 
 		bufferW = file.NewWBspace(BuffMap)
@@ -344,13 +469,14 @@ func WriteNewTimeUse(date string,fileName string,funcion string, line string, ur
 
 }
 
-func WriteNewMemoryUse(date string, fileName string,funcion string, line string, url string, 
+func WriteNewMemoryUse(spaceName string,date string, fileName string,funcion string, line string, url string, 
 alloc string, totalAlloc string,memSys string, bigObjSize string, gcCount string){
 
 	var bufferW *WBuffer
 	var file *spaceFile
 
-	file = memoryLog.OSpace("memory")
+	file = memoryLog.OSpace(spaceName)
+
 	if file != nil {
 
 		bufferW = file.NewWBspace(BuffMap)
@@ -398,23 +524,14 @@ alloc string, totalAlloc string,memSys string, bigObjSize string, gcCount string
 
 }
 
-func WriteNewError(date string, typeError errorDac,fileName string,funcion string, line string, messageLog string, url string ) {
+func WriteNewError(spaceName string, date string, typeError errorDac,fileName string,funcion string, line string, messageLog string, url string ) {
 
 
 	var bufferW *WBuffer
 	var file *spaceFile
 
-	switch typeError {
+	file = errorLog.OSpace(spaceName)
 
-		case NewRouteFolder:
-			file = errorLog.OSpace("newRouteFolder")
-			break
-			
-		default:
-			file       = errorLog.OSpace("errors")
-
-	}
-	
 	if file != nil {
 
 		bufferW = file.NewWBspace(BuffMap)

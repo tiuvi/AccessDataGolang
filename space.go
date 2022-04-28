@@ -46,22 +46,7 @@ var extensionFile = map[string]string{
 	DacBit:      "Archivo que incluye fields y una lista de bits",
 }
 
-type SpaceErrors struct {
-	//Si fatal close program si no log normales.
-	LogFatalErrors   bool
-	LogConsoleErrors bool
 
-	LevelsUrl int
-	LogFileError     bool
-
-	LogTimeUse        bool
-	LogFileTimeUse   bool
-
-	LogMemoryUse     bool
-	LogFileMemoryUse     bool
-
-	SeparatorLog string
-}
 
 type spaceLen struct {
 	name string

@@ -3,8 +3,8 @@ martes madrugada     - 3:30
 martes tarde         - 4 
 miercoles madrugada  - 5
 miercoles tarde      - 8:30
-jueves madrugada     - 1:30
-
+jueves madrugada     - 1:30 -> 31 horas
+                            
 
 
 HECHO - Separar los buffers de lectura de los buffers de escritura en dos archivos.
@@ -134,10 +134,7 @@ HECHO          - Crear todos los errores del paquete
 HECHO - Añadir precalcular campos poniendo el tamañao en un array, tanto para indexsizefield como indexsizecolumn
 
 
-CHEQUEO
-        ospaceCompilationFile
-        DIR
-        EXTENSION
+ACTUAL - Configurar todos los errores de la aplicación
 
 
 
