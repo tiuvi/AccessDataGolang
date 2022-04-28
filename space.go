@@ -50,12 +50,23 @@ type SpaceErrors struct {
 	//Si fatal close program si no log normales.
 	LogFatalErrors   bool
 	LogConsoleErrors bool
+
 	LevelsUrl int
 	LogFileError     bool
 
-	LogSpeeds        bool
+	LogTimeUse        bool
+	LogFileTimeUse   bool
+
+	LogMemoryUse     bool
+	LogFileMemoryUse     bool
+
+	SeparatorLog string
 }
 
+type spaceLen struct {
+	name string
+	len  int64
+}
 type Space struct  {
 
 	//TE dice si chequear los archivos y en caso de que si se usa la superglobal SpaceErrors
@@ -72,10 +83,12 @@ type Space struct  {
 	SizeLine int64
 
 	//Indice de fields
+	IndexSizeFieldsArray []spaceLen
 	IndexSizeFields map[string][2]int64
 	lenFields int64
 
 	//Indice de columnas y tamaño de columna
+	IndexSizeColumnsArray []spaceLen
 	IndexSizeColumns map[string][2]int64
 	lenColumns int64
 	//Formateadores antes y despues

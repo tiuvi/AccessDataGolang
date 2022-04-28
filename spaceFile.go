@@ -25,8 +25,12 @@ func (obj *Space )newSpaceFile(folderString string, name string)*spaceFile{
 			
 			err = os.MkdirAll(obj.Dir + folderString , 0666)
 			if err != nil {
-				
+
 				log.Println("Error al crear la carpeta para ese archivo. ", err)
+			} else {
+
+				obj.LogNewError(Message , "Nueva ruta de archivo en: ", obj.Dir + folderString )
+				
 			}
 			spacef.File, err = os.OpenFile(url , os.O_RDWR | os.O_CREATE, 0666)
 			if err != nil {

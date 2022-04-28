@@ -1,12 +1,10 @@
 package bd
 
 import(
-	"log"
 	"time"
 	"strings"
 )
-var fileName = "Ospace.go"
-var funcName = "ospaceCompilationFile"
+
 
 func (obj *Space ) ospaceCompilationFile()bool {
 
@@ -14,24 +12,84 @@ func (obj *Space ) ospaceCompilationFile()bool {
 	if obj.Check {
 
 		obj.SpaceErrors = GlobalError
-		obj.LogNewError(message ,"Errores activados en: ", obj.Dir )
+		obj.LogNewError(MessageCopilation ,obj.Dir, `Las alertas en ospace son fatales con el tipo: MessageCopilation.`)
 	}
 
 	if len(obj.Dir) == 0 {
 
-		obj.LogNewError(message , "Variable Dir vacia .", obj.Dir )
+		obj.LogNewError(MessageCopilation ,obj.Dir, `Variable Dir vacia.`)
+
 	}
 	
 	if len(obj.Extension) == 0 {
 
-		log.Fatalln("Extension vacia en: ", obj.Dir, obj.Extension )
+		obj.LogNewError(MessageCopilation ,obj.Dir, `Extension vacia.`)
 
 	}
 
-	if _ , found := extensionFile[obj.Extension];  !found{
+	if _ , found := extensionFile[obj.Extension]; !found{
 
-		log.Fatalln("Extension no valida en: ", obj.Dir, obj.Extension)
+		obj.LogNewError(MessageCopilation ,obj.Dir, `Extension no valida.`)
 
+	}
+
+
+
+	if len(obj.IndexSizeFieldsArray) > 0 {
+
+		if obj.IndexSizeFields == nil {
+
+			obj.IndexSizeFields = make(map[string][2]int64)
+
+		}
+
+		var afterValue int64
+		for ind , value := range obj.IndexSizeFieldsArray {
+			
+			name := value.name
+			len  := value.len
+
+			if ind == 0 {
+
+				obj.IndexSizeFields[name] = [2]int64{0 , len }
+
+			}else {
+
+				obj.IndexSizeFields[name] = [2]int64{ afterValue ,len + afterValue }
+
+			}
+
+			afterValue += len
+		}
+	}
+	
+
+	if len(obj.IndexSizeColumnsArray) > 0 {
+
+		if obj.IndexSizeColumns == nil {
+
+			obj.IndexSizeColumns = make(map[string][2]int64)
+
+		}
+
+		var afterValue int64
+		for ind , value := range obj.IndexSizeColumnsArray {
+
+			name := value.name
+			len  := value.len
+		
+			if ind == 0 {
+
+				obj.IndexSizeColumns[name] = [2]int64{0 , len }
+
+			}else {
+
+				obj.IndexSizeColumns[name] = [2]int64{ afterValue ,len + afterValue}
+
+			}
+
+			afterValue += len
+		}
 	}
 
 
@@ -39,20 +97,21 @@ func (obj *Space ) ospaceCompilationFile()bool {
 	obj.lenColumns = int64(len(obj.IndexSizeColumns))
 	obj.lenFields  = int64(len(obj.IndexSizeFields))
 
-	if obj.lenColumns == 0 && obj.lenFields == 0{
-		
-		log.Fatalln("Iniciaste un archivo de acceso a datos sin columnas y sin campos.", obj.Dir)
+	if obj.lenColumns == 0 && obj.lenFields == 0 {
+
+		obj.LogNewError(MessageCopilation ,obj.Dir, `Iniciaste un espacio sin columnas y sin campos.`)
+	
 	}
 
 	if _ , found := obj.IndexSizeColumns["buffer"]; found {
 
-		log.Fatalln("La palabra buffer esta reservada para el programa.", obj.Dir, obj.IndexSizeColumns)
+		obj.LogNewError(MessageCopilation ,obj.Dir, `La palabra buffer en columnas esta reservada para el uso del programa.`)
 
 	}
 
 	if _ , found := obj.IndexSizeFields["buffer"]; found {
 
-		log.Fatalln("La palabra buffer esta reservada para el programa.", obj.Dir, obj.IndexSizeColumns)
+		obj.LogNewError(MessageCopilation ,obj.Dir, `La palabra buffer en campos esta reservada para el uso del programa.`)
 
 	}
 
@@ -65,13 +124,19 @@ func (obj *Space ) ospaceCompilationFile()bool {
 
 		for name, val := range obj.IndexSizeFields{
 
+			if found := checkMap[name]; found{
+
+				obj.LogNewError(MessageCopilation ,obj.Dir, "El campo: " + name +" coincide con el campo: " + name)
+
+			}
+
 			checkMap[name] = true
 
 			calcSizeLine := (val[1] - val[0])
 			if calcSizeLine <= 0 {
-	
-				log.Fatalln("Los fields no pueden tener un tamaño inferior a cero.",
-				obj.Dir,obj.IndexSizeColumns)
+
+				obj.LogNewError(MessageCopilation ,obj.Dir, `Los fields no pueden tener un tamaño igual o inferior a cero.`)
+
 			}
 
 			obj.lenFields += calcSizeLine
@@ -83,7 +148,9 @@ func (obj *Space ) ospaceCompilationFile()bool {
 		}
 
 		if checkSizeFields != int64(obj.lenFields){
-			log.Fatalln("Los campos estan mal escritos, Ejemplo: field1: 0,20; field2:20,30;", obj.Dir)
+		
+			obj.LogNewError(MessageCopilation ,obj.Dir, `Los campos estan mal escritos, Ejemplo: field1: 0,20; field2:20,30`)
+
 		}
 
 	}
@@ -95,23 +162,22 @@ func (obj *Space ) ospaceCompilationFile()bool {
 
 		var checkSizeColumns int64 = 0
 
-		for name , val := range obj.IndexSizeColumns{
+		for name , val := range obj.IndexSizeColumns {
 
 			if obj.IndexSizeFields != nil {
 
 				if found := checkMap[name]; found{
 
-					log.Fatalln("El campo: " + name +" coincide con la columna: " + name + " en: ",
-					obj.Dir)
-				
+					obj.LogNewError(MessageCopilation ,obj.Dir, "El campo: " + name +" coincide con la columna: " + name)
+
 				}
 			}
 	
 			calcSizeLine := (val[1] - val[0])
 			if calcSizeLine <= 0 {
 
-				log.Fatalln("Las columnas no pueden tener un tamaño inferior a cero.",
-				obj.Dir,obj.IndexSizeColumns)
+				obj.LogNewError(MessageCopilation ,obj.Dir, "Las columnas no pueden tener un tamaño igual o inferior a cero." )
+
 			}
 
 			obj.SizeLine += calcSizeLine
@@ -124,8 +190,8 @@ func (obj *Space ) ospaceCompilationFile()bool {
 		}
 		
 		if checkSizeColumns != obj.SizeLine {
-
-			log.Fatalln("Las columnas estan mal escritos, Ejemplo: column1: 0,20; column2:20,30;", obj.Dir)
+			
+			obj.LogNewError(MessageCopilation ,obj.Dir, "Las columnas estan mal escritas, Ejemplo: column1: 0,20; column2:20,30;" )
 		
 		}
 
@@ -145,14 +211,14 @@ func (obj *Space ) ospaceCompilationFile()bool {
 	//bdisk: Lista de bit en un archivo disk
 	if obj.Extension == DacBit {
 
-		obj.FileCoding      = Bit
+		obj.FileCoding  = Bit
 		obj.compilation = true
 		return true
 	}
 
+	obj.LogNewError(MessageCopilation ,obj.Dir,
+	"No se han encontrado coincidencias con las extensiones de archivo predeterminadas." )
 
-	log.Fatalln("Archivo: Ospace.go; Funcion: ospaceCompilationFile ; Linea:150 ;" +
-	"No se han encontrado coincidencias de archivos con esas extensiones.", obj.Dir)
 	return false
 }
 
