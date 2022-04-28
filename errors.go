@@ -191,6 +191,9 @@ type ErrorsDac struct  {
 
 	TimeNow *time.Time
 }
+
+
+
 func (sP *Space )ErrorSpaceDefault(typeError errorDac, MessageLog string){
 
 	EDAC := &ErrorsDac {
@@ -201,6 +204,51 @@ func (sP *Space )ErrorSpaceDefault(typeError errorDac, MessageLog string){
 		MessageLog: MessageLog,
 		LevelsUrl:    sP.LevelsUrl ,
 		SeparatorLog:  sP.SeparatorLog,
+		TimeNow: nil,
+	}
+	EDAC.LogNewError()
+}
+
+func (sP *Space ) NewErrorSpace(FileName string, typeError errorDac, MessageLog string){
+
+	EDAC := &ErrorsDac {
+		SpaceErrors: sP.SpaceErrors,
+		FileName: FileName,
+		TypeError: typeError,
+		Url: sP.Dir,
+		MessageLog: MessageLog,
+		LevelsUrl:    sP.LevelsUrl ,
+		SeparatorLog:  sP.SeparatorLog,
+		TimeNow: nil,
+	}
+	EDAC.LogNewError()
+}
+
+func (sF *spaceFile ) ErrorSpaceFileDefault(typeError errorDac, MessageLog string){
+
+	EDAC := &ErrorsDac {
+		SpaceErrors: sF.SpaceErrors,
+		FileName: "",
+		TypeError: typeError,
+		Url: sF.Url,
+		MessageLog: MessageLog,
+		LevelsUrl:    sF.LevelsUrl ,
+		SeparatorLog:  sF.SeparatorLog,
+		TimeNow: nil,
+	}
+	EDAC.LogNewError()
+}
+
+func (sF *spaceFile ) NewErrorSpace(FileName string, typeError errorDac, MessageLog string){
+
+	EDAC := &ErrorsDac {
+		SpaceErrors: sF.SpaceErrors,
+		FileName: FileName,
+		TypeError: typeError,
+		Url: sF.Url,
+		MessageLog: MessageLog,
+		LevelsUrl:    sF.LevelsUrl ,
+		SeparatorLog:  sF.SeparatorLog,
 		TimeNow: nil,
 	}
 	EDAC.LogNewError()
@@ -222,21 +270,6 @@ func (sP *Space ) LogDeferTimeMemoryDefault(timeNow time.Time){
 
 }
 
-func (sP *Space )NewErrorSpace(FileName string, typeError errorDac, MessageLog string){
-
-	EDAC := &ErrorsDac {
-		SpaceErrors: sP.SpaceErrors,
-		FileName: FileName,
-		TypeError: typeError,
-		Url: sP.Dir,
-		MessageLog: MessageLog,
-		LevelsUrl:    sP.LevelsUrl ,
-		SeparatorLog:  sP.SeparatorLog,
-		TimeNow: nil,
-	}
-	EDAC.LogNewError()
-}
-
 func (sP *Space ) NewLogDeferTimeMemory(FileName string, timeNow time.Time){
 
 	EDAC := &ErrorsDac {
@@ -252,6 +285,42 @@ func (sP *Space ) NewLogDeferTimeMemory(FileName string, timeNow time.Time){
 	EDAC.LogNewError()
 
 }
+
+func (sF *spaceFile ) LogDeferTimeMemorySF(timeNow time.Time){
+
+	EDAC := &ErrorsDac {
+		SpaceErrors: sF.SpaceErrors,
+		FileName: "",
+		TypeError: TimeMemory,
+		Url: sF.Url,
+		MessageLog: "",
+		LevelsUrl:    sF.LevelsUrl ,
+		SeparatorLog:  sF.SeparatorLog,
+		TimeNow: &timeNow,
+	}
+	EDAC.LogNewError()
+
+}
+
+
+
+func (sF *spaceFile ) NewLogDeferTimeMemorySF(FileName string, timeNow time.Time){
+
+	EDAC := &ErrorsDac {
+		SpaceErrors: sF.SpaceErrors,
+		FileName: FileName,
+		TypeError: TimeMemory,
+		Url: sF.Url,
+		MessageLog: "",
+		LevelsUrl:    sF.LevelsUrl ,
+		SeparatorLog:  sF.SeparatorLog,
+		TimeNow: &timeNow,
+	}
+	EDAC.LogNewError()
+
+}
+
+
 
 func (EDAC *ErrorsDac ) LogNewError(){
 
