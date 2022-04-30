@@ -8,73 +8,35 @@ import (
 
 
 
-type WLines struct{
-	Line  int64
-}
 
-type WRangues struct {
-	Rangue      int64 
-	RangeBytes  int64
-}
-
-//El canal de escritura linea , nombre de columna y el buffer.
-type WChanBuf struct{
-	*WLines
-	*WRangues
-	ColName string
-	Buffer 	[]byte
-}
-
-//Buffer de escritura con tres tipos de buffer
-//Tipo buffer unicamente puede escribir en una columna o un field.
-//Tipo mapaBuffer puede escribir simultaneametne en columnas y fields.
-//Abre un canal que puede actualizar tantno columnas como fields.
-type WBuffer struct {
-	*spaceFile
-	ColumnName string
-	typeBuff FileTypeBuffer
-	PreFormat bool
-	*WLines
-	*WRangues
-
-	Buffer *[]byte
-	BufferMap map[string][]byte
-	Channel chan WChanBuf
-}
-
-//Activa o desactiva los errores y chequeos adicionales.
-func (WB *WBuffer)CheckWRspace(active bool){
-
-	WB.Check = active
-}
 
 //Crea un nuevo espacio de buffer, que es una unica referencia.
-func (sF *spaceFile)NewWBspace(typeBuff FileTypeBuffer)*WBuffer{
+func (sF *spaceFile)NewWBspace(typeBuff fileTypeBuffer)*WBuffer{
 
 	WB := &WBuffer{
 			spaceFile: sF,
-			PreFormat: true,
+			preFormat: true,
 			typeBuff:typeBuff,
 	}
 
 	//Buffer de bytes
-	if CheckFileTypeBuffer(WB.typeBuff, BuffBytes ){
+	if checkFileTypeBuffer(WB.typeBuff, buffBytes ){
 
-		WB.Buffer = new([]byte)
+		WB.buffer = new([]byte)
 		return WB
 	}
 
 	//Buffer de bytes
-	if CheckFileTypeBuffer(WB.typeBuff, BuffMap ){
+	if checkFileTypeBuffer(WB.typeBuff, buffMap ){
 
-		WB.BufferMap = make(map[string][]byte)
+		WB.bufferMap = make(map[string][]byte)
 		return WB
 	}
 
 	//Buffer de bytes
-	if CheckFileTypeBuffer(WB.typeBuff, BuffChan ){
+	if checkFileTypeBuffer(WB.typeBuff, buffChan ){
 
-		WB.Channel = make(chan WChanBuf, 0)
+		WB.channel = make(chan wChanBuf, 0)
 		return WB
 	}
 
@@ -84,36 +46,36 @@ func (sF *spaceFile)NewWBspace(typeBuff FileTypeBuffer)*WBuffer{
 //Activa o desactiva el preformateado de los datos.
 func (WB *WBuffer)PreFormatBRspace(active bool){
 
-	WB.PreFormat = active
+	WB.preFormat = active
 }
 
 //Escribe una nueva linea en el archivo.
 func (WB *WBuffer)NewLineWBspace(){
 
-	WB.WLines = &WLines{
-		Line: -1,
+	WB.wLines = &wLines{
+		line: -1,
 	}
 }
 
 //Escribe en un numero determinado de linea.
 func (WB *WBuffer)UpdateLineWBspace(line int64){
 
-	if WB.Check &&  line < 0 {
+	if WB.spaceErrors != nil &&  line < 0 {
 		
-		log.Fatalln("Error no se puede enviar una linea inferior a 0",WB.Url)
+		log.Fatalln("Error no se puede enviar una linea inferior a 0",WB.url)
 		
 	}
 
-	WB.WLines = &WLines{
-		Line: line,
+	WB.wLines = &wLines{
+		line: line,
 	}
 }
 
 //Escribe en la siguiente linea
 func (WB *WBuffer)NextLineWBspace(){
 
-	*WB.WLines = WLines{
-		Line: WB.Line + 1,
+	*WB.wLines = wLines{
+		line: WB.line + 1,
 	}
 
 }
@@ -123,26 +85,26 @@ func (WB *WBuffer)NextLineWBspace(){
 func (WB *WBuffer)NewRangeWBspace(RangeBytes int64 ){
 
 	
-	WB.WRangues = &WRangues{
-		Rangue:      0,       
-		RangeBytes:  RangeBytes,
+	WB.wRangues = &wRangues{
+		rangue:      0,       
+		rangeBytes:  RangeBytes,
 	}	
 }
 
 func (WB *WBuffer)NewNoRangeWBspace(){
 
-	WB.WRangues = &WRangues{
-		Rangue:      0,       
-		RangeBytes:  0,
+	WB.wRangues = &wRangues{
+		rangue:      0,       
+		rangeBytes:  0,
 	}	
 }
 
 //Escribe en un rango
 func (WB *WBuffer)RangeWBspace(Range int64){
 
-	WB.WRangues = &WRangues{
-		Rangue:      Range,       
-		RangeBytes:  WB.RangeBytes,
+	WB.wRangues = &wRangues{
+		rangue:      Range,       
+		rangeBytes:  WB.rangeBytes,
 	}
 
 	//WB.Rangue   =  Range
@@ -152,9 +114,9 @@ func (WB *WBuffer)RangeWBspace(Range int64){
 //Escribe en el siguiente rango
 func (WB *WBuffer)NextRangeWBspace(){
 
-	WB.WRangues = &WRangues{
-		Rangue:      WB.Rangue + 1,       
-		RangeBytes:  WB.RangeBytes,
+	WB.wRangues = &wRangues{
+		rangue:      WB.rangue + 1,       
+		rangeBytes:  WB.rangeBytes,
 	}
 	//WB.Rangue   +=  1
 	
@@ -183,9 +145,9 @@ func calcRanges(lenBuffer int64,RangeBytes int64)*int64{
 //CAlcula el tamaño de un campo
 func (WB *WBuffer)CalcSizeFieldBWspace(field string)*int64{
 
-	if WB.IndexSizeFields != nil {
+	if WB.indexSizeFields != nil {
 
-		size, found := WB.IndexSizeFields[field]
+		size, found := WB.indexSizeFields[field]
 		if found {
 
 			sizeTotal   := size[1] - size[0]
@@ -199,9 +161,9 @@ func (WB *WBuffer)CalcSizeFieldBWspace(field string)*int64{
 //CAlcula el tamaño de una columna
 func (WB *WBuffer)CalcSizeColumnBWspace(field string)*int64{
 
-	if WB.IndexSizeColumns != nil {
+	if WB.indexSizeColumns != nil {
 
-		size, found := WB.IndexSizeColumns[field]
+		size, found := WB.indexSizeColumns[field]
 		if found {
 
 			sizeTotal   := size[1] - size[0]
@@ -215,63 +177,63 @@ func (WB *WBuffer)CalcSizeColumnBWspace(field string)*int64{
 
 func(WB *WBuffer)SendBWspace(columnName string, bufferBytes *[]byte)*int64{
 
-		if WB.Check  {
+		if WB.spaceErrors != nil  {
 			
 			WB.checkColFil(columnName, "Archivo: BWspace.go ; Funcion: BWspaceBuff")
 		}
 
 		//Buffer de bytes
-		if CheckFileTypeBuffer(WB.typeBuff, BuffBytes ){
+		if checkFileTypeBuffer(WB.typeBuff, buffBytes ){
 
 			WB.ColumnName = columnName
-			WB.Buffer     = bufferBytes
+			WB.buffer     = bufferBytes
 			return nil
 		}
 
 		//Buffer de bytes
-		if CheckFileTypeBuffer(WB.typeBuff, BuffMap ){
+		if checkFileTypeBuffer(WB.typeBuff, buffMap ){
 
-			if WB.BufferMap == nil {
+			if WB.bufferMap == nil {
 
-				WB.BufferMap = make(map[string][]byte)
+				WB.bufferMap = make(map[string][]byte)
 
 			}
 
-			WB.BufferMap[columnName] = *bufferBytes
+			WB.bufferMap[columnName] = *bufferBytes
 			return nil
 		}
 
 		//Buffer de bytes
-		if CheckFileTypeBuffer(WB.typeBuff, BuffChan ){
+		if checkFileTypeBuffer(WB.typeBuff, buffChan ){
 		
-			if WB.IndexSizeFields != nil && WB.WRangues != nil  {
+			if WB.indexSizeFields != nil && WB.wRangues != nil  {
 			
-					WB.Channel <- WChanBuf{nil, WB.WRangues , columnName, *bufferBytes }
+					WB.channel <- wChanBuf{nil, WB.wRangues , columnName, *bufferBytes }
 					return nil
 			
 			}
 
-			if WB.IndexSizeColumns != nil  && WB.WLines != nil {  
+			if WB.indexSizeColumns != nil  && WB.wLines != nil {  
 			
 			
-				newLine := &WLines{
-					Line:WB.Line,
+				newLine := &wLines{
+					line:WB.line,
 				}
-				if WB.Line == -1 {
+				if WB.line == -1 {
 					
-					 newLine.Line = atomic.AddInt64(WB.SizeFileLine, 1)
+					 newLine.line = atomic.AddInt64(WB.sizeFileLine, 1)
 		
 				}
 		
-				if WB.Line > *WB.SizeFileLine {
+				if WB.line > *WB.sizeFileLine {
 		
-					atomic.AddInt64(WB.SizeFileLine, newLine.Line - *WB.SizeFileLine )
+					atomic.AddInt64(WB.sizeFileLine, newLine.line - *WB.sizeFileLine )
 						
 				}
 
 
-				WB.Channel <- WChanBuf{newLine , nil , columnName, *bufferBytes }
-				return &WB.Line
+				WB.channel <- wChanBuf{newLine , nil , columnName, *bufferBytes }
+				return &WB.line
 			}
 
 		}
@@ -283,6 +245,6 @@ func(WB *WBuffer)SendBWspace(columnName string, bufferBytes *[]byte)*int64{
 //Cierra un canal.
 func (WBuffer *WBuffer)BWspaceClosechan(){
 	
-	close(WBuffer.Channel)
+	close(WBuffer.channel)
 }
 

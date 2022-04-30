@@ -17,7 +17,7 @@ type SpaceSGMStr struct  {
 //#bd/ramSync/SGMapStringLineInit
 func (sF *spaceFile) SGMapStringLineInit(colName string)*SpaceSGMStr {
 
-	size , found := sF.IndexSizeColumns[colName]
+	size , found := sF.indexSizeColumns[colName]
 		if found {
 
 		//Creamos un puntero a la estructura.
@@ -34,14 +34,14 @@ func (sF *spaceFile) SGMapStringLineInit(colName string)*SpaceSGMStr {
 
 		//Leemos el fichero completo y desactivamos postformat.
 		//Estos datos son preformateados.
-		//mapColumn := SGMS.BRspace( BuffMap, false ,  0, *sF.SizeFileLine  , colName)
+		//mapColumn := SGMS.BRspace( BuffMap, false ,  0, *sF.sizeFileLine  , colName)
 		//mapColumn.Rspace()
 
 		mapColumn := SGMS.GetAllLines(colName)
 
 		//Guardamos el fichero en un mapa
 		var x int64
-		for x = 0 ; x <= *sF.SizeFileLine; x++{
+		for x = 0 ; x <= *sF.sizeFileLine; x++{
 			
 			//Borramos los espacios a la derecha
 			SGMS.spaceTrimPointer(&mapColumn.BufferMap[colName][x])
@@ -71,7 +71,7 @@ func (sF *spaceFile) SGMapStringLineInit(colName string)*SpaceSGMStr {
 func (SGMS *SpaceSGMStr) SGMapStringLineRead(bufferBytes *[]byte)bool {
 	
 	//Preformateamos los datos para que mantenga la concordancia con el archivo.
-	if SGMS.Hooker != nil {
+	if SGMS.hooker != nil {
 
 		SGMS.hookerPreFormatPointer(bufferBytes , SGMS.colName)
 
@@ -109,7 +109,7 @@ func (SGMS *SpaceSGMStr) SGMapStringLineRead(bufferBytes *[]byte)bool {
 func (SGMS *SpaceSGMStr)SGMapStringLineUpd(line int64 , bufferBytes *[]byte)(int64, bool){
 
 	//preformat para el mapa
-	if SGMS.Hooker != nil {
+	if SGMS.hooker != nil {
 
 		SGMS.hookerPreFormatPointer(bufferBytes , SGMS.colName)
 

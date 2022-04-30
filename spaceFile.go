@@ -3,36 +3,37 @@ package bd
 import(
 	"log"
 	"os"
+	"strings"
 	"sync/atomic"
 )
 
 
-func (obj *Space )newSpaceFile(folderString string, name string)*spaceFile{
+func (obj *space )newSpaceFile(folderString string, name string)*spaceFile{
 
-	url := obj.Dir + folderString + name + "." + obj.Extension
+	url := strings.Join([]string{ obj.dir , folderString , name , "." , obj.extension }, "") 
 
 	var err error
 	//Creamos una nueva referencia a spaceFile
 	spacef := new(spaceFile)
 
 	//Abrimos el archivo
-	spacef.File, err = os.OpenFile(url , os.O_RDWR | os.O_CREATE, 0666)
+	spacef.file, err = os.OpenFile(url , os.O_RDWR | os.O_CREATE, 0666)
 	if err != nil {
 		//Migrar los errores de archivo a un log de archivo
 		log.Println("Error al abrir o crear el archivo.", err)
 
 		if  os.IsNotExist(err) {
 			
-			err = os.MkdirAll(obj.Dir + folderString , 0666)
+			err = os.MkdirAll(obj.dir + folderString , 0666)
 			if err != nil {
 
 				log.Println("Error al crear la carpeta para ese archivo. ", err)
 			} else {
 
-				// obj.LogNewError(Message , "Nueva ruta de archivo en: ", obj.Dir + folderString )
+				// obj.LogNewError(Message , "Nueva ruta de archivo en: ", obj.dir + folderString )
 				
 			}
-			spacef.File, err = os.OpenFile(url , os.O_RDWR | os.O_CREATE, 0666)
+			spacef.file, err = os.OpenFile(url , os.O_RDWR | os.O_CREATE, 0666)
 			if err != nil {
 			
 				log.Println("Error al abrir el archivo, Error al crear la carpeta para ese archivo.", err)
@@ -40,14 +41,14 @@ func (obj *Space )newSpaceFile(folderString string, name string)*spaceFile{
 		}
 	}
 
-	spacef.Space = obj
+	spacef.space = obj
 	//Url pasada como valor dir + name + extension -> name dinamico
-	spacef.Url = url
+	spacef.url = url
 	//Iniciamos un puntero a SizeFileLine manejado atomicamente por
 	//un contador atomico
-	spacef.SizeFileLine = new(int64)
+	spacef.sizeFileLine = new(int64)
 	//Iniciamos el contador atomico
-	atomic.StoreInt64(spacef.SizeFileLine, spacef.ospaceAtomicUpdateSizeFileLine())
+	atomic.StoreInt64(spacef.sizeFileLine, spacef.ospaceAtomicUpdateSizeFileLine())
 	//Guardamos nuestro puntero de estructura space en el mapa global DiskFile
 	
 
@@ -59,7 +60,7 @@ return spacef
 func (obj *spaceFile ) ospaceAtomicUpdateSizeFileLine()int64 {
 
 var line int64
-size, err := obj.File.Seek(0, 2)
+size, err := obj.file.Seek(0, 2)
 if err != nil {
 
 	log.Println(err)
@@ -72,20 +73,21 @@ if size > 0 {
 
 }
 
-if size  % obj.SizeLine == 0 {
+if size  % obj.sizeLine == 0 {
 
-	line = (size / obj.SizeLine)
+	line = (size / obj.sizeLine)
 
 }
 
 
-if size  % obj.SizeLine != 0 {
+if size  % obj.sizeLine != 0 {
 
-	line = (size / obj.SizeLine) + 1
+	line = (size / obj.sizeLine) + 1
 	
 }
 
-if CheckFileCoding(obj.FileCoding , Bit) {
+if checkFileCoding(obj.fileCoding , bit) {
+
 	if line > 0 {
 
 		line *= 8 

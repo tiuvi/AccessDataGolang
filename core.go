@@ -91,7 +91,7 @@ func CheckBit(base int64, compare int64)(bool){
 func (sp *spaceFile)hookerPreFormatPointer(bufByte *[]byte,colName string){
 
 	//Preformat por columnas
-	function, exist := sp.Hooker[Preformat + colName]
+	function, exist := sp.hooker[preformat + colName]
 	if exist{
 
 		 function(bufByte)
@@ -99,7 +99,7 @@ func (sp *spaceFile)hookerPreFormatPointer(bufByte *[]byte,colName string){
 	} else {
 
 		//Preformat global
-		function, exist = sp.Hooker[Preformat]
+		function, exist = sp.hooker[preformat]
 		if exist {
 
 			function(bufByte)
@@ -115,7 +115,7 @@ func (sp *spaceFile)hookerPreFormatPointer(bufByte *[]byte,colName string){
 func (sp *spaceFile)hookerPostFormatPointer(bufByte *[]byte,colName string){
 
 	//Postformat por columnas
-	function, exist := sp.Hooker[Postformat + colName]
+	function, exist := sp.hooker[postformat + colName]
 	if exist{
 
 		function(bufByte)
@@ -123,7 +123,7 @@ func (sp *spaceFile)hookerPostFormatPointer(bufByte *[]byte,colName string){
 	} else {
 
 		//Postformat global
-		function, exist = sp.Hooker[Postformat]
+		function, exist = sp.hooker[postformat]
 		if exist {
 
 			function(bufByte)
@@ -135,7 +135,7 @@ func (sp *spaceFile)hookerPostFormatPointer(bufByte *[]byte,colName string){
 
 //spacePaddingPointer: Genera espacios tanto para fields como para columnas.
 //#bd/core.go
-func (sP *Space)spacePaddingPointer(buf *[]byte , size [2]int64){
+func (sP *space)spacePaddingPointer(buf *[]byte , size [2]int64){
 
 	//Contamos el array de bytes
 	textCount  := int64(len(*buf))
@@ -157,7 +157,7 @@ func (sP *Space)spacePaddingPointer(buf *[]byte , size [2]int64){
 
 //spacePaddingPointer: Genera espacios tanto para fields como para columnas.
 //#bd/core.go
-func (sP *Space)spaceTrimPointer(buf *[]byte){
+func (sP *space)spaceTrimPointer(buf *[]byte){
 
 		//Limpiamos nulos
 		for len(*buf) > 0 && (*buf)[len(*buf)-1] == 0 {
@@ -172,31 +172,31 @@ func (sP *Space)spaceTrimPointer(buf *[]byte){
 
 //WriteIndexSizeField: Escribe los fields en los archivos.
 //#bd/core.go
-func (WB *WBuffer)WriteIndexSizeField(colName string, size [2]int64,rangues WRangues,fieldBuffer *[]byte){
+func (WB *WBuffer)WriteIndexSizeField(colName string, size [2]int64,rangues wRangues,fieldBuffer *[]byte){
 
 	rangueTotal := size[1] - size[0]
 	
 	
-	if WB.Hooker != nil && WB.PreFormat {
+	if WB.hooker != nil && WB.preFormat {
 
 		WB.hookerPreFormatPointer(fieldBuffer, colName)
 
 	}
 
 
-	if  rangues.RangeBytes < rangueTotal && rangues.RangeBytes > 0 {
+	if  rangues.rangeBytes < rangueTotal && rangues.rangeBytes > 0 {
 	
-		rangueFinal := (rangues.Rangue * rangues.RangeBytes) + rangues.RangeBytes
+		rangueFinal := (rangues.rangue * rangues.rangeBytes) + rangues.rangeBytes
 
 		if rangueFinal <= rangueTotal {
 
-			WB.spacePaddingPointer(fieldBuffer , [2]int64{0 , rangues.RangeBytes})
+			WB.spacePaddingPointer(fieldBuffer , [2]int64{0 , rangues.rangeBytes})
 	
 		}
 	
 		if rangueFinal > rangueTotal {
 	
-			restRangue := rangues.RangeBytes - (rangueFinal - rangueTotal)
+			restRangue := rangues.rangeBytes - (rangueFinal - rangueTotal)
 			if restRangue > 0 {
 
 				WB.spacePaddingPointer(fieldBuffer , [2]int64{0 , restRangue })
@@ -208,13 +208,13 @@ func (WB *WBuffer)WriteIndexSizeField(colName string, size [2]int64,rangues WRan
 
 	}
 
-	if rangues.RangeBytes >= rangueTotal || rangues.RangeBytes <= 0 {
+	if rangues.rangeBytes >= rangueTotal || rangues.rangeBytes <= 0 {
 
 		WB.spacePaddingPointer(fieldBuffer , size)
 
 	}
 	
-	WB.File.WriteAt(*fieldBuffer,   + size[0] + (rangues.Rangue * rangues.RangeBytes))
+	WB.file.WriteAt(*fieldBuffer,   + size[0] + (rangues.rangue * rangues.rangeBytes))
 
 
 }
@@ -225,7 +225,7 @@ func (WB *WBuffer)WriteIndexSizeField(colName string, size [2]int64,rangues WRan
 //#bd/core.go
 func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 ){
 
-	if CheckFileTypeBuffer(buf.typeBuff , BuffChan ) {
+	if checkFileTypeBuffer(buf.typeBuff , buffChan ) {
 
 		buf.FieldBuffer = new([]byte)
 
@@ -234,36 +234,36 @@ func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 ){
 
 	sizeTotal := size[1] - size[0]
 
-	if  buf.RangeBytes < sizeTotal && buf.RangeBytes > 0 {
+	if  buf.rangeBytes < sizeTotal && buf.rangeBytes > 0 {
 		
-		buf.TotalRangue = sizeTotal / buf.RangeBytes
-		restoRangue := sizeTotal % buf.RangeBytes
+		buf.totalRangue = sizeTotal / buf.rangeBytes
+		restoRangue := sizeTotal % buf.rangeBytes
 
 
-		if buf.Rangue < buf.TotalRangue {
+		if buf.rangue < buf.totalRangue {
 
-			if len(*buf.FieldBuffer) != int(buf.RangeBytes) {
+			if len(*buf.FieldBuffer) != int(buf.rangeBytes) {
 
-				*buf.FieldBuffer = make([]byte, buf.RangeBytes)
+				*buf.FieldBuffer = make([]byte, buf.rangeBytes)
 
 			}
 			
 
-			_ , err := buf.File.ReadAt(*buf.FieldBuffer , size[0] + (buf.RangeBytes * buf.Rangue) )
+			_ , err := buf.file.ReadAt(*buf.FieldBuffer , size[0] + (buf.rangeBytes * buf.rangue) )
 			if err != nil {
 				log.Println(err)
 				
 			}
 
 			//Limpiamos el buffer de espacios
-			if buf.PostFormat == true {
+			if buf.postFormat == true {
 
 				buf.spaceTrimPointer(buf.FieldBuffer)
 
 			}
 			
 			//Activamos PostFormat si existe
-			if buf.Hooker != nil && buf.PostFormat == true {
+			if buf.hooker != nil && buf.postFormat == true {
 			
 				buf.hookerPostFormatPointer(buf.FieldBuffer ,colName)
 
@@ -271,19 +271,19 @@ func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 ){
 
 			if restoRangue != 0 {
 			
-				buf.TotalRangue += 1
+				buf.totalRangue += 1
 			}
 
 
 		}
 
 		
-		if  buf.Rangue == buf.TotalRangue && restoRangue != 0 {
+		if  buf.rangue == buf.totalRangue && restoRangue != 0 {
 
 
 			*buf.FieldBuffer = make([]byte, restoRangue)
 
-			_ , err := buf.File.ReadAt(*buf.FieldBuffer , size[0] + (buf.RangeBytes * buf.Rangue) )
+			_ , err := buf.file.ReadAt(*buf.FieldBuffer , size[0] + (buf.rangeBytes * buf.rangue) )
 			if err != nil {
 
 				log.Println(err)
@@ -291,44 +291,44 @@ func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 ){
 			}
 
 			//Limpiamos el buffer de espacios
-			if buf.PostFormat == true {
+			if buf.postFormat == true {
 
 				buf.spaceTrimPointer(buf.FieldBuffer)
 
 			}
 			
 			//Activamos PostFormat si existe
-			if buf.Hooker != nil && buf.PostFormat == true {
+			if buf.hooker != nil && buf.postFormat == true {
 			
 				buf.hookerPostFormatPointer(buf.FieldBuffer ,colName)
 
 			}
 
-			buf.TotalRangue += 1
+			buf.totalRangue += 1
 			
 		}	
 	}
 
 
-	if buf.RangeBytes >= sizeTotal || buf.RangeBytes <= 0 {
+	if buf.rangeBytes >= sizeTotal || buf.rangeBytes <= 0 {
 
 		*buf.FieldBuffer = make([]byte, size[1] - size[0])
 
-		_ , err := buf.File.ReadAt(*buf.FieldBuffer , size[0])
+		_ , err := buf.file.ReadAt(*buf.FieldBuffer , size[0])
 		if err != nil {
 			log.Println(err)
 			
 		}
 
 		//Limpiamos el buffer de espacios
-		if buf.PostFormat == true {
+		if buf.postFormat == true {
 
 			buf.spaceTrimPointer(buf.FieldBuffer)
 
 		}
 		
 		//Activamos PostFormat si existe
-		if buf.Hooker != nil && buf.PostFormat == true {
+		if buf.hooker != nil && buf.postFormat == true {
 		
 			buf.hookerPostFormatPointer(buf.FieldBuffer ,colName)
 
@@ -336,5 +336,40 @@ func (buf *RBuffer)readIndexSizeFieldPointer(colName string,  size [2]int64 ){
 	
 	}
 
+
+}
+
+
+
+func checkFileNativeType(base fileNativeType, compare fileNativeType)(bool){
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+	return false
+}
+
+func checkFileCoding(base fileCoding, compare fileCoding)(bool){
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+	return false
+}
+
+//Revisa el tipo de buffer y devuelve true o false dependiendo de si hay coincidencia.
+func checkFileTypeBuffer(base fileTypeBuffer, compare fileTypeBuffer) bool {
+
+	if (base & compare) != 0 {
+
+		return true
+
+	}
+
+	return false
 
 }
