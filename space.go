@@ -1,3 +1,112 @@
+/*
+En el fichero space se pueden ver todas las estructuras y constantes utilizadas en DAC.
+
+El flujo de datos en resumen es este
+spaceErrors ->  *pointer
+
+	lDAC ->  *pointer
+
+		space ->  *pointer
+ 
+			spaceFile ->  *pointer
+
+				WBuffer -> *pointer
+				RBuffer -> *pointer
+
+Este flujo optimiza la memoria, y la reutilización de en los siguientes espacios, en caso de 
+tener que actualizar un espacio es inevitable crear un nuevo objeto, que cree dicho espacio
+esto es debido a que el flujo de datos ya esta optimizado.
+
+Ejemplo teorico:
+Si quisieras un nuevo space reutilizarias spaceErrors y lDAC.
+Si quisieras un nuevo spaceFile reutilizarias spaceErrors , lDAC y space.
+Si quisieras un nuevo WBuffer o RBuffer reutilizarias spaceErrors , lDAC, space y spaceFile.
+
+Ejemplo practico:
+1 -> spaceErrors, 1 -> lDAC, -> 1 space -> 50 spaceFile -> 100  WBuffer
+														   1000 rBuffer
+En este caso estamos usando 1 space que genera 50 spaceFile que generan 100 WBuufer y
+1000 rBuffer cada uno.
+
+Otro ejemplo practico:		
+1 -> spaceErrors, 1 -> lDAC, -> 100 space -> 50 spaceFile -> 100  WBuffer
+														     1000 rBuffer											   
+En este caso estamos usando 100 space que generan 50 spaceFile cada uno que generan a su vez 100 WBuufer y
+1000 rBuffer cada uno.
+
+Como test he creado 1000 000 de archivos que permanecen abiertos en un 
+linux ubuntu y equivalen a 700 mb de ram. Todo son punteros a archivos que van a 
+permanecer abiertos disminuyendo muchisimo los tiempos de escritura y lectura.
+
+El siguiente paso es comprender como funcionan los archivos hay tres tipos por ahora,
+disk deferDisk y permDisk.
+
+Los archivos disk se cierran cada x tiempo.
+Los archivos deferDisk permanecen en memoria hasta que se supera un limite
+de archivos abiertos.
+Los permDisk permanecen siempre abiertos como los logs de la aplicación.
+
+¿Como funciona DAC?
+
+En resumen DAC almacena los datos y lee los datos muy rapido a coste de desperdiciar memoria en
+disco.
+
+¿Por qué desperdiciar esa memoria?
+Lo que perdemos en memoria lo ganamos en procesamiento, hasta ahora el coste de procesamiento
+siempre ha sido mas caro que el coste en memoria.
+
+¿Qué ocurre si se invierte ese coste?
+No importa DAC optimiza el tiempo de ejecucion al maximo simplemente comprime los archivos
+con un algoritmo de compresion exacto la mayoria estan llenos de bytes nulos.
+
+¿Cómo funciona exacatamente?
+
+Los archivos se dividen en fields y lineas, a su vez las lineas se dividen en columnas.
+
+Los fields ocupan un espacio fijo al inicio del archivo.
+
+Las lineas ocupan un espacio fijo segun se van creando tengan datos utiles o no.
+
+Ejemplo:
+Cuando un usuario te pide datos como un email ese usuario tendra una id que es el numero de linea 
+ o el id suyo en la aplicación y apunta a un numero de linea, leerias los datos directamente 
+ de esa linea para ese usuario.
+
+ Usuario: Franky, Id: 101, 
+ Guardar email pues escribiria en el archivo de emails en la linea 101.
+ Leer email pues leeria en el archivo email en la linea 101.
+
+¿Porqué complicarse la vida frente a sistema de bases de datos?
+
+La primera razon DAC es divertido, resolveras problemas que nuncan pensaste, valoraras las
+soluciones de bases de datos que lo resuelven todo.
+
+La segunda razon es que actualmente es la solucion mas rapida de lectura y escritura de 
+almacenamiento de datos, no lo he medido, la razon es que no hay otra forma de hacerlo
+mas rapido mediante el software teoricamente.
+
+Ademas optimiza el uso de la memoria para todo tipo de archivos video, audio, fotos, html
+jss gracias a la escritura por rangos en fields, no como otras soluciones de bases de datos
+que no estan optimizadas para guardar archivos grandes.
+
+La tercera es muy seguro, no hay inyeccion sql porque no es un lenguaje sql.
+
+La cuarta optimizado para la ejecuion en paralelo y la concurrencia, puedes escribir todos los
+datos con go write si quieres y funciona.
+
+La quinta y la mejor almacenamiento de datos NATIVO en golang, ya sabes amo Golang y lo
+quiero hacer todo en golang y en cuanto menos herramientas de tercero no optimizadas para
+golang mejor.
+
+La sexta muy facil de usar, poco a poco ire añadiendo porcelana de las principales operaciones
+que se harian en lenguaje sql en DAC.
+
+Diviertete y no utilices DAC para un proyecto serio ya que le quedan años de desarrollo todavia.
+
+Todas las funciones que se pueden utlizar estan en los archivos que empiezan por public.
+
+*/
+
 package bd
 
 import (
@@ -121,9 +230,9 @@ type spaceErrors struct {
 }
 
 //space globales
-var timeLog *space
-var memoryLog *space
-var errorLog *space
+var timeLog *PublicSpace
+var memoryLog *PublicSpace
+var errorLog *PublicSpace
 
 
 
@@ -131,7 +240,8 @@ var errorLog *space
 
 /**********************************************************************************************/
 /* 
-spaceErrors -> Gestion de errores de la aplicación, test de velocidad y test de memoria.
+spaceErrors -> *pointer
+
 lDAC -> Inicio de la aplicacion global e instancia del DAC central, compartido con el 
 resto de espacios, equivalente a una base de datos mysql
 */
@@ -146,7 +256,7 @@ type lDAC struct {
 }
 
 //Variable global de DAC
-var globalLaunchDac *lDAC
+var globUrlDac *lDAC
 
 
 
@@ -154,9 +264,10 @@ var globalLaunchDac *lDAC
 
 /**********************************************************************************************/
 /*
-spaceErrors -> Gestion de errores de la aplicación, test de velocidad y test de memoria.
-lDAC -> Inicio de la aplicacion global e instancia del DAC central, compartido con el 
-resto de espacios, equivalente a una base de datos mysql
+spaceErrors ->  *pointer
+
+lDAC ->  *pointer
+
 space -> Genera un espacio que seria igual a una tabla mysql, se divide en dos tipos de campos
 fields campos unicos y columnas campos dinamicos, los espacios son compatibles y recomendados
  para todo tipo de datos tablas de nombres, emails, video, audio, html, jss, css...
@@ -167,6 +278,7 @@ type spaceLen struct {
 	name string
 	len  int64
 }
+
 type space struct {
 	*lDAC
 	//TE dice si chequear los archivos y en caso de que si se usa la superglobal SpaceErrors
@@ -197,21 +309,22 @@ type space struct {
 
 	compilation bool
 }
+type PublicSpace struct  {
+	*space
+}
 
 
+var Space map[string]*space
 
 
 
 /**********************************************************************************************/
 /* 
-spaceErrors -> Gestion de errores de la aplicación, test de velocidad y test de memoria.
+spaceErrors ->  *pointer
 
-lDAC -> Inicio de la aplicacion global e instancia del DAC central, compartido con el 
-resto de espacios, equivalente a una base de datos mysql
+lDAC ->  *pointer
 
-space -> Genera un espacio que seria igual a una tabla mysql, se divide en dos tipos de campos
-fields campos unicos y columnas campos dinamicos, los espacios son compatibles y recomendados
- para todo tipo de datos tablas de nombres, emails, video, audio, html, jss, css...
+space ->  *pointer
 
 spaceFile -> Apunta a un archivo y se guardan actualmente en tres diferentes mapas donde
 permanecen abiertos hasta que un timer los cierra, funcionan con locs de lectura y escritura.
@@ -273,17 +386,13 @@ type spacePermDisk struct {
 
 /**********************************************************************************************/
 /* 
-spaceErrors -> Gestion de errores de la aplicación, test de velocidad y test de memoria.
+spaceErrors ->  *pointer
 
-lDAC -> Inicio de la aplicacion global e instancia del DAC central, compartido con el 
-resto de espacios, equivalente a una base de datos mysql
+lDAC ->  *pointer
 
-space -> Genera un espacio que seria igual a una tabla mysql, se divide en dos tipos de campos
-fields campos unicos y columnas campos dinamicos, los espacios son compatibles y recomendados
- para todo tipo de datos tablas de nombres, emails, video, audio, html, jss, css...
+space ->  *pointer
  
-spaceFile -> Apunta a un archivo y se guardan actualmente en tres diferentes mapas donde
-permanecen abiertos hasta que un timer los cierra, funcionan con locs de lectura y escritura.
+spaceFile ->  *pointer
 
 RBuffer -> Inicia el buffer de lectura para leer un archivo, compatible con un solo campo,
 una sola linea, multiples campos, multiples lineas, (multiples campos y multiples lineas).
@@ -336,17 +445,13 @@ type RBuffer struct {
 
 /**********************************************************************************************/
 /*
-spaceErrors -> Gestion de errores de la aplicación, test de velocidad y test de memoria.
+spaceErrors ->  *pointer
 
-lDAC -> Inicio de la aplicacion global e instancia del DAC central, compartido con el 
-resto de espacios, equivalente a una base de datos mysql
+lDAC ->  *pointer
 
-space -> Genera un espacio que seria igual a una tabla mysql, se divide en dos tipos de campos
-fields campos unicos y columnas campos dinamicos, los espacios son compatibles y recomendados
- para todo tipo de datos tablas de nombres, emails, video, audio, html, jss, css...
+space ->  *pointer
  
-spaceFile -> Apunta a un archivo y se guardan actualmente en tres diferentes mapas donde
-permanecen abiertos hasta que un timer los cierra, funcionan con locs de lectura y escritura.
+spaceFile ->  *pointer
 
 WBuffer -> Inicia un buffer de escritura para escribir en un archivo compatible con un solo campo,
 una sola linea, multiples campos, multiples columnas, (multiples campos y multiples columnas),
@@ -382,7 +487,7 @@ type wChanBuf struct{
 //Abre un canal que puede actualizar tantno columnas como fields.
 type WBuffer struct {
 	*spaceFile
-	ColumnName string
+	columnName string
 	typeBuff fileTypeBuffer
 	preFormat bool
 	*wLines

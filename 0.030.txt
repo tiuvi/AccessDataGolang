@@ -7,6 +7,7 @@ jueves madrugada     - 1:30     -> 31 horas
 Jueves tarde         - 3        -> 34 horas            
 viernes              - 3:30 + 3 -> 40.5 horas
 sabado madrugada     - 3.30     -> 44 horas
+sabado tarde         - 4.30     -> 48.5
 
 ACTUAL (REFLEXIONANDOLO)- Crear mapa de espacios globales
 
@@ -24,14 +25,16 @@ EN PROCESO      - Funciones para iniciar dac desde cualquier supPaquete
           HECHO - Rescribir las variables publicas, quitando las variables que no 
                 necesariamente se necesiten ser accesibles fuera del paquete.
 
-        ACTUAL  - Cambiar el nombre de BRspace y BWspace y agregar launch
-                - Funcion para iniciar los buffers ya que ahora la variable es privada.
-                - Que abstraiga de crear un buffer de bit que sea on y off, y lo cree automaticamente.
+        HECHO  - Cambiar el nombre de BRspace y BWspace y agregar launch
+        HECHO  - Funcion para iniciar los buffers ya que ahora la variable es privada.
 
+        ACTUAL - Configurar todos los errores de la aplicación
+
+        ACTUAL - Que abstraiga de crear un buffer de bit que sea on y off, y lo cree automaticamente.
         ACTUAL - funcion para modificar los tiempos de deffer file y disk
-        IDEA          - Funciones para gestionar los mapas globales
+        ACTUAL          - Funciones para gestionar los mapas globales
 
-ACTUAL - Configurar todos los errores de la aplicación
+
 
 
 IDEA - SubPaquete funciones que muestren los datos para iniciar un space o un file en cualquier otro servidor

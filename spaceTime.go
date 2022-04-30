@@ -10,12 +10,7 @@ import(
 //Abrimos el espacio en disco
 func (obj *space ) ospaceDisk( name string, folder []string)*spaceFile {
 	
-	if obj.spaceErrors != nil && obj.logTimeOpenFile{
-		defer obj.LogDeferTimeMemoryDefault(time.Now())
 
-		//defer obj.LogDeferTimeMemory(obj.dir,time.Now())
-
-	}
 	var folderString string
 	if len(folder) > 0 {
 
@@ -41,6 +36,76 @@ func (obj *space ) ospaceDisk( name string, folder []string)*spaceFile {
 	
 	return spacef
 }
+
+
+func (obj *space ) ospaceDeferDisk(name string, folder []string)*spaceFile{
+
+	var folderString string
+	if len(folder) > 0 {
+
+		folderString = strings.Join(folder, "/")
+		folderString += "/"
+	}
+	url := strings.Join([]string{ obj.dir , folderString , name , "." , obj.extension }, "") 
+	
+	
+	spacef , found := deferSpace.deferFile[url]
+	if !found {
+
+		//Creamos una nueva referencia a spaceFile
+		spacef = obj.newSpaceFile(folderString, name)
+		//Unico bloqueo cuando se abre el archivo para mantener la atomicidad
+		deferSpace.Lock()
+		//Creamos una nueva referencia a spaceFile
+		deferSpace.deferFile[url] = spacef
+		//Añadimos un elemento a la cola de array para su posterior
+		//eleiminacion del mapa en orden
+		deferSpace.info = append( deferSpace.info , deferFileInfo{url,time.Now()})
+		//Quitamos el cerrojo de la estructura diskSpace
+		deferSpace.Unlock()
+
+	}
+	return spacef
+}
+
+
+
+func (obj *space ) ospacePermDisk( name string,folder []string)*spaceFile{
+
+	var folderString string
+	if len(folder) > 0 {
+
+		folderString = strings.Join(folder, "/")
+		folderString += "/"
+	}
+	url := strings.Join([]string{ obj.dir , folderString , name , "." , obj.extension }, "") 
+	
+
+	spacef , found := permSpace.permDisk[url]
+	if !found {
+
+		//Creamos una nueva referencia a spaceFile
+		spacef = obj.newSpaceFile(folderString, name)
+		//Unico bloqueo cuando se abre el archivo para mantener la atomicidad
+		permSpace.Lock()
+		//Creamos una nueva referencia a spaceFile
+		permSpace.permDisk[url] = spacef
+		//Quitamos el cerrojo de la estructura diskSpace
+		permSpace.Unlock()
+	
+
+	}
+
+	return spacef
+
+}
+
+
+
+
+
+
+
 
 
 //Timer que cierra cuando hay mas de 10 000 archivos abiertos

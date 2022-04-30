@@ -8,30 +8,24 @@ import (
 	"time"
 )
 
+type ErrorsDac struct  {
+	*spaceErrors
+	fileName string
+	typeError errorDac
+	url string
+	messageLog string
 
+	levelsUrl int
+	separatorLog string
 
-
-/*
-var GlobalError = &spaceErrors{
-	logFatalErrors:   false,
-	logConsoleErrors: true,
-
-	logFileError: true,
-
-	logTimeUse :   true,   
-	logFileTimeUse: true,
-	logTimeOpenFile: true,
-
-
-	logMemoryUse:  true,
-	logFileMemoryUse: true,
-
-	separatorLog: " ",
-	levelsUrl: 8,
+	timeNow *time.Time
 }
-*/
+
+
+
 
 /*
+HECHO
 var errorLog = &space{
 	FileNativeType: PermDisk,
 	Dir: autoload_options.Patch + "/errors/dac/",
@@ -56,7 +50,7 @@ var errorLog = &space{
 		{"endLine3",   2,},
 	},
 }
-
+hecho
 var memoryLog = &space{
 	FileNativeType: PermDisk,
 	Dir: autoload_options.Patch + "/errors/dac/",
@@ -97,6 +91,82 @@ var timeLog = &space{
 	},
 }
 */
+func (LDAC *lDAC)OnErrorsLog(){
+
+		//errorLog
+		space := globUrlDac.NewSpace()
+		space.NewTimeFileDisk()
+		space.NewDacByte()
+		space.SetDir("/errors/dac/")
+
+		space.NewField("exceptionCount", 64)
+		space.NewField("warningCount", 64)
+		space.NewField("fatalCount", 64)
+
+		space.NewColumnByte("date", 20)
+		space.NewColumnByte("typeError", 20)
+		space.NewColumnByte("fileName", 20)
+		space.NewColumnByte("funcion", 35)
+		space.NewColumnByte("line", 6)
+		space.NewColumnByte("endLine1", 1)
+
+		space.NewColumnByte("message", 64)
+		space.NewColumnByte("endLine2", 1)
+
+		space.NewColumnByte("DAC", 64)
+		space.NewColumnByte("endLine3", 2)
+		space.OSpaceInit()
+		errorLog = space.SetPublicSpace()
+
+
+	
+		//memoryLog
+		space = globUrlDac.NewSpace()
+		space.NewTimeFileDisk()
+		space.NewDacByte()
+		space.SetDir("/errors/dac/")
+
+		space.NewColumnByte("date", 20)
+		space.NewColumnByte("fileName", 20)
+		space.NewColumnByte("funcion", 35)
+		space.NewColumnByte("line", 6)
+		space.NewColumnByte("endLine1", 1)
+
+		space.NewColumnByte("DAC", 64)
+		space.NewColumnByte("endLine2", 1)
+
+		space.NewColumnByte("Alloc", 20)
+		space.NewColumnByte("totalAlloc", 20)
+		space.NewColumnByte("memSys", 20)
+		space.NewColumnByte("objLargerMemory", 20)
+		space.NewColumnByte("countGC", 20)
+		space.NewColumnByte("endLine3", 2)
+		space.OSpaceInit()
+		memoryLog = space.SetPublicSpace()
+	
+
+
+	//memoryLog
+	space = globUrlDac.NewSpace()
+	space.NewTimeFileDisk()
+	space.NewDacByte()
+	space.SetDir("/errors/dac/")
+
+	space.NewColumnByte("date", 20)
+	space.NewColumnByte("fileName", 20)
+	space.NewColumnByte("funcion", 35)
+	space.NewColumnByte("line", 6)
+	space.NewColumnByte("endLine1", 1)
+
+	space.NewColumnByte("DAC", 64)
+	space.NewColumnByte("nanosecond", 15)
+	space.NewColumnByte("endLine2", 2)
+
+	space.OSpaceInit()
+	timeLog = space.SetPublicSpace()
+	
+}
+
 
 func negritaTerminal(str string)string{
 	
@@ -130,27 +200,9 @@ func (EDAC *ErrorsDac ) uint64ToString(uintData uint64)string {
 	return uintFormat
 }
 
-func errorsLog(){
-
-//	errorLog.OSpaceInit()
-//	timeLog.OSpaceInit()
-//	memoryLog.OSpaceInit()
 
 
-}
 
-type ErrorsDac struct  {
-	*spaceErrors
-	fileName string
-	typeError errorDac
-	Url string
-	messageLog string
-
-	levelsUrl int
-	separatorLog string
-
-	timeNow *time.Time
-}
 
 
 
@@ -160,7 +212,7 @@ func (sP *space )ErrorSpaceDefault(typeError errorDac, messageLog string){
 		spaceErrors: sP.spaceErrors,
 		fileName: "",
 		typeError: typeError,
-		Url: sP.dir,
+		url: sP.dir,
 		messageLog: messageLog,
 		levelsUrl:    sP.levelsUrl ,
 		separatorLog:  sP.separatorLog,
@@ -175,7 +227,7 @@ func (sP *space ) NewErrorSpace(fileName string, typeError errorDac, messageLog 
 		spaceErrors: sP.spaceErrors,
 		fileName: fileName,
 		typeError: typeError,
-		Url: sP.dir,
+		url: sP.dir,
 		messageLog: messageLog,
 		levelsUrl:    sP.levelsUrl ,
 		separatorLog:  sP.separatorLog,
@@ -190,7 +242,7 @@ func (sF *spaceFile ) ErrorSpaceFileDefault(typeError errorDac, messageLog strin
 		spaceErrors: sF.spaceErrors,
 		fileName: "",
 		typeError: typeError,
-		Url: sF.url,
+		url: sF.url,
 		messageLog: messageLog,
 		levelsUrl:    sF.levelsUrl ,
 		separatorLog:  sF.separatorLog,
@@ -205,7 +257,7 @@ func (sF *spaceFile ) NewErrorSpace(fileName string, typeError errorDac, message
 		spaceErrors: sF.spaceErrors,
 		fileName: fileName,
 		typeError: typeError,
-		Url: sF.url,
+		url: sF.url,
 		messageLog: messageLog,
 		levelsUrl:    sF.levelsUrl ,
 		separatorLog:  sF.separatorLog,
@@ -220,7 +272,7 @@ func (sP *space ) LogDeferTimeMemoryDefault(timeNow time.Time){
 		spaceErrors: sP.spaceErrors,
 		fileName: "",
 		typeError: TimeMemory,
-		Url: sP.dir,
+		url: sP.dir,
 		messageLog: "",
 		levelsUrl:    sP.levelsUrl ,
 		separatorLog:  sP.separatorLog,
@@ -236,7 +288,7 @@ func (sP *space ) NewLogDeferTimeMemory(fileName string, timeNow time.Time){
 		spaceErrors: sP.spaceErrors,
 		fileName: fileName,
 		typeError: TimeMemory,
-		Url: sP.dir,
+		url: sP.dir,
 		messageLog: "",
 		levelsUrl:    sP.levelsUrl ,
 		separatorLog:  sP.separatorLog,
@@ -252,7 +304,7 @@ func (sF *spaceFile ) LogDeferTimeMemorySF(timeNow time.Time){
 		spaceErrors: sF.spaceErrors,
 		fileName: "",
 		typeError: TimeMemory,
-		Url: sF.url,
+		url: sF.url,
 		messageLog: "",
 		levelsUrl:    sF.levelsUrl ,
 		separatorLog:  sF.separatorLog,
@@ -270,7 +322,7 @@ func (sF *spaceFile ) NewLogDeferTimeMemorySF(fileName string, timeNow time.Time
 		spaceErrors: sF.spaceErrors,
 		fileName: fileName,
 		typeError: TimeMemory,
-		Url: sF.url,
+		url: sF.url,
 		messageLog: "",
 		levelsUrl:    sF.levelsUrl ,
 		separatorLog:  sF.separatorLog,
@@ -294,7 +346,7 @@ func (EDAC *ErrorsDac ) LogNewError(){
 	
 	fileString     := frame.File
 	funcNameString := frame.Function
-	urlNameString  := EDAC.Url
+	urlNameString  := EDAC.url
 	lineStr        := strconv.Itoa(frame.Line)
 
 	fileDir    := strings.Split(frame.File, "/")
@@ -311,7 +363,7 @@ func (EDAC *ErrorsDac ) LogNewError(){
 	}
 	
 
-	urlName       := strings.Split(EDAC.Url , "/")
+	urlName       := strings.Split(EDAC.url , "/")
 	if len(urlName) > EDAC.levelsUrl {
 
 		urlNameString = strings.Join(urlName[len(urlName)-EDAC.levelsUrl:] , "/")

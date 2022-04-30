@@ -15,10 +15,10 @@ func (WB *WBuffer) writeByteSpace()*int64{
 		if WB.indexSizeFields != nil && WB.wRangues != nil {
 
 
-			size, found := WB.indexSizeFields[WB.ColumnName]
+			size, found := WB.indexSizeFields[WB.columnName]
 			if found {
 
-				WB.WriteIndexSizeField(WB.ColumnName,size,*WB.wRangues,WB.buffer )
+				WB.WriteIndexSizeField(WB.columnName,size,*WB.wRangues,WB.buffer )
 				
 				return nil
 			}
@@ -27,7 +27,7 @@ func (WB *WBuffer) writeByteSpace()*int64{
 		
 		if WB.indexSizeColumns != nil  && WB.wLines != nil { 
 
-			size , found := WB.indexSizeColumns[WB.ColumnName]
+			size , found := WB.indexSizeColumns[WB.columnName]
 			if found {
 
 				line := WB.line
@@ -45,7 +45,7 @@ func (WB *WBuffer) writeByteSpace()*int64{
 
 				if WB.hooker != nil {
 
-					WB.hookerPreFormatPointer(WB.buffer,WB.ColumnName)
+					WB.hookerPreFormatPointer(WB.buffer,WB.columnName)
 
 				}
 				
@@ -261,10 +261,10 @@ func (WB *WBuffer) writeBitSpace()*int64{
 		if WB.indexSizeFields != nil && WB.wRangues != nil {
 
 
-			size, found := WB.indexSizeFields[WB.ColumnName]
+			size, found := WB.indexSizeFields[WB.columnName]
 			if found {
 
-				WB.WriteIndexSizeField(WB.ColumnName,size,*WB.wRangues,WB.buffer )
+				WB.WriteIndexSizeField(WB.columnName,size,*WB.wRangues,WB.buffer )
 				
 				return nil
 			}
@@ -273,7 +273,7 @@ func (WB *WBuffer) writeBitSpace()*int64{
 
 		if WB.indexSizeColumns != nil  && WB.wLines != nil { 
 
-			size , found := WB.indexSizeColumns[WB.ColumnName]
+			size , found := WB.indexSizeColumns[WB.columnName]
 			if found {
 
 				line := WB.line

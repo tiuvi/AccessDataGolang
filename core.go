@@ -2,6 +2,7 @@ package bd
 
 import (
 	"log"
+	"regexp"
 )
 
 
@@ -371,5 +372,12 @@ func checkFileTypeBuffer(base fileTypeBuffer, compare fileTypeBuffer) bool {
 	}
 
 	return false
+
+}
+
+func regexPathGlobal(path string) string {
+
+	//Filtrado solo se permite letras mayusculas, letras minusculas, numeros y barras.
+	return regexp.MustCompile(`[^a-zA-Z0-9/]`).ReplaceAllString(path, "")
 
 }
