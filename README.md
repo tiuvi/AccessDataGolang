@@ -1,7 +1,5 @@
 # AccessDataGolang
 
-<h1>Magia En Golang</h1>
-
 Acceso a grupo de telegram, donde subo las actualizaciones del proyecto y donde se puede hablar de todo lo referido a GOLANG.
 https://t.me/happycode_invitacion
 
