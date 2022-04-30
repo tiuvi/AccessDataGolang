@@ -1,7 +1,17 @@
 # AccessDataGolang
 
+<h1>Magia En Golang</h1>
+
 Acceso a grupo de telegram, donde subo las actualizaciones del proyecto y donde se puede hablar de todo lo referido a GOLANG.
 https://t.me/happycode_invitacion
+
+Empapate bien de la estructura DAC en:
+https://github.com/FrankyGolang/AccessDataGolang/blob/main/space.go
+
+Podras ver como cada estructura se integra en la siguiente estructura mediante un puntero, donde cada estrutura puede dar
+luegar a multiples estructuras que se integran en las siguientes, todo es inmutable debido al sistema de Errores Fatales que
+impiden que te equivoques en el proceso de fabricacion pero seguro en tiempo de ejecución con log de errores.
+Como ejemplo: spaceErrors->lDAC->space->spaceFile->RBuffer
 
 Nueva tecnología de acceso a datos, separa la busqueda de datos, del acceso a datos aumentando la velocidad en *100.
 
