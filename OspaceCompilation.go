@@ -2,39 +2,36 @@ package bd
 
 
 
+func (obj *space) ospaceCompilationFile() bool {
 
-func (obj *space ) ospaceCompilationFile()bool {
-
-
-	if obj.spaceErrors != nil {
-
+	//eMSGoCF: Error Mensaje ospaceCompilationFile
+	//#Error MessageCopilation -> ErrorSpaceDefault
+	var eMSGoCF func(c bool,b string) = func (conditional bool, msg string) {
 	
-		obj.ErrorSpaceDefault(MessageCopilation , `Las alertas en ospace son fatales con el tipo: MessageCopilation.`)
-
-		if len(obj.dir) == 0 {
-
-			obj.ErrorSpaceDefault(MessageCopilation , `Variable dir vacia.`)
+		if obj.spaceErrors != nil {
 	
-		}
-		
-		if  len(obj.extension) == 0 {
+			if conditional {
 	
-			obj.ErrorSpaceDefault(MessageCopilation , `extension vacia.`)
-	
-		}
-	
-		if _ , found := extensionFile[obj.extension]; !found{
-	
-			obj.ErrorSpaceDefault(MessageCopilation , `extension no valida.`)
-	
+				obj.ErrorSpaceDefault(MessageCopilation, msg)
+			}	
 		}
 	}
 
+	eMSGoCF(obj.spaceErrors != nil,`Las alertas en ospace son fatales con el tipo: MessageCopilation.`)
+
+	eMSGoCF(obj.fileNativeType == 0 ,`Variable fileNativeType no definida.`)
+
+	eMSGoCF(obj.fileNativeType == 0,`Variable fileNativeType no definida.`)
+
+	eMSGoCF(len(obj.dir) == 0 ,`Variable dir vacia.`)
+
+	eMSGoCF(len(obj.extension) == 0, `Extension vacia.`)
+
+
+	eMSGoCF(obj.IsNotExtension(obj.extension),`Extension no valida.`)
 
 	
-
-
-
+	
 
 	if len(obj.indexSizeFieldsArray) > 0 {
 
@@ -45,25 +42,32 @@ func (obj *space ) ospaceCompilationFile()bool {
 		}
 
 		var afterValue int64
-		for ind , value := range obj.indexSizeFieldsArray {
+		for ind, value := range obj.indexSizeFieldsArray {
+
 			
-			name := value.name
-			len  := value.len
+			eMSGoCF(value.len < 0,`indexSizeFieldsArray valor negativo.`)
+			
+			eMSGoCF(obj.IsField(value.name),`Nombre repetido en indexSizeFieldsArray.`)
+
+			
 
 			if ind == 0 {
 
-				obj.indexSizeFields[name] = [2]int64{0 , len }
+				obj.indexSizeFields[value.name] = [2]int64{0, value.len}
 
-			}else {
+			} else {
 
-				obj.indexSizeFields[name] = [2]int64{ afterValue ,len + afterValue }
+				obj.indexSizeFields[value.name] = [2]int64{afterValue, value.len + afterValue}
 
 			}
 
-			afterValue += len
+			afterValue += value.len
 		}
 	}
-	
+
+
+
+
 
 	if len(obj.indexSizeColumnsArray) > 0 {
 
@@ -74,78 +78,45 @@ func (obj *space ) ospaceCompilationFile()bool {
 		}
 
 		var afterValue int64
-		for ind , value := range obj.indexSizeColumnsArray {
+		for ind, value := range obj.indexSizeColumnsArray {
 
-			name := value.name
-			len  := value.len
-		
+			eMSGoCF(value.len < 0,`indexSizeFieldsArray valor negativo.`)
+			
+			eMSGoCF(obj.IsColumn(value.name),`Nombre repetido en indexSizeColumnsArray.`)
+
 			if ind == 0 {
 
-				obj.indexSizeColumns[name] = [2]int64{0 , len }
+				obj.indexSizeColumns[value.name] = [2]int64{0, value.len}
 
-			}else {
+			} else {
 
-				obj.indexSizeColumns[name] = [2]int64{ afterValue ,len + afterValue}
+				obj.indexSizeColumns[value.name] = [2]int64{afterValue, value.len + afterValue}
 
 			}
 
-			afterValue += len
+			afterValue += value.len
 		}
 	}
 
 
 
-	obj.lenColumns = int64(len(obj.indexSizeColumns))
-	obj.lenFields  = int64(len(obj.indexSizeFields))
-	if obj.spaceErrors != nil {
-		
-		if obj.lenColumns == 0 && obj.lenFields == 0 {
+	if obj.indexSizeFields != nil {
 
-			obj.ErrorSpaceDefault(MessageCopilation , `Iniciaste un espacio sin columnas y sin campos.`)
-		
-		}
-	
-		if _ , found := obj.indexSizeColumns["buffer"]; found {
-	
-			obj.ErrorSpaceDefault(MessageCopilation , `La palabra buffer en columnas esta reservada para el uso del programa.`)
-	
-		}
-	
-		if _ , found := obj.indexSizeFields["buffer"]; found {
-	
-			obj.ErrorSpaceDefault(MessageCopilation , `La palabra buffer en campos esta reservada para el uso del programa.`)
-	
-		}
-	}
+		obj.lenFields  = int64(len(obj.indexSizeFields))
 
+		eMSGoCF(obj.lenFields == 0,`Iniciaste un mapa de campos, sin campos`)
 
-	checkMap := make(map[string]bool)
-
-	if obj.lenFields != 0 {
-
-		obj.lenFields       = 0
 		var checkSizeFields int64 = 0
 
-		for name, val := range obj.indexSizeFields{
+		for name, val := range obj.indexSizeFields {
 
-			if obj.spaceErrors != nil {
-				if found := checkMap[name]; found{
+			eMSGoCF(obj.IsColumn(name),`Los nombres de fields y columnas tiene que ser unicos.`)
 
-					obj.ErrorSpaceDefault(MessageCopilation , "El campo: " + name +" coincide con el campo: " + name)
-
-				}
-			}
-
-			checkMap[name] = true
-
-			calcSizeLine := (val[1] - val[0])
-			if obj.spaceErrors != nil && calcSizeLine <= 0 {
-
-				obj.ErrorSpaceDefault(MessageCopilation , `Los fields no pueden tener un tamaño igual o inferior a cero.`)
-
-			}
-
-			obj.lenFields += calcSizeLine
+			calcSize := (val[1] - val[0])
+		
+			eMSGoCF(calcSize <= 0, `El field` + name + ` no puede tener un tamaño igual o inferior a cero.`)
+			
+			obj.sizeField += calcSize
 
 			if val[1] >= checkSizeFields {
 
@@ -153,41 +124,33 @@ func (obj *space ) ospaceCompilationFile()bool {
 			}
 		}
 
-		if obj.spaceErrors != nil && checkSizeFields != int64(obj.lenFields){
-		
-			obj.ErrorSpaceDefault(MessageCopilation , `Los campos estan mal escritos, Ejemplo: field1: 0,20; field2:20,30`)
+		eMSGoCF(checkSizeFields != obj.lenFields,`Los campos estan mal escritos, Ejemplo: field1: 0,20; field2:20,30`)
 
-		}
+		eMSGoCF(obj.IsField("buffer"),`La palabra buffer en campos esta reservada para el uso del programa.`)
 
 	}
 
 
-
 	//Actualizamos el valor del ancho de la linea
-	if obj.lenColumns != 0 {
+	if obj.indexSizeColumns != nil {
+
+		obj.lenColumns = int64(len(obj.indexSizeColumns))
+		eMSGoCF(obj.lenColumns == 0,`Iniciaste un mapa de columnas, sin columnas`)
+
 
 		var checkSizeColumns int64 = 0
 
 		for name , val := range obj.indexSizeColumns {
 
-			if obj.indexSizeFields != nil {
+			eMSGoCF(obj.IsField(name),`Los nombres de fields y columnas tiene que ser unicos.`)
 
-				if obj.spaceErrors != nil {
 
-					if found := checkMap[name]; found{
-
-						obj.ErrorSpaceDefault(MessageCopilation , "El campo: " + name +" coincide con la columna: " + name)
-	
-					}
-				}
-			}
-	
 			calcSizeLine := (val[1] - val[0])
-			if obj.spaceErrors != nil  && calcSizeLine <= 0 {
+		
 
-				obj.ErrorSpaceDefault(MessageCopilation , "Las columnas no pueden tener un tamaño igual o inferior a cero." )
+			eMSGoCF(calcSizeLine <= 0 , "Las columnas no pueden tener un tamaño igual o inferior a cero.")
 
-			}
+			
 
 			obj.sizeLine += calcSizeLine
 
@@ -195,50 +158,37 @@ func (obj *space ) ospaceCompilationFile()bool {
 
 				checkSizeColumns = val[1]
 			}
-			
+
 		}
-		
-		if obj.spaceErrors != nil  && checkSizeColumns != obj.sizeLine {
-			
-			obj.ErrorSpaceDefault(MessageCopilation , "Las columnas estan mal escritas, Ejemplo: column1: 0,20; column2:20,30;" )
-		
-		}
+
+		eMSGoCF(checkSizeColumns != obj.sizeLine , "Las columnas estan mal escritas, Ejemplo: column1: 0,20; column2:20,30;")
+
+		eMSGoCF(obj.IsColumn("buffer"),`La palabra buffer en columnas esta reservada para el uso del programa.`)
 
 	}
-	
 
-	
+	eMSGoCF(obj.indexSizeColumns != nil  && obj.indexSizeFields != nil ,`Iniciaste un espacio sin columnas y sin campos.`)
+
+
+
 	//Lectura de archivos de byte
-	if  obj.extension == dacByte {
+	if obj.extension == dacByte {
 
 		obj.fileCoding = bytes
 		obj.compilation = true
 		return true
 	}
 
-
 	//bdisk: Lista de bit en un archivo disk
 	if obj.extension == dacBit {
 
-		obj.fileCoding  = bit
+		obj.fileCoding = bit
 		obj.compilation = true
 		return true
 	}
 
-	if obj.spaceErrors != nil {
-		obj.ErrorSpaceDefault(MessageCopilation ,
-			"No se han encontrado coincidencias con las extensiones de archivo predeterminadas." )
-		
-	}
+
+	eMSGoCF(true,"No se han encontrado coincidencias con las extensiones de archivo predeterminadas.")
+
 	return false
 }
-
-
-
-
-
-
-
-
-
-
