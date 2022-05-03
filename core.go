@@ -1,7 +1,7 @@
 package bd
 
 import (
-	"log"
+	"fmt"
 	"regexp"
 )
 
@@ -11,6 +11,10 @@ import (
 // 0 0 0 0 0 0 0 0 0
 //#bd/core.go
 func writeBit(id int64, turn bool, bufferBit []byte) []byte {
+
+	if EDAC &&
+		globUrlDac.ELDACF(id > 7, "Error Fatal id superior al permitido para la lectura de bit") {
+	}
 
 	bitId := []uint8{128, 64, 32, 16, 8, 4, 2, 1}
 
@@ -47,6 +51,10 @@ func writeBit(id int64, turn bool, bufferBit []byte) []byte {
 // 0 0 0 0 0 0 0 0 0
 //#bd/core.go
 func readBit(id int64, bufferBit []byte) bool {
+
+	if EDAC &&
+		globUrlDac.ELDACF(id > 7, "Error Fatal id superior al permitido para la lectura de bit") {
+	}
 
 	bitId := []uint8{128, 64, 32, 16, 8, 4, 2, 1}
 
@@ -127,7 +135,7 @@ func (sp *spaceFile) hookerPostFormatPointer(bufByte *[]byte, colName string) {
 func (sP *space) spacePaddingPointer(buf *[]byte, size [2]int64) {
 
 	//Contamos el array de bytes
-	textCount  := int64(len(*buf))
+	textCount := int64(len(*buf))
 	sizeColumn := size[1] - size[0]
 
 	if textCount < sizeColumn {
@@ -199,7 +207,10 @@ func (WB *WBuffer) WriteIndexSizeField(colName string, size [2]int64, rangues wR
 
 	}
 
-	WB.file.WriteAt(*fieldBuffer, +size[0]+(rangues.rangue*rangues.rangeBytes))
+	_, err := WB.file.WriteAt(*fieldBuffer, +size[0]+(rangues.rangue*rangues.rangeBytes))
+	if err != nil && EDAC &&
+		WB.ECSFD(true, "Error al escribir en el archivo. \n\r"+fmt.Sprintln(err)) {
+	}
 
 }
 
@@ -229,9 +240,8 @@ func (buf *RBuffer) readIndexSizeFieldPointer(colName string, size [2]int64) {
 			}
 
 			_, err := buf.file.ReadAt(*buf.FieldBuffer, size[0]+(buf.rangeBytes*buf.rangue))
-			if err != nil {
-				log.Println(err)
-
+			if err != nil && EDAC &&
+				buf.ECSFD(true, "Error al leer el archivo. \n\r"+fmt.Sprintln(err)) {
 			}
 
 			//Limpiamos el buffer de espacios
@@ -260,10 +270,8 @@ func (buf *RBuffer) readIndexSizeFieldPointer(colName string, size [2]int64) {
 			*buf.FieldBuffer = make([]byte, restoRangue)
 
 			_, err := buf.file.ReadAt(*buf.FieldBuffer, size[0]+(buf.rangeBytes*buf.rangue))
-			if err != nil {
-
-				log.Println(err)
-
+			if err != nil && EDAC &&
+				buf.ECSFD(true, "Error al leer el archivo. \n\r"+fmt.Sprintln(err)) {
 			}
 
 			//Limpiamos el buffer de espacios
@@ -290,9 +298,8 @@ func (buf *RBuffer) readIndexSizeFieldPointer(colName string, size [2]int64) {
 		*buf.FieldBuffer = make([]byte, size[1]-size[0])
 
 		_, err := buf.file.ReadAt(*buf.FieldBuffer, size[0])
-		if err != nil {
-			log.Println(err)
-
+		if err != nil && EDAC &&
+			buf.ECSFD(true, "Error al leer el archivo. \n\r"+fmt.Sprintln(err)) {
 		}
 
 		//Limpiamos el buffer de espacios

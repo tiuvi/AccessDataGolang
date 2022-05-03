@@ -4,8 +4,20 @@ import (
 	"time"
 )
 
-var runCallerGlobal = 3
+/*
 
+Evaluacion global de excepciones
+if EDAC && 
+obj.ECSD( true," "){}
+
+Error mas evaluacion global
+if err != nil && EDAC && 
+obj.ECSD( true,"Error al crear el archivo despues de crear la carpeta para ese archivo. \n\r" + fmt.Sprintln(err)){}
+
+*/
+
+
+var runCallerGlobal = 3
 
 //Coge la url space.dir para el error
 func (LDAC *lDAC) ErrorLDACDefault(typeError errorDac, messageLog string)bool {
@@ -37,6 +49,17 @@ func (LDAC *lDAC) ELDAC (conditional bool, msg string)bool {
 	return false
 }
 
+func (LDAC *lDAC) ELDACF (conditional bool, msg string)bool {
+	
+	if LDAC.spaceErrors != nil {
+
+		if conditional {
+
+			return	LDAC.ErrorLDACDefault(Fatal, msg)
+		}	
+	}
+	return false
+}
 
 //Coge la url space.dir para el error
 func (sP *space) ErrorSpaceDefault(typeError errorDac, messageLog string)bool {

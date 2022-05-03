@@ -1,15 +1,12 @@
 package bd
 
-	import "log"
-
-
 
 func (buf *WBuffer) Wspace()*int64{
 
 
 	if checkFileCoding(buf.fileCoding , bit){
 
-			return buf.writeBitSpace()
+		return buf.writeBitSpace()
 		
 	}
 
@@ -19,8 +16,9 @@ func (buf *WBuffer) Wspace()*int64{
 		
 	}
 
-	log.Fatalln("Error Grave, Uspace.go ; Funcion: Wspace ;" +
-	"No Hubo coincidencias fileCoding")
+	if EDAC && 
+	buf.ECSD( true,"Error grave, sin coincidencias de filecoding"){}
+
 	return nil
 }
 
@@ -40,7 +38,8 @@ func (buf *RBuffer)Rspace (){
 		 return
 	}
 
-	log.Fatalln("Error Grave, Uspace.go ; Funcion: Rspace ;" +
-	"No Hubo coincidencias fileCoding")
+	if EDAC && 
+	buf.ECSD( true,"Error grave, sin coincidencias de filecoding"){}
+
 	return
 }

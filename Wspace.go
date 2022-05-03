@@ -1,7 +1,7 @@
 package bd
 
 import (
-	"log"
+	"fmt"
 	"sync/atomic"
 )
 
@@ -52,11 +52,9 @@ func (WB *WBuffer) writeByteSpace()*int64{
 				WB.spacePaddingPointer(WB.buffer , size)
 
 				_ , err := WB.file.WriteAt(*WB.buffer , WB.lenFields + (WB.sizeLine * line) + size[0])
-				if err != nil{
-
-					log.Println("Error de buffer en Wspace")
-
-				}
+				if err != nil && EDAC && 
+				WB.ECSFD( true,"Error al escribir en el archivo \n\r" + fmt.Sprintln(err)){}
+				
 				return &line
 			}
 		}
@@ -112,11 +110,9 @@ func (WB *WBuffer) writeByteSpace()*int64{
 					WB.spacePaddingPointer(&bufBytes , size)
 					
 					_ , err := WB.file.WriteAt(bufBytes, WB.lenFields + (WB.sizeLine * line) + size[0])
-					if err != nil{
-
-						log.Println("Error de buffer en Wspace")
-	
-					}
+					if err != nil && EDAC && 
+					WB.ECSFD( true,"Error al escribir en el archivo \n\r" + fmt.Sprintln(err)){}
+					
 				}
 			}
 			return &line
@@ -157,11 +153,9 @@ func (WB *WBuffer) writeByteSpace()*int64{
 						
 		
 					_, err := WB.file.WriteAt(CHAN.buffer, WB.lenFields + (WB.sizeLine * CHAN.line) + size[0])
-					if err != nil{
-
-						log.Println("Error de buffer en Wspace")
-
-					}
+					if err != nil && EDAC && 
+					WB.ECSFD( true,"Error al escribir en el archivo \n\r" + fmt.Sprintln(err)){}
+				
 					continue
 				}
 			}
@@ -241,11 +235,9 @@ func (WB *WBuffer) writeBitSpace()*int64{
 						//log.Printf("Binary After: %b", bufferBit ) 
 
 						_ , err = WB.file.WriteAt(bufferBit, WB.lenFields + (byteLine * WB.sizeLine) + size[0] )	
-						if err != nil{
-
-							log.Println("Error de buffer en Wspace")
-
-						}
+						if err != nil && EDAC && 
+						WB.ECSFD( true,"Error al escribir en el archivo de bits \n\r" + fmt.Sprintln(err)){}
+				
 					}
 				}
 				return &line
@@ -317,11 +309,9 @@ func (WB *WBuffer) writeBitSpace()*int64{
 			//	log.Printf("Binary After: %b", bufferBit ) 
 
 				_ , err = WB.file.WriteAt(bufferBit, WB.lenFields + (byteLine * WB.sizeLine) + size[0] )	
-				if err != nil{
-
-					log.Println("Error de buffer en Wspace")
-
-				}
+				if err != nil && EDAC && 
+				WB.ECSFD( true,"Error al escribir en el archivo de bits \n\r" + fmt.Sprintln(err)){}
+				
 				return &line
 			}
 		}
@@ -371,11 +361,9 @@ func (WB *WBuffer) writeBitSpace()*int64{
 					}
 
 					_, err = WB.file.WriteAt(bufferBit , WB.lenFields + (WB.sizeLine * byteLine) + size[0])
-					if err != nil{
-
-						log.Println("Error de buffer en Wspace")
-
-					}
+					if err != nil && EDAC && 
+					WB.ECSFD( true,"Error al escribir en el archivo de bits \n\r" + fmt.Sprintln(err)){}
+				
 
 					WB.Unlock()
 

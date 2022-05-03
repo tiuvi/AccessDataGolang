@@ -1,21 +1,13 @@
 package bd
 
-import "log"
 
 
 func (SP *space ) OSpace( name string ,folder... string)*spaceFile  {
 
 
 	if EDAC &&
-	SP.ECSD( !SP.compilation ,"Este espacio no se ha copilado"){}
-
-
-
-	if len(name) == 0 {
-
-		log.Fatalln("Nombre de archivo vacio en: ", SP.dir, SP.extension)
-
-	}
+	SP.ECSD( !SP.compilation ,"Este espacio no se ha copilado") ||
+	SP.ECSD( len(name) == 0 ,"No se puede enviar un nombre de archivo vacio."){}
 
 
 	if checkFileNativeType(SP.fileNativeType, disk ){
@@ -36,6 +28,8 @@ func (SP *space ) OSpace( name string ,folder... string)*spaceFile  {
 
 	}
 
-	log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", SP.dir,SP.extension)
+	if EDAC &&
+	SP.ECSD( true ,"Error grave sin coincidencias FileNativeType."){}
+
 	return nil
 }

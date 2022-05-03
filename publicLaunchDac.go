@@ -1,18 +1,23 @@
 package bd
 
 import (
-	"log"
+	"fmt"
 	"os"
-	"strconv"
 )
 
-var formatBool = strconv.FormatBool
 
 //Inicia DAC y crea la carpeta para la aplicación
-func NewLaunchDac() *lDAC {
+func NewLaunchDac()(ldac *lDAC) {
 
-	return new(lDAC)
+	 ldac = new(lDAC)
+	 ldac.timersFile = &timersFile{
+		fileOpenDeferFile:  612, // Linux permite 1024 descriptores por proceso.
+		timeEventDeferFile: 21600, //6 horas
 
+		timeEventDiskFile: 21600, //6 horas
+	 }
+
+	 return ldac
 }
 
 
@@ -248,10 +253,30 @@ func (LDAC *lDAC) OffGoDACFolder() {
 
 }
 
+func (LDAC *lDAC) ConfCloserDiskFile(seconds int64){
+
+	if EDAC && 
+	LDAC.ELDAC(seconds < 600 ,"El valor no puede ser inferior a 600 segundos"){}
+
+	LDAC.timersFile.timeEventDiskFile = seconds
+}
+
+func (LDAC *lDAC) ConfCloserDeferFile(fileopen int, seconds int64){
+
+	if EDAC && 
+	LDAC.ELDAC(fileopen < 612 , "El valor de archivos abiertos no puede ser inferior a 612.") ||
+	LDAC.ELDAC(seconds < 600 , "El valor no puede ser inferior a 600 segundos"){}
+
+	LDAC.timersFile.fileOpenDeferFile  = fileopen
+	LDAC.timersFile.timeEventDeferFile = seconds
+}
+
+
 func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 
-	LDAC.ELDAC(len(LDAC.globalDACFolder) > 0 ,"La ruta DAC ya esta establecida.")
-	LDAC.ELDAC(len(path) == 0 ,"patch vacio")
+	if EDAC && 
+	LDAC.ELDAC(len(LDAC.globalDACFolder) > 0 ,"La ruta DAC ya esta establecida.") ||
+	LDAC.ELDAC(len(path) == 0 ,"patch vacio"){}
 
 	//Filtrado solo se permite letras mayusculas, letras minusculas, numeros y barras.
 	path = regexPathGlobal(path)
@@ -267,28 +292,27 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 	path += "DAC/"
 
 	//Verificamos la ruta antes de crear la carpeta
-	LDAC.ELDAC(!LDAC.goDACFolder ,"¿Correcto?: " + path + " |Activa - bd.OnGoDACFolder()")
+	if EDAC && 
+	LDAC.ELDAC(!LDAC.goDACFolder ,"¿Correcto?: " + path + " |Activa - bd.OnGoDACFolder()"){}
 
 
 	//Verificamos si el archivo existe y si no existe lo creamos.
 	_, err := os.Stat(path)
 	if err != nil {
 
-
+		if EDAC && 
 		LDAC.ELDAC(os.IsNotExist(err) && !LDAC.newDACFolder ,
 		"No existe la ruta a la carpeta DAC, o has introducido una ruta incorrecta." + 
 		"\r\n" +
-		"¿Crear nueva ruta? , |Activa onCreateDACFolder() para crear la carpeta en la ruta seleccionada.")
+		"¿Crear nueva ruta? , |Activa onCreateDACFolder() para crear la carpeta en la ruta seleccionada."){}
 
 		
 		if os.IsNotExist(err) {
 
 			err = os.MkdirAll(path, 0666)
-			if err != nil {
-
-				log.Fatal("Error al crear la carpeta DAC ", err)
-
-			}
+			if err != nil && EDAC && 
+			LDAC.ELDAC( true,"Error al crear la carpeta DAC. \n\r" + fmt.Sprintln(err)){}
+			
 		}
 
 	}
@@ -301,9 +325,9 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 		//Variable SuperGlobal de DAC
 		globUrlDac = LDAC
 
-		go dacTimerCloserDeferFile()
+		go LDAC.dacTimerCloserDeferFile()
 
-		go dacTimerCloserDiskFile()
+		go LDAC.dacTimerCloserDiskFile()
 
 		Space = make(map[string]*space)
 
@@ -315,7 +339,8 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 
 func (LDAC *lDAC) GetGlobalDACFolder() string {
 	
-	LDAC.ELDAC(len(LDAC.globalDACFolder) == 0,"La ruta DAC no esta establecida.")
+	if EDAC && 
+	LDAC.ELDAC(len(LDAC.globalDACFolder) == 0,"La ruta DAC no esta establecida."){}
 	
 	return LDAC.globalDACFolder
 

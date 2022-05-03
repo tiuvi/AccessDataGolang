@@ -1,8 +1,10 @@
 Lunes Mañana - 3
 lunes tarde  - 2.5 
-lunes tarde  - 3,5
+lunes tarde  - 3.5
+martes madrugada - 2.5
+martes tarde - 2.5
 
-semana - 9
+semana - 14
 
 ACTUAL (REFLEXIONANDOLO)- Crear mapa de espacios globales
 
@@ -36,23 +38,24 @@ EN PROCESO      - Funciones para iniciar dac desde cualquier supPaquete
                 HECHO - publiclaunchdac
                 HECHO - publicSuportDac.go
                 HECHO - publiclaunchspace
-
-                falta - publiclaunchspacefile
-                spaceFile
-                uspace
-                readspace
-                writespace
-                ramsync
-                spaceTime
-                
-
-
-
+                HECHO - publiclaunchspacefile
+                HECHO - spaceFile
+                HECHO - uspace
+                HECHO - readspace -> Se desvinculo readspace de writespace ya no devuelve 
+                byte nulo si se envia un numero de linea superior al del fichero dando como negativo
+                HECHO -  writespace
+                HECHO - ramsync
+                HECHO - Refrescar todo los archivos a errores con evaluacion
+                HECHO - spaceTime
+                HECHO -  funcion para modificar los tiempos de deffer file y disk
 
 
-        ACTUAL - Que abstraiga de crear un buffer de bit que sea on y off, y lo cree automaticamente.
-        ACTUAL - funcion para modificar los tiempos de deffer file y disk
-        ACTUAL - Funciones para gestionar los mapas globales
+
+
+
+ACTUAL - Que abstraiga de crear un buffer de bit que sea on y off, y lo cree automaticamente.
+
+ACTUAL - Funciones para gestionar los mapas globales
 
 
 

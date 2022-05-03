@@ -1,7 +1,5 @@
 package bd
 
-
-
 //Verifica si el string, es una columna en ese espacio.
 func (SF *space) IsColumnMap(column string) *bool {
 
@@ -22,7 +20,7 @@ func (SF *space) IsColumnMap(column string) *bool {
 }
 
 //Verifica si el string, es una columna en ese espacio.
-func (SF *space) IsColumn(column string)bool {
+func (SF *space) IsColumn(column string) bool {
 
 	if SF.indexSizeColumns != nil {
 
@@ -39,8 +37,8 @@ func (SF *space) IsColumn(column string)bool {
 }
 
 //Verifica si el string, es una columna en ese espacio.
-func (SF *space) IsNotColumn(column string)bool {
-	
+func (SF *space) IsNotColumn(column string) bool {
+
 	if SF.indexSizeColumns != nil {
 
 		_, found := SF.indexSizeColumns[column]
@@ -56,19 +54,25 @@ func (SF *space) IsNotColumn(column string)bool {
 }
 
 //CAlcula el tamaño de una columna
-func (SP *space)CalcSizeColumnBWspace(field string)int64{
+func (SP *space) CalcSizeColumnBWspace(field string) (sizeTotal int64) {
 
-	SP.ECSD( SP.indexSizeColumns == nil, "Este espacio no tiene columnas")
+	if EDAC &&
+		SP.ECSD(SP.indexSizeColumns == nil, "Este espacio no tiene columnas") {
+	}
 
 	size, found := SP.indexSizeColumns[field]
-	SP.ECSD(!found, "Este espacio no es un columnas")
-	sizeTotal   := size[1] - size[0]
+	if EDAC &&
+		SP.ECSD(!found, "Este espacio no es un columnas") {
+	}
+	if found {
+		sizeTotal = size[1] - size[0]
+	}
 
 	return sizeTotal
 }
 
 //Verifica si el string, es un campo en ese espacio.
-func (SF *space) IsFieldMap(field string)*bool {
+func (SF *space) IsFieldMap(field string) *bool {
 
 	if SF.indexSizeFields != nil {
 
@@ -87,7 +91,7 @@ func (SF *space) IsFieldMap(field string)*bool {
 }
 
 //Verifica si el string, es un campo en ese espacio.
-func (SF *space) IsField(field string)bool {
+func (SF *space) IsField(field string) bool {
 
 	if SF.indexSizeFields != nil {
 
@@ -104,8 +108,8 @@ func (SF *space) IsField(field string)bool {
 }
 
 //Verifica si el string, es un campo en ese espacio.
-func (SF *space) IsNotField(field string)bool {
-	
+func (SF *space) IsNotField(field string) bool {
+
 	if SF.indexSizeFields != nil {
 
 		_, found := SF.indexSizeFields[field]
@@ -121,22 +125,27 @@ func (SF *space) IsNotField(field string)bool {
 }
 
 //CAlcula el tamaño de un campo
-func (SP *space)CalcSizeField(field string)int64{
+func (SP *space) CalcSizeField(field string) (sizeTotal int64) {
 
-	SP.ECSD( SP.indexSizeFields == nil, "Este espacio no tiene fields")
-	
+	if EDAC &&
+		SP.ECSD(SP.indexSizeFields == nil, "Este espacio no tiene fields") {
+	}
+
 	size, found := SP.indexSizeFields[field]
-	SP.ECSD(!found, "Este espacio no es un fields")
 
-	sizeTotal   := size[1] - size[0]
+	if EDAC &&
+		SP.ECSD(!found, "Este espacio no es un fields") {
+	}
+
+	if found {
+		sizeTotal = size[1] - size[0]
+	}
 
 	return sizeTotal
-
-
 }
 
 //Verifica si el string, es un campo en ese espacio.
-func (SF *space) IsExtension(field string)bool {
+func (SF *space) IsExtension(field string) bool {
 
 	_, found := extensionFile[field]
 	if found {
@@ -147,7 +156,7 @@ func (SF *space) IsExtension(field string)bool {
 }
 
 //Verifica si el string, es un campo en ese espacio.
-func (SF *space) IsNotExtension(field string)bool {
+func (SF *space) IsNotExtension(field string) bool {
 
 	_, found := extensionFile[field]
 	if found {
@@ -157,17 +166,15 @@ func (SF *space) IsNotExtension(field string)bool {
 	return true
 }
 
-
-
-func (sP *space)IsColFil(data ...string)bool{
+func (sP *space) IsColFil(data ...string) bool {
 
 	for _, name := range data {
 
 		if sP.IsField(name) {
 			continue
 		}
-		
-		if sP.IsColumn(name){
+
+		if sP.IsColumn(name) {
 			continue
 		}
 		return false
@@ -176,16 +183,15 @@ func (sP *space)IsColFil(data ...string)bool{
 	return true
 }
 
+func (sP *space) IsNotColFil(data ...string) bool {
 
-func (sP *space)IsNotColFil(data ...string)bool{
-	
 	for _, name := range data {
 
 		if sP.IsField(name) {
 			continue
 		}
-		
-		if sP.IsColumn(name){
+
+		if sP.IsColumn(name) {
 			continue
 		}
 		return true
@@ -195,17 +201,30 @@ func (sP *space)IsNotColFil(data ...string)bool{
 }
 
 //CAlcula el numero de rangos de un field o nil si no existe.
-func (SP *space) CalcRangeField(field string, RangeBytes int64)int64 {
+func (SP *space) CalcRangeField(field string, RangeBytes int64) int64 {
 
-	SP.ECSD( SP.indexSizeFields == nil, "Este espacio no tiene fields")
-	
-	SP.ECSD( RangeBytes < 0, "Rango inferior a 0.")
+	var sizeTotal int64
+
+	if EDAC &&
+		SP.ECSD(SP.indexSizeFields == nil, "Este espacio no tiene fields") ||
+		SP.ECSD(RangeBytes < 0, "Rango inferior a 0.") {
+	}
 
 	size, found := SP.indexSizeFields[field]
-	SP.ECSD( !found , "Ese field no existe")
 
-	sizeTotal := size[1] - size[0]
-	SP.ECSD( RangeBytes > sizeTotal, "El rango es mayor que el tamaño total del campo.")
+	if EDAC &&
+		SP.ECSD(!found, "Ese field no existe") {
+	}
+
+	if found {
+		sizeTotal = size[1] - size[0]
+	} else {
+		return 0
+	}
+
+	if EDAC &&
+		SP.ECSD(RangeBytes > sizeTotal, "El rango es mayor que el tamaño total del campo.") {
+	}
 
 	TotalRangue := sizeTotal / RangeBytes
 	restoRangue := sizeTotal % RangeBytes
@@ -219,18 +238,20 @@ func (SP *space) CalcRangeField(field string, RangeBytes int64)int64 {
 }
 
 //Funcion de soporte para calcular los rangos
-func (SP *space) CalcRangesBytes(lenBuffer int64,RangeBytes int64)int64{
+func (SP *space) CalcRangesBytes(lenBuffer int64, RangeBytes int64) int64 {
 
-	SP.ECSD( RangeBytes <= 0, "El rango de bytes no puede ser inferior o igual a cero")
-	SP.ECSD( lenBuffer <= 0, "El buffer de bytes no puede ser inferior o igual a cero")
-	SP.ECSD( lenBuffer < RangeBytes, "El tamaño del buffer no puede ser inferior al tamaño del rango.")
+	if EDAC &&
+	SP.ECSD(RangeBytes <= 0, "El rango de bytes no puede ser inferior o igual a cero") ||
+	SP.ECSD(lenBuffer <= 0, "El buffer de bytes no puede ser inferior o igual a cero") ||
+	SP.ECSD(lenBuffer < RangeBytes, "El tamaño del buffer no puede ser inferior al tamaño del rango."){}
 
 	TotalRangue := lenBuffer / RangeBytes
 	restoRangue := lenBuffer % RangeBytes
+
 	if restoRangue != 0 {
 
 		TotalRangue += 1
 	}
+	
 	return TotalRangue
 }
-

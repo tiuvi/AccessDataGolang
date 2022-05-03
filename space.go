@@ -249,9 +249,17 @@ resto de espacios, equivalente a una base de datos mysql
 */
 /**********************************************************************************************/
 
+type timersFile struct {
+
+	fileOpenDeferFile int
+	timeEventDeferFile int64
+	timeEventDiskFile int64
+
+}
 //Inicio del path DAC
 type lDAC struct {
 	*spaceErrors
+	*timersFile
 	newDACFolder    bool
 	goDACFolder     bool
 	globalDACFolder string

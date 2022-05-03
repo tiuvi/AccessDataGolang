@@ -1,22 +1,18 @@
 package bd
 
-import(
-	"log"
-	"time"
+import (
+	"fmt"
 	"strings"
+	"time"
 )
 
-
 //Abrimos el espacio en disco
-func (obj *space ) ospaceDisk( name string, folder []string)*spaceFile {
-	
-/*
-	if obj.logTimeOpenFile && !obj.isErrorFile {
+func (obj *space) ospaceDisk(name string, folder []string) *spaceFile {
 
-		defer obj.NewLogDeferTimeMemory("diskFile",time.Now())
-
+	if EDAC &&
+		obj.logTimeOpenFile && !obj.isErrorFile {
+		defer obj.NewLogDeferTimeMemory("diskFile", time.Now())
 	}
-	*/
 
 	var folderString string
 	if len(folder) > 0 {
@@ -26,8 +22,7 @@ func (obj *space ) ospaceDisk( name string, folder []string)*spaceFile {
 	}
 	url := obj.dir + folderString + name + "." + obj.extension
 
-
-	spacef , found := diskSpace.diskFile[url]
+	spacef, found := diskSpace.diskFile[url]
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
@@ -41,17 +36,14 @@ func (obj *space ) ospaceDisk( name string, folder []string)*spaceFile {
 
 	}
 
-	
 	return spacef
 }
 
+func (obj *space) ospaceDeferDisk(name string, folder []string) *spaceFile {
 
-func (obj *space ) ospaceDeferDisk(name string, folder []string)*spaceFile{
-
-	if obj.logTimeOpenFile && !obj.isErrorFile {
-
-		defer obj.NewLogDeferTimeMemory("deferDiskFile",time.Now())
-
+	if EDAC &&
+		obj.logTimeOpenFile && !obj.isErrorFile {
+		defer obj.NewLogDeferTimeMemory("deferDiskFile", time.Now())
 	}
 
 	var folderString string
@@ -60,10 +52,9 @@ func (obj *space ) ospaceDeferDisk(name string, folder []string)*spaceFile{
 		folderString = strings.Join(folder, "/")
 		folderString += "/"
 	}
-	url := strings.Join([]string{ obj.dir , folderString , name , "." , obj.extension }, "") 
-	
-	
-	spacef , found := deferSpace.deferFile[url]
+	url := strings.Join([]string{obj.dir, folderString, name, ".", obj.extension}, "")
+
+	spacef, found := deferSpace.deferFile[url]
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
@@ -74,7 +65,7 @@ func (obj *space ) ospaceDeferDisk(name string, folder []string)*spaceFile{
 		deferSpace.deferFile[url] = spacef
 		//Añadimos un elemento a la cola de array para su posterior
 		//eleiminacion del mapa en orden
-		deferSpace.info = append( deferSpace.info , deferFileInfo{url,time.Now()})
+		deferSpace.info = append(deferSpace.info, deferFileInfo{url, time.Now()})
 		//Quitamos el cerrojo de la estructura diskSpace
 		deferSpace.Unlock()
 
@@ -82,14 +73,11 @@ func (obj *space ) ospaceDeferDisk(name string, folder []string)*spaceFile{
 	return spacef
 }
 
+func (obj *space) ospacePermDisk(name string, folder []string) *spaceFile {
 
-
-func (obj *space ) ospacePermDisk( name string,folder []string)*spaceFile{
-
-	if obj.logTimeOpenFile && !obj.isErrorFile {
-
-		defer obj.NewLogDeferTimeMemory("permDiskFile",time.Now())
-
+	if EDAC &&
+		obj.logTimeOpenFile && !obj.isErrorFile {
+		defer obj.NewLogDeferTimeMemory("permDiskFile", time.Now())
 	}
 
 	var folderString string
@@ -98,10 +86,9 @@ func (obj *space ) ospacePermDisk( name string,folder []string)*spaceFile{
 		folderString = strings.Join(folder, "/")
 		folderString += "/"
 	}
-	url := strings.Join([]string{ obj.dir , folderString , name , "." , obj.extension }, "") 
-	
+	url := strings.Join([]string{obj.dir, folderString, name, ".", obj.extension}, "")
 
-	spacef , found := permSpace.permDisk[url]
+	spacef, found := permSpace.permDisk[url]
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
@@ -112,7 +99,6 @@ func (obj *space ) ospacePermDisk( name string,folder []string)*spaceFile{
 		permSpace.permDisk[url] = spacef
 		//Quitamos el cerrojo de la estructura diskSpace
 		permSpace.Unlock()
-	
 
 	}
 
@@ -120,88 +106,82 @@ func (obj *space ) ospacePermDisk( name string,folder []string)*spaceFile{
 
 }
 
-
-
-
-
-
-
-
-
 //Timer que cierra cuando hay mas de 10 000 archivos abiertos
-//Maximos archivos Ubuntu 1 048 576 Files  --  700 MB Ram 
-func dacTimerCloserDeferFile(){
+//Maximos archivos Ubuntu 1 048 576 Files  --  700 MB Ram
+func (LDAC *lDAC) dacTimerCloserDeferFile() {
 
-	//Numero de archivos maximos
-	fileOpen := 10000
 	//Especifica cada cuanto se ejecuta la funcion
-	tikectDb := time.Tick(time.Duration(300) * time.Second)
+	tikectDb := time.Tick(time.Duration(LDAC.timeEventDeferFile) * time.Second)
 	for range tikectDb {
 
-		if len(deferSpace.deferFile) == 0 {
-			log.Println("0 DeferFile Map")
+		if len(deferSpace.deferFile) == 0 || len(deferSpace.info) == 0 {
+
 			continue
 		}
 
-		if len(deferSpace.info) == 0{
-			log.Println("0 DeferFile Slice")
-			continue
-		}
 
 		//Bloqueamos el mapa para operaciones en paralelo
 		deferSpace.Lock()
+
 		//Recorremos el slice con la informacion
-		for len(deferSpace.info) > fileOpen  {
+		for len(deferSpace.info) > LDAC.fileOpenDeferFile {
 
 			//Buscamos el primer elemento del slice añadido
 			value, found := deferSpace.deferFile[deferSpace.info[0].name]
+
 			//Si encontramos el elemento
 			if found {
+
 				//Cerramos el descriptor del archivo
 				err := value.file.Close()
-				if err != nil {
-					log.Println(err)
-				}
+				if err != nil && EDAC && 
+				LDAC.ELDACF( true,"Error al cerrar el archivo en el mapa defer global. \n\r" + fmt.Sprintln(err)){}
+
 			}
-	
+
 			//Borrado del elemento del mapa y de la variable
-			delete(deferSpace.deferFile  ,  deferSpace.info[0].name)
+			delete(deferSpace.deferFile, deferSpace.info[0].name)
+
 			//Borramos el primer elemento del slice que hemos borrado
 			deferSpace.info = deferSpace.info[1:]
+
 		}
+
 		//Quitamos el candado al mapa
 		deferSpace.Unlock()
 	}
 }
 
 
+
 //Cierra todos los archivos abiertos cada X segundos , minutos, horas, dias....
-func dacTimerCloserDiskFile(){
+func (LDAC *lDAC) dacTimerCloserDiskFile() {
 
 	//Cada cuanto se ejecuta la funcion
-	tikectDiskFile := time.Tick(time.Duration(300) * time.Second)
+	tikectDiskFile := time.Tick(time.Duration(LDAC.timeEventDiskFile) * time.Second)
 	for range tikectDiskFile {
-	
+
 		if len(diskSpace.diskFile) == 0 {
-			log.Println("0 diskFile")
+		
 			continue
 		}
 
 		//Abrimos el candado para operaciones de mapas concurrentes
 		diskSpace.Lock()
-		
-		//Recorremos todo el mapa 
-		for ind, value := range diskSpace.diskFile   {
+
+		//Recorremos todo el mapa
+		for ind, value := range diskSpace.diskFile {
+
 			//Cerramos todos los archivos
 			err := value.file.Close()
-			if err != nil {
-				log.Println(err)
-			}
-			
+			if err != nil && EDAC && 
+			LDAC.ELDACF( true,"Error al cerrar el archivo en el mapa defer global. \n\r" + fmt.Sprintln(err)){}
+
 			//Borrado del elemento del mapa y de la variable
-			delete(diskSpace.diskFile  ,  ind)
-			
+			delete(diskSpace.diskFile, ind)
+
 		}
+		
 		//Quitamos el candado al mapa
 		diskSpace.Unlock()
 
