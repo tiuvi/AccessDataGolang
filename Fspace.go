@@ -10,6 +10,7 @@ import (
 */
 func (sF *spaceFile)GetOneLine(col string, line int64) *RBuffer {
 
+
 	RBuf := sF.NewReaderBytes()
 	RBuf.OneLineBRspace(line)
 	RBuf.BRspace(col)
@@ -24,7 +25,7 @@ func (sF *spaceFile)GetOneLine(col string, line int64) *RBuffer {
 */
 func (sF *spaceFile)SetOneLine(col string, line int64,bufferBytes *[]byte )*int64 {
 
-	RBuf := sF.NewWBspace(buffBytes)
+	RBuf := sF.NewWriterBytes()
 	RBuf.UpdateLineWBspace(line)
 	RBuf.SendBWspace(col,bufferBytes)
 	
@@ -33,7 +34,7 @@ func (sF *spaceFile)SetOneLine(col string, line int64,bufferBytes *[]byte )*int6
 
 func (sF *spaceFile)NewOneLine(col string, bufferBytes *[]byte )*int64 {
 
-	RBuf := sF.NewWBspace(buffBytes)
+	RBuf := sF.NewWriterBytes()
 	RBuf.NewLineWBspace()
 	RBuf.SendBWspace(col,bufferBytes)
 	

@@ -2,22 +2,21 @@ package bd
 
 
 
-func (obj *space) ospaceCompilationFile() bool {
+func (obj *space) ospaceCompilationFile()bool {
 
 	//eMSGoCF: Error Mensaje ospaceCompilationFile
 	//#Error MessageCopilation -> ErrorSpaceDefault
-	var eMSGoCF func(c bool,b string) = func (conditional bool, msg string) {
+	var eMSGoCF func(c bool,b string)bool = func (conditional bool, msg string)bool {
 	
 		if obj.spaceErrors != nil {
 	
 			if conditional {
 	
-				obj.ErrorSpaceDefault(MessageCopilation, msg)
+				return obj.ErrorSpaceDefault(MessageCopilation, msg)
 			}	
 		}
+		return false
 	}
-
-	eMSGoCF(obj.spaceErrors != nil,`Las alertas en ospace son fatales con el tipo: MessageCopilation.`)
 
 	eMSGoCF(obj.fileNativeType == 0 ,`Variable fileNativeType no definida.`)
 
@@ -103,8 +102,9 @@ func (obj *space) ospaceCompilationFile() bool {
 	if obj.indexSizeFields != nil {
 
 		obj.lenFields  = int64(len(obj.indexSizeFields))
-
+	
 		eMSGoCF(obj.lenFields == 0,`Iniciaste un mapa de campos, sin campos`)
+
 
 		var checkSizeFields int64 = 0
 
@@ -124,7 +124,7 @@ func (obj *space) ospaceCompilationFile() bool {
 			}
 		}
 
-		eMSGoCF(checkSizeFields != obj.lenFields,`Los campos estan mal escritos, Ejemplo: field1: 0,20; field2:20,30`)
+		eMSGoCF(checkSizeFields != obj.sizeField,`Los campos estan mal escritos, Ejemplo: field1: 0,20; field2:20,30`)
 
 		eMSGoCF(obj.IsField("buffer"),`La palabra buffer en campos esta reservada para el uso del programa.`)
 
@@ -136,8 +136,7 @@ func (obj *space) ospaceCompilationFile() bool {
 
 		obj.lenColumns = int64(len(obj.indexSizeColumns))
 		eMSGoCF(obj.lenColumns == 0,`Iniciaste un mapa de columnas, sin columnas`)
-
-
+	
 		var checkSizeColumns int64 = 0
 
 		for name , val := range obj.indexSizeColumns {
@@ -167,7 +166,7 @@ func (obj *space) ospaceCompilationFile() bool {
 
 	}
 
-	eMSGoCF(obj.indexSizeColumns != nil  && obj.indexSizeFields != nil ,`Iniciaste un espacio sin columnas y sin campos.`)
+	eMSGoCF(obj.indexSizeColumns == nil  && obj.indexSizeFields == nil ,`Iniciaste un espacio sin columnas y sin campos.`)
 
 
 

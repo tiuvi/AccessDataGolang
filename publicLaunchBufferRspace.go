@@ -1,8 +1,6 @@
 package bd
 
-import (
-	"log"
-)
+
 
 //Crea un nuevo buffer de bytes de lectura
 func (sF *spaceFile) NewReaderBytes() (buf *RBuffer) {
@@ -10,6 +8,7 @@ func (sF *spaceFile) NewReaderBytes() (buf *RBuffer) {
 	return &RBuffer{
 		spaceFile: sF,
 		typeBuff:  buffBytes,
+		postFormat: false,
 	}
 }
 
@@ -19,6 +18,7 @@ func (sF *spaceFile) NewReaderChan() (buf *RBuffer) {
 	return &RBuffer{
 		spaceFile: sF,
 		typeBuff:  buffChan,
+		postFormat: false,
 	}
 }
 
@@ -28,11 +28,14 @@ func (sF *spaceFile) NewReaderMapBytes() (buf *RBuffer) {
 	return &RBuffer{
 		spaceFile: sF,
 		typeBuff:  buffMap,
+		postFormat: false,
 	}
 }
 
 //Activa el postformateado de los datos.
-func (RB *RBuffer) PostFormatBRspace() {
+func (RB *RBuffer) OnPostFormat() {
+
+	RB.ECSFD(RB.postFormat == true, "Ya se activo el postformateo.")
 
 	RB.postFormat = true
 }
@@ -40,17 +43,9 @@ func (RB *RBuffer) PostFormatBRspace() {
 //Lee una sola linea de buffer. (Columnas)
 func (RB *RBuffer) OneLineBRspace(line int64) {
 
-	if RB.spaceErrors != nil && *RB.sizeFileLine < line {
-
-		log.Fatalln("Error de buffer archivo: ", RB.url, " Linea final: ", line, " Numero de lineas del archivo: ", *RB.sizeFileLine)
-
-	}
-
-	if RB.rLines != nil {
-
-		log.Fatalln("Accion incompatible en paralelo, crea un nuevo RBuffer para mayor seguridad.")
-
-	}
+	RB.ECSFD(line < 0, "Se trato de leer una linea inferior a 0")
+	RB.ECSFD(*RB.sizeFileLine < line, "Se trato de leer una linea que no existe.")
+	RB.ECSFD(RB.rLines != nil, "Llamada dos veces a la misma funcion, Accion incompatible en paralelo, crea un nuevo buffer.")
 
 	RB.rLines = &rLines{
 		startLine: line,
@@ -59,26 +54,44 @@ func (RB *RBuffer) OneLineBRspace(line int64) {
 
 }
 
+//Lee dos lineas de buffer. (Columnas)
+func (RB *RBuffer) TwoLineBRspace(line int64) {
+
+	RB.ECSFD(line < 0, "Se trato de leer una linea inferior a 0")
+	RB.ECSFD(RB.typeBuff == buffBytes, "Funcion Incompatible con buffer de bytes")
+	RB.ECSFD(*RB.sizeFileLine < line, "Se trato de leer una linea que no existe.")
+	RB.ECSFD(RB.rLines != nil, "Llamada dos veces a la misma funcion, Accion incompatible en paralelo, crea un nuevo buffer.")
+
+	RB.rLines = &rLines{
+		startLine: line,
+		endLine:   line + 2,
+	}
+
+}
+
+
+//Lee tres lineas de buffer. (Columnas)
+func (RB *RBuffer) ThreeLineBRspace(line int64) {
+
+	RB.ECSFD(line < 0, "Se trato de leer una linea inferior a 0")
+	RB.ECSFD(RB.typeBuff == buffBytes, "Funcion Incompatible con buffer de bytes")
+	RB.ECSFD(*RB.sizeFileLine < line, "Se trato de leer una linea que no existe.")
+	RB.ECSFD(RB.rLines != nil, "Llamada dos veces a la misma funcion, Accion incompatible en paralelo, crea un nuevo buffer.")
+
+	RB.rLines = &rLines{
+		startLine: line,
+		endLine:   line + 3,
+	}
+}
+
 //Lee multiples lineas de buffer.(Columnas)
 func (RB *RBuffer) MultiLineBRspace(startLine int64, endLine int64) {
 
-	if RB.spaceErrors != nil && *RB.sizeFileLine < endLine {
-
-		log.Fatalln("Error de buffer archivo: ", RB.url, " Linea final: ", endLine, " Numero de lineas del archivo: ", *RB.sizeFileLine)
-
-	}
-
-	if RB.typeBuff == buffBytes {
-
-		log.Fatalln("Incompatible con buffer de bytes")
-
-	}
-
-	if RB.rLines != nil {
-
-		log.Fatalln("Accion incompatible en paralelo, crea un nuevo RBuffer para mayor seguridad.")
-
-	}
+	RB.ECSFD(startLine < 0, "Se trato de leer una linea inferior a 0")
+	RB.ECSFD(startLine > endLine, "El principio de linea no puede ser mayor que el final de linea.")
+	RB.ECSFD(*RB.sizeFileLine < endLine, "Se trato de leer una linea que no existe.")
+	RB.ECSFD(RB.typeBuff == buffBytes, "Funcion Incompatible con buffer de bytes")
+	RB.ECSFD(RB.rLines != nil, "Llamada dos veces a la misma funcion, Accion incompatible en paralelo, crea un nuevo buffer.")
 
 	RB.rLines = &rLines{
 		startLine: startLine,
@@ -90,17 +103,8 @@ func (RB *RBuffer) MultiLineBRspace(startLine int64, endLine int64) {
 //Lee todas las lineas de un archivo (Columnas)
 func (RB *RBuffer) AllLinesBRspace() {
 
-	if RB.typeBuff == buffBytes {
-
-		log.Fatalln("Incompatible con buffer de bytes")
-
-	}
-
-	if RB.rLines != nil {
-
-		log.Fatalln("Accion incompatible en paralelo, crea un nuevo RBuffer para mayor seguridad.")
-
-	}
+	RB.ECSFD(RB.typeBuff == buffBytes, "Funcion Incompatible con buffer de bytes")
+	RB.ECSFD(RB.rLines != nil, "Llamada dos veces a la misma funcion, Accion incompatible en paralelo, crea un nuevo buffer.")
 
 	RB.rLines = &rLines{
 		startLine: 0,
@@ -109,14 +113,32 @@ func (RB *RBuffer) AllLinesBRspace() {
 
 }
 
+func (RB *RBuffer) FirstLineBRspace() {
+
+	RB.ECSFD(RB.rLines != nil, "Llamada dos veces a la misma funcion, Accion incompatible en paralelo, crea un nuevo buffer.")
+
+	RB.rLines = &rLines{
+		startLine: 0,
+		endLine:   1,
+	}
+}
+
+//Lee la ultima linea del archivo, necesario bloqueo para garantizar que no se escriba
+//mientras se esta pidiendo la ultima linea (Columnas)
+func (RB *RBuffer) LastLineBRspace() {
+
+	RB.ECSFD(RB.rLines != nil, "Llamada dos veces a la misma funcion, Accion incompatible en paralelo, crea un nuevo buffer.")
+
+	RB.rLines = &rLines{
+		startLine: *RB.sizeFileLine ,
+		endLine:   *RB.sizeFileLine + 1,
+	}
+}
+
 //Lee un field sin rangos.(Campos)
 func (RB *RBuffer) NoRangeFieldsBRspace() {
 
-	if RB.rRangues != nil {
-
-		log.Fatalln("Accion incompatible en paralelo, crea un nuevo RBuffer para mayor seguridad.")
-
-	}
+	RB.ECSFD( RB.rRangues != nil, "Llamada dos veces a la misma funcion, Accion incompatible en paralelo, crea un nuevo buffer.")
 
 	RB.rRangues = &rRangues{
 		rangeBytes:  0,
@@ -128,11 +150,8 @@ func (RB *RBuffer) NoRangeFieldsBRspace() {
 //Lee un fields por rangos, de manera dinamica.(Campos)
 func (RB *RBuffer) RangeFieldsBRspace(RangeBytes int64) {
 
-	if RB.rRangues != nil {
-
-		log.Fatalln("Accion incompatible en paralelo, crea un nuevo RBuffer para mayor seguridad.")
-
-	}
+	RB.ECSFD( RB.rRangues != nil, "Llamada dos veces a la misma funcion, Accion incompatible en paralelo, crea un nuevo buffer.")
+	RB.ECSFD( RangeBytes < 0, "Rango inferior a 0.")
 
 	RB.rRangues = &rRangues{
 		rangeBytes:  RangeBytes,
@@ -142,29 +161,7 @@ func (RB *RBuffer) RangeFieldsBRspace(RangeBytes int64) {
 
 }
 
-//CAlcula el numero de rangos de un field o nil si no existe.
-func (RB *RBuffer) CalcRangeFieldBRspace(field string, RangeBytes int64) *int64 {
 
-	if RB.indexSizeFields != nil {
-
-		size, found := RB.indexSizeFields[field]
-		if found {
-
-			sizeTotal := size[1] - size[0]
-			if RangeBytes < sizeTotal && RangeBytes > 0 {
-
-				TotalRangue := sizeTotal / RB.rangeBytes
-				restoRangue := sizeTotal % RB.rangeBytes
-				if restoRangue != 0 {
-
-					TotalRangue += 1
-				}
-				return &TotalRangue
-			}
-		}
-	}
-	return nil
-}
 
 
 
@@ -173,45 +170,23 @@ func (RB *RBuffer) CalcRangeFieldBRspace(field string, RangeBytes int64) *int64 
 //data son los fields y las columnas que se desean.
 func (RB *RBuffer) BRspace(data ...string) {
 
-	if RB.spaceErrors != nil {
-
-		if int64(len(data)) > RB.lenColumns+RB.lenFields {
-
-			log.Fatalln("Error el archivo solo tiene: ", RB.lenColumns+RB.lenFields, "columnas y campos", RB.url)
-
-		}
-
-		if len(data) == 0 {
-
-			log.Fatalln("No se puede enviar un buffer vacio en:", RB.url)
-
-		}
-
-		if checkFileTypeBuffer(RB.typeBuff, buffBytes) {
-
-			if RB.spaceErrors != nil && len(data) > 1 {
-
-				log.Fatalln("El Buffer de Bytes solo es compatible con un unico campo.", RB.url)
-
-			}
-		}
-
-		for _, colname := range data {
-
-			if RB.spaceErrors != nil {
-
-				RB.checkColFil(colname, "Archivo: BRspace.go ; Funcion: BRspace")
-			}
-		}
-
-	}
+	RB.ECSFD(int64(len(data)) > (RB.lenColumns+RB.lenFields) , "El spacio no tiene tantos fields y Columnas.")
+	RB.ECSFD(len(data) == 0 , "No se puede enviar un buffer vacio.")
+	RB.ECSFD(RB.IsNotColFil(data...) , "Se ha iniciado un buffer de lectura con una columna o fields que no existe.")
+	RB.ECSFD(RB.rRangues != nil && RB.rLines != nil,"Usar buffer de lineas y buffer de rangos es propenso a errores.")
+	RB.ECSFD(RB.rRangues == nil && RB.rLines == nil,"Iniciaste un buffer vacio.")
+	
 
 	RB.colName = &data
+	var fieldsOk  bool = RB.indexSizeFields  != nil && RB.rRangues != nil
+	var columnsOk bool = RB.indexSizeColumns != nil && RB.rLines   != nil
 
 	//Buffer de bytes
 	if checkFileTypeBuffer(RB.typeBuff, buffBytes) {
 
-		if RB.indexSizeFields != nil && RB.rRangues != nil {
+		RB.ECSFD(len(data) > 1  , "El Buffer de Bytes solo es compatible con un unico campo.")
+	
+		if fieldsOk {
 
 			_, found := RB.indexSizeFields[(*RB.colName)[0]]
 			if found {
@@ -220,7 +195,7 @@ func (RB *RBuffer) BRspace(data ...string) {
 			}
 		}
 
-		if RB.indexSizeColumns != nil && RB.rLines != nil {
+		if columnsOk {
 
 			size, found := RB.indexSizeColumns[(*RB.colName)[0]]
 			if found {
@@ -234,12 +209,12 @@ func (RB *RBuffer) BRspace(data ...string) {
 
 	if checkFileTypeBuffer(RB.typeBuff, buffChan) {
 
-		if RB.indexSizeFields != nil && RB.rRangues != nil {
+		if fieldsOk {
 
 			RB.FieldBuffer = new([]byte)
 		}
 
-		if RB.indexSizeColumns != nil && RB.rLines != nil {
+		if columnsOk {
 
 			RB.Buffer = new([]byte)
 			*RB.Buffer = make([]byte, RB.sizeLine)
@@ -252,16 +227,18 @@ func (RB *RBuffer) BRspace(data ...string) {
 
 		RB.BufferMap = make(map[string][][]byte)
 
-		if RB.indexSizeFields != nil && RB.rRangues != nil {
+		if fieldsOk {
 
 			RB.FieldBuffer = new([]byte)
 		}
 
-		if RB.indexSizeColumns != nil && RB.rLines != nil {
+		if columnsOk {
 
 			RB.BufferMap["buffer"] = make([][]byte, 1)
 			RB.BufferMap["buffer"][0] = make([]byte, RB.sizeLine*(RB.endLine-RB.startLine))
 		}
 		return
 	}
+	
+	RB.ECSFD(true , "Comportamiento inesperado, sin coincidencias en buffer de lectura.")
 }

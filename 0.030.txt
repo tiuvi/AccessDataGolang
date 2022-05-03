@@ -1,13 +1,8 @@
-Lunes Tarde          - 8:30
-martes madrugada     - 3:30
-martes tarde         - 4 
-miercoles madrugada  - 5
-miercoles tarde      - 8:30
-jueves madrugada     - 1:30     -> 31 horas
-Jueves tarde         - 3        -> 34 horas            
-viernes              - 3:30 + 3 -> 40.5 horas
-sabado madrugada     - 3.30     -> 44 horas
-sabado tarde         - 4.30     -> 48.5
+Lunes Mañana - 3
+lunes tarde  - 2.5 
+lunes tarde  - 3,5
+
+semana - 9
 
 ACTUAL (REFLEXIONANDOLO)- Crear mapa de espacios globales
 
@@ -28,11 +23,36 @@ EN PROCESO      - Funciones para iniciar dac desde cualquier supPaquete
         HECHO  - Cambiar el nombre de BRspace y BWspace y agregar launch
         HECHO  - Funcion para iniciar los buffers ya que ahora la variable es privada.
 
+        HECHO - soporte para subcarpetas en los errores de la aplicacion.
+
         ACTUAL - Configurar todos los errores de la aplicación
+                HECHO - ospacecopilation.go
+                HECHO - core.go
+                HECHO - errors.go
+                HECHO - Fspace.go
+                HECHO - publicErrors.go
+                HECHO - publiclaunchbufferrspace
+                HECHO - publicluanchbufferBWspace
+                HECHO - publiclaunchdac
+                HECHO - publicSuportDac.go
+                HECHO - publiclaunchspace
+
+                falta - publiclaunchspacefile
+                spaceFile
+                uspace
+                readspace
+                writespace
+                ramsync
+                spaceTime
+                
+
+
+
+
 
         ACTUAL - Que abstraiga de crear un buffer de bit que sea on y off, y lo cree automaticamente.
         ACTUAL - funcion para modificar los tiempos de deffer file y disk
-        ACTUAL          - Funciones para gestionar los mapas globales
+        ACTUAL - Funciones para gestionar los mapas globales
 
 
 
@@ -44,7 +64,7 @@ IDEA - SubPaquete funciones que muestren los datos para iniciar un space o un fi
 IDEA - Añadir funciones de copiar un espacio en un nuevo espacio con mas columnas , mas fields o eliminando
 columnas o campos de manera mas facil y rapida, y haciendo un rename al final.
 
-
+FUNCIONALIDAD - Gestion de borrado de carpetas, borrado de archivos, truncado de archivos...
 
 
 
@@ -52,7 +72,7 @@ columnas o campos de manera mas facil y rapida, y haciendo un rename al final.
 IDEA          - Soporte para truncar archivos cuando se copilan como vaciar errores
 
 FUNCIONALIDAD - Crear las funciones de borrado de archivos, directorios, subdirectorios.
-
+Revisar - Posible inyeccion en la funcion que inicia los spaceFile ospace.
 
 IDEA - Leer campo y escribir en el como sumar un numero.ç
 IDEA - Funcion que escriba espacios al final

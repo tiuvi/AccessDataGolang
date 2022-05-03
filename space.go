@@ -119,6 +119,8 @@ import (
 /* Constantes */
 /**********************************************************************************************/
 
+const(welcome string = `Bienvend@ a DAC, Errores: ACTIVADOS, Documentacion: https://github.com/FrankyGolang/AccessDataGolang`)
+
 type fileNativeType int64
 const (
 	disk fileNativeType = 1 << iota
@@ -281,8 +283,7 @@ type spaceLen struct {
 
 type space struct {
 	*lDAC
-	//TE dice si chequear los archivos y en caso de que si se usa la superglobal SpaceErrors
-
+	isErrorFile bool
 	//Indica el estado del archivo en la aplicacion
 	fileNativeType fileNativeType
 	//Propiedades comunes a todos los archivos
@@ -292,6 +293,7 @@ type space struct {
 	extension string
 
 	sizeLine int64
+	sizeField int64
 
 	//Indice de fields
 	indexSizeFieldsArray []spaceLen
@@ -302,6 +304,7 @@ type space struct {
 	indexSizeColumnsArray []spaceLen
 	indexSizeColumns      map[string][2]int64
 	lenColumns            int64
+
 	//Formateadores antes y despues
 	hooker map[string]func(*[]byte)
 
@@ -380,9 +383,32 @@ type spacePermDisk struct {
 }
 
 
+/**********************************************************************************************/
+/* 
+space 
+spaceFile 
+spaceErrors -> pointer
+ Compatible con space y spaceFile, hereda url del dac space o spaceFile
+*/
+/**********************************************************************************************/
 
+type errorsDac struct  {
+	*spaceErrors
+	fileName string
+	fileFolder []string
 
+	typeError errorDac
+	url string
+	messageLog string
 
+	levelsUrl int
+	separatorLog string
+	//Cuantas funciones ascienden para localizar la funcion de llamada
+	runCaller int
+
+	timeNow *time.Time
+}
+var EDAC bool
 
 /**********************************************************************************************/
 /* 

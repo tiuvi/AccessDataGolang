@@ -8,149 +8,71 @@ import (
 	"time"
 )
 
-type ErrorsDac struct  {
-	*spaceErrors
-	fileName string
-	typeError errorDac
-	url string
-	messageLog string
-
-	levelsUrl int
-	separatorLog string
-
-	timeNow *time.Time
-}
 
 
 
+func (LDAC *lDAC)onErrorsLog(){
 
-/*
-HECHO
-var errorLog = &space{
-	FileNativeType: PermDisk,
-	Dir: autoload_options.Patch + "/errors/dac/",
-	extension: DacByte,
-	indexSizeFieldsArray: []spaceLen{
-		{"exceptionCount", 64,},
-		{"warningCount", 64,},
-		{"fatalCount", 64,},
-	},
-	indexSizeColumnsArray: []spaceLen{
-		{"date",      20,},
-		{"typeError", 20,},
-		{"fileName",  20,},
-		{"funcion",   35,},
-		{"line",       6,},
-		{"endLine1",   1,},
+	//errorLog
+	space := globUrlDac.NewSpace()
+	space.OnErrorFile()
+	space.NewTimeFileDisk()
+	space.NewDacByte()
+	space.SetSubDir("errors","dac","errors")
+	space.NewField("exceptionCount", 64)
+	space.NewField("warningCount", 64)
+	space.NewField("fatalCount", 64)
 
-		{"message",   64,},
-		{"endLine2",   1,},
+	space.NewColumnByte("date", 20)
+	space.NewColumnByte("typeError", 20)
+	space.NewColumnByte("fileName", 20)
+	space.NewColumnByte("funcion", 35)
+	space.NewColumnByte("line", 6)
+	space.NewColumnByte("endLine1", 1)
 
-		{"DAC", 64,},
-		{"endLine3",   2,},
-	},
-}
-hecho
-var memoryLog = &space{
-	FileNativeType: PermDisk,
-	Dir: autoload_options.Patch + "/errors/dac/",
-	extension: DacByte,
-	indexSizeColumnsArray: []spaceLen{
-		{"date",      20,},
-		{"fileName",  20,},
-		{"funcion",   35,},
-		{"line",       6,},
-		{"endLine1",   1,},
+	space.NewColumnByte("message", 64)
+	space.NewColumnByte("endLine2", 1)
 
-		{"DAC", 64,},
-		{"endLine2",   1,},
-
-		{"Alloc",   20,},
-		{"totalAlloc", 20,},
-		{"memSys", 20,},
-		{"objLargerMemory", 20,},
-		{"countGC", 20,},
-		{"endLine3",   2,},
-	},
-}
-
-var timeLog = &space{
-	FileNativeType: PermDisk,
-	Dir: autoload_options.Patch + "/errors/dac/",
-	extension: DacByte,
-	indexSizeColumnsArray: []spaceLen{
-		{"date",      20,},
-		{"fileName",  20,},
-		{"funcion",   35,},
-		{"line",       6,},
-		{"endLine1",   1,},
-		
-		{"DAC", 64,},
-		{"nanosecond",   15,},
-		{"endLine2",   2,},
-	},
-}
-*/
-func (LDAC *lDAC)OnErrorsLog(){
-
-		//errorLog
-		space := globUrlDac.NewSpace()
-		space.NewTimeFileDisk()
-		space.NewDacByte()
-		space.SetDir("/errors/dac/")
-
-		space.NewField("exceptionCount", 64)
-		space.NewField("warningCount", 64)
-		space.NewField("fatalCount", 64)
-
-		space.NewColumnByte("date", 20)
-		space.NewColumnByte("typeError", 20)
-		space.NewColumnByte("fileName", 20)
-		space.NewColumnByte("funcion", 35)
-		space.NewColumnByte("line", 6)
-		space.NewColumnByte("endLine1", 1)
-
-		space.NewColumnByte("message", 64)
-		space.NewColumnByte("endLine2", 1)
-
-		space.NewColumnByte("DAC", 64)
-		space.NewColumnByte("endLine3", 2)
-		space.OSpaceInit()
-		errorLog = space.SetPublicSpace()
+	space.NewColumnByte("DAC", 64)
+	space.NewColumnByte("endLine3", 2)
+	space.OSpaceInit()
+	errorLog = space.SetPublicSpace()
 
 
 	
-		//memoryLog
-		space = globUrlDac.NewSpace()
-		space.NewTimeFileDisk()
-		space.NewDacByte()
-		space.SetDir("/errors/dac/")
+	//memoryLog
+	space = globUrlDac.NewSpace()
+	space.OnErrorFile()
+	space.NewTimeFileDisk()
+	space.NewDacByte()
+	space.SetSubDir("errors","dac","memory")
 
-		space.NewColumnByte("date", 20)
-		space.NewColumnByte("fileName", 20)
-		space.NewColumnByte("funcion", 35)
-		space.NewColumnByte("line", 6)
-		space.NewColumnByte("endLine1", 1)
+	space.NewColumnByte("date", 20)
+	space.NewColumnByte("fileName", 20)
+	space.NewColumnByte("funcion", 35)
+	space.NewColumnByte("line", 6)
+	space.NewColumnByte("endLine1", 1)
 
-		space.NewColumnByte("DAC", 64)
-		space.NewColumnByte("endLine2", 1)
+	space.NewColumnByte("DAC", 64)
+	space.NewColumnByte("endLine2", 1)
 
-		space.NewColumnByte("Alloc", 20)
-		space.NewColumnByte("totalAlloc", 20)
-		space.NewColumnByte("memSys", 20)
-		space.NewColumnByte("objLargerMemory", 20)
-		space.NewColumnByte("countGC", 20)
-		space.NewColumnByte("endLine3", 2)
-		space.OSpaceInit()
-		memoryLog = space.SetPublicSpace()
-	
+	space.NewColumnByte("Alloc", 20)
+	space.NewColumnByte("totalAlloc", 20)
+	space.NewColumnByte("memSys", 20)
+	space.NewColumnByte("objLargerMemory", 20)
+	space.NewColumnByte("countGC", 20)
+	space.NewColumnByte("endLine3", 2)
+	space.OSpaceInit()
+	memoryLog = space.SetPublicSpace()
+
 
 
 	//memoryLog
 	space = globUrlDac.NewSpace()
+	space.OnErrorFile()
 	space.NewTimeFileDisk()
 	space.NewDacByte()
-	space.SetDir("/errors/dac/")
+	space.SetSubDir("errors","dac","timers")
 
 	space.NewColumnByte("date", 20)
 	space.NewColumnByte("fileName", 20)
@@ -173,7 +95,7 @@ func negritaTerminal(str string)string{
 	return strings.Join( []string{"\u001b[01m" ,ColorWhite, "\u001b[40m",   str , Reset} , "")
 }
 
-func (EDAC *ErrorsDac ) uint64ToString(uintData uint64)string {
+func (EDAC *errorsDac ) uint64ToString(uintData uint64)string {
 
 	
 
@@ -206,148 +128,46 @@ func (EDAC *ErrorsDac ) uint64ToString(uintData uint64)string {
 
 
 
-func (sP *space )ErrorSpaceDefault(typeError errorDac, messageLog string){
 
-	EDAC := &ErrorsDac {
-		spaceErrors: sP.spaceErrors,
-		fileName: "",
-		typeError: typeError,
-		url: sP.dir,
-		messageLog: messageLog,
-		levelsUrl:    sP.levelsUrl ,
-		separatorLog:  sP.separatorLog,
-		timeNow: nil,
+
+
+func (EDAC *errorsDac ) logNewError(){
+
+
+	/*
+	* Variables para iniciar tanto el log como el archivo.
+	* 
+	* Fin del tiempo cronometrado
+	* Nombre de archivo, funcion, linea y url dac
+	* Leer memoria actual en uso
+	*
+	*/
+	
+
+	//Finalizacion del log de time
+	var elapsed int64
+	if (EDAC.logFileTimeUse || EDAC.logTimeUse) && EDAC.timeNow != nil  {
+		
+		elapsed = time.Since(*EDAC.timeNow).Nanoseconds()
+
 	}
-	EDAC.LogNewError()
-}
 
-func (sP *space ) NewErrorSpace(fileName string, typeError errorDac, messageLog string){
-
-	EDAC := &ErrorsDac {
-		spaceErrors: sP.spaceErrors,
-		fileName: fileName,
-		typeError: typeError,
-		url: sP.dir,
-		messageLog: messageLog,
-		levelsUrl:    sP.levelsUrl ,
-		separatorLog:  sP.separatorLog,
-		timeNow: nil,
+	//Inicio de los datos de Archivo, funcion, linea y url del dac desde donde se llama.
+	ptr , _, _, ok  := runtime.Caller(EDAC.runCaller)
+	if !ok {
+		return
 	}
-	EDAC.LogNewError()
-}
-
-func (sF *spaceFile ) ErrorSpaceFileDefault(typeError errorDac, messageLog string){
-
-	EDAC := &ErrorsDac {
-		spaceErrors: sF.spaceErrors,
-		fileName: "",
-		typeError: typeError,
-		url: sF.url,
-		messageLog: messageLog,
-		levelsUrl:    sF.levelsUrl ,
-		separatorLog:  sF.separatorLog,
-		timeNow: nil,
-	}
-	EDAC.LogNewError()
-}
-
-func (sF *spaceFile ) NewErrorSpace(fileName string, typeError errorDac, messageLog string){
-
-	EDAC := &ErrorsDac {
-		spaceErrors: sF.spaceErrors,
-		fileName: fileName,
-		typeError: typeError,
-		url: sF.url,
-		messageLog: messageLog,
-		levelsUrl:    sF.levelsUrl ,
-		separatorLog:  sF.separatorLog,
-		timeNow: nil,
-	}
-	EDAC.LogNewError()
-}
-
-func (sP *space ) LogDeferTimeMemoryDefault(timeNow time.Time){
-
-	EDAC := &ErrorsDac {
-		spaceErrors: sP.spaceErrors,
-		fileName: "",
-		typeError: TimeMemory,
-		url: sP.dir,
-		messageLog: "",
-		levelsUrl:    sP.levelsUrl ,
-		separatorLog:  sP.separatorLog,
-		timeNow: &timeNow,
-	}
-	EDAC.LogNewError()
-
-}
-
-func (sP *space ) NewLogDeferTimeMemory(fileName string, timeNow time.Time){
-
-	EDAC := &ErrorsDac {
-		spaceErrors: sP.spaceErrors,
-		fileName: fileName,
-		typeError: TimeMemory,
-		url: sP.dir,
-		messageLog: "",
-		levelsUrl:    sP.levelsUrl ,
-		separatorLog:  sP.separatorLog,
-		timeNow: &timeNow,
-	}
-	EDAC.LogNewError()
-
-}
-
-func (sF *spaceFile ) LogDeferTimeMemorySF(timeNow time.Time){
-
-	EDAC := &ErrorsDac {
-		spaceErrors: sF.spaceErrors,
-		fileName: "",
-		typeError: TimeMemory,
-		url: sF.url,
-		messageLog: "",
-		levelsUrl:    sF.levelsUrl ,
-		separatorLog:  sF.separatorLog,
-		timeNow: &timeNow,
-	}
-	EDAC.LogNewError()
-
-}
-
-
-
-func (sF *spaceFile ) NewLogDeferTimeMemorySF(fileName string, timeNow time.Time){
-
-	EDAC := &ErrorsDac {
-		spaceErrors: sF.spaceErrors,
-		fileName: fileName,
-		typeError: TimeMemory,
-		url: sF.url,
-		messageLog: "",
-		levelsUrl:    sF.levelsUrl ,
-		separatorLog:  sF.separatorLog,
-		timeNow: &timeNow,
-	}
-	EDAC.LogNewError()
-
-}
-
-
-
-func (EDAC *ErrorsDac ) LogNewError(){
-
-	date := time.Now()
+	date       := time.Now()
 	dateString := date.Format("02/01/2006 15:04:05")
 
+	firstFrame     := runtime.CallersFrames([]uintptr{ptr})
+	frame, _       := firstFrame.Next()
 
-	ptr , _, _, _ := runtime.Caller(2)
-	firstFrame := runtime.CallersFrames([]uintptr{ptr})
-	frame, _ := firstFrame.Next()
-	
 	fileString     := frame.File
 	funcNameString := frame.Function
 	urlNameString  := EDAC.url
 	lineStr        := strconv.Itoa(frame.Line)
+
 
 	fileDir    := strings.Split(frame.File, "/")
 	if len(fileDir) > 2 {
@@ -369,20 +189,31 @@ func (EDAC *ErrorsDac ) LogNewError(){
 		urlNameString = strings.Join(urlName[len(urlName)-EDAC.levelsUrl:] , "/")
 	}
 
-	if EDAC.logFileError && EDAC.typeError != MessageCopilation && EDAC.timeNow == nil{
-	
-		if len(EDAC.fileName) == 0{
 
-			go WriteNewError("message",dateString, EDAC.typeError ,fileString ,funcNameString , lineStr , EDAC.messageLog , urlNameString )
+	//Inicio de la memoria.
+	var memoryStats runtime.MemStats
+	var allocString string
+	var totalAlloc string
+	var memSys string
+	var bigObjSize string
+	var gcCount string
+	if (EDAC.logMemoryUse || EDAC.logFileMemoryUse) && EDAC.timeNow != nil {
 
-		}else{
-
-			go WriteNewError(EDAC.fileName + "Message" ,dateString, EDAC.typeError ,fileString ,funcNameString , lineStr , EDAC.messageLog , urlNameString )
-
-		}
-	
+		runtime.ReadMemStats(&memoryStats)
+		allocString = EDAC.uint64ToString(memoryStats.Alloc)
+		totalAlloc  = EDAC.uint64ToString(memoryStats.TotalAlloc)
+		memSys      = EDAC.uint64ToString(memoryStats.Sys)
+		bigObjSize  = EDAC.uint64ToString(uint64(memoryStats.BySize[60].Size))
+		gcCount     = EDAC.uint64ToString(uint64(memoryStats.NumGC))
 	}
 
+	/*
+	* Funciones de log de errores asincronas excepto el log fatal.
+	* Log Fatal
+	* Log consola
+	* Log memory
+	* Log time
+	*/
 
 	var logString string
 	var nT func(string)string = negritaTerminal
@@ -408,7 +239,7 @@ func (EDAC *ErrorsDac ) LogNewError(){
 		nT("Ruta DAC:"), " " , urlNameString, "\n\r",
 		nT("Mensaje:"), " " , EDAC.messageLog, "\n\r" } , "")
 	
-		if EDAC.logFatalErrors  {
+		if EDAC.logFatalErrors && (EDAC.typeError == Fatal || EDAC.typeError == MessageCopilation) {
 
 			log.Fatalln(logString )
 	
@@ -421,37 +252,6 @@ func (EDAC *ErrorsDac ) LogNewError(){
 		}
 	}
 
-
-	var memoryStats runtime.MemStats
-	var allocString string
-	var totalAlloc string
-	var memSys string
-	var bigObjSize string
-	var gcCount string
-	if (EDAC.logMemoryUse || EDAC.logFileMemoryUse) && EDAC.timeNow != nil {
-
-		runtime.ReadMemStats(&memoryStats)
-		allocString = EDAC.uint64ToString(memoryStats.Alloc)
-		totalAlloc  = EDAC.uint64ToString(memoryStats.TotalAlloc)
-		memSys      = EDAC.uint64ToString(memoryStats.Sys)
-		bigObjSize  = EDAC.uint64ToString(uint64(memoryStats.BySize[60].Size))
-		gcCount     = EDAC.uint64ToString(uint64(memoryStats.NumGC))
-	}
-
-	//Log de memoria y archivo de memoria
-	if EDAC.logFileMemoryUse && EDAC.typeError != MessageCopilation && EDAC.timeNow != nil {
-
-		if len(EDAC.fileName) == 0{
-
-			go WriteNewMemoryUse("memory",dateString, fileString ,funcNameString , lineStr , urlNameString, 
-			allocString, totalAlloc,memSys , bigObjSize, gcCount )
-		}else{
-
-			go WriteNewMemoryUse(EDAC.fileName + "memory",dateString, fileString ,funcNameString , lineStr , urlNameString, 
-			allocString, totalAlloc,memSys , bigObjSize, gcCount )
-		}
-	
-	}
 
 	// For info on each, see: https://golang.org/pkg/runtime/#MemStats
 	if EDAC.logMemoryUse && EDAC.timeNow != nil {
@@ -471,29 +271,6 @@ func (EDAC *ErrorsDac ) LogNewError(){
 
 	}
 
-
-	//Variables para iniciar tanto el log como el archivo.
-	var elapsed int64
-	if (EDAC.logFileTimeUse || EDAC.logTimeUse) && EDAC.timeNow != nil  {
-		
-		elapsed = time.Since(*EDAC.timeNow).Nanoseconds()
-
-	}
-
-	//Log de tiempo transcurrido y archivo de tiempo transcurrido
-	if EDAC.logFileTimeUse && EDAC.typeError != MessageCopilation && EDAC.timeNow != nil {
-
-		if len(EDAC.fileName) == 0{
-
-			go WriteNewTimeUse("time",dateString, fileString ,funcNameString , lineStr , urlNameString, EDAC.uint64ToString(uint64(elapsed)) )
-
-		}else{
-
-			go WriteNewTimeUse(EDAC.fileName + "Time",dateString, fileString ,funcNameString , lineStr , urlNameString, EDAC.uint64ToString(uint64(elapsed)) )
-
-		}
-	}
-
 	if EDAC.logTimeUse && EDAC.timeNow != nil {
 
 		logString := strings.Join([]string{ 
@@ -504,22 +281,52 @@ func (EDAC *ErrorsDac ) LogNewError(){
 			go log.Println(logString)
 	}
 	
+	/*
+	* Funciones de escritura de archivos asincronas
+	* - writeNewError
+	* - writeNewTimeUse
+	* - writeNewMemoryUse
+	*/
+
+	//Log de errores
+	if EDAC.logFileError && EDAC.typeError != MessageCopilation && EDAC.timeNow == nil{
+	
+		go EDAC.writeNewError(dateString, EDAC.typeError ,fileString ,funcNameString , lineStr , EDAC.messageLog , urlNameString )
+
+	}
+
+	//Log de tiempo transcurrido y archivo de tiempo transcurrido
+	if EDAC.logFileTimeUse && EDAC.typeError != MessageCopilation && EDAC.timeNow != nil {
+
+		go EDAC.writeNewTimeUse(dateString, fileString ,funcNameString , lineStr , urlNameString, EDAC.uint64ToString(uint64(elapsed)) )
+
+	}
+
+	//Log de memoria y archivo de memoria
+	if EDAC.logFileMemoryUse && EDAC.typeError != MessageCopilation && EDAC.timeNow != nil {
+
+		go EDAC.writeNewMemoryUse(dateString, fileString ,funcNameString , lineStr , urlNameString, 
+		allocString, totalAlloc,memSys , bigObjSize, gcCount )
+
+	}
 }
 
 
 
-func WriteNewTimeUse(spaceName string, date string,fileName string,funcion string, line string, url string , nanosecond string) {
+
+
+func (EDAC *errorsDac ) writeNewTimeUse( date string,fileName string,funcion string, line string, url string , nanosecond string) {
 
 	var bufferW *WBuffer
 	var file *spaceFile
 
 
-	file = timeLog.OSpace(spaceName)
+	file = timeLog.OSpace(EDAC.fileName + "Time", EDAC.fileFolder...)
 
 
 	if file != nil {
 
-		bufferW = file.NewWBspace(buffMap)
+		bufferW = file.NewWriterMapBytes()
 		
 	}
 
@@ -550,17 +357,17 @@ func WriteNewTimeUse(spaceName string, date string,fileName string,funcion strin
 
 }
 
-func WriteNewMemoryUse(spaceName string,date string, fileName string,funcion string, line string, url string, 
+func (EDAC *errorsDac ) writeNewMemoryUse(date string, fileName string,funcion string, line string, url string, 
 alloc string, totalAlloc string,memSys string, bigObjSize string, gcCount string){
 
 	var bufferW *WBuffer
 	var file *spaceFile
 
-	file = memoryLog.OSpace(spaceName)
+	file = memoryLog.OSpace(EDAC.fileName + "Memory", EDAC.fileFolder...)
 
 	if file != nil {
 
-		bufferW = file.NewWBspace(buffMap)
+		bufferW = file.NewWriterMapBytes()
 		
 	}
 
@@ -605,17 +412,17 @@ alloc string, totalAlloc string,memSys string, bigObjSize string, gcCount string
 
 }
 
-func WriteNewError(spaceName string, date string, typeError errorDac,fileName string,funcion string, line string, messageLog string, url string ) {
+func (EDAC *errorsDac ) writeNewError( date string, typeError errorDac,fileName string,funcion string, line string, messageLog string, url string ) {
 
 
 	var bufferW *WBuffer
 	var file *spaceFile
 
-	file = errorLog.OSpace(spaceName)
+	file = errorLog.OSpace(EDAC.fileName + "Errors", EDAC.fileFolder...)
 
 	if file != nil {
 
-		bufferW = file.NewWBspace(buffMap)
+		bufferW = file.NewWriterMapBytes()
 		
 	}
 
@@ -649,49 +456,3 @@ func WriteNewError(spaceName string, date string, typeError errorDac,fileName st
 }
 
 
-
-//check: revisa las columnas y los fields haber si existen como columna si no existe da error fatal.
-//#core.go/check
-func (sP *space)checkColFil(name string, err string){
-
-	mensaje := err + " ; La columna o field: " + name + " no existe en el archivo ; " + sP.dir
-
-	if sP.indexSizeColumns != nil {
-
-		_, found := sP.indexSizeColumns[name]
-		if !found {
-		
-			if sP.indexSizeFields != nil {
-
-				_, found := sP.indexSizeFields[name]
-				if !found {
-		
-					log.Fatalln(mensaje)
-				
-				}
-				return
-			}
-		}
-	}
-
-	if sP.indexSizeColumns == nil {
-
-		if sP.indexSizeFields != nil {
-
-			_, found := sP.indexSizeFields[name]
-			if !found {
-	
-				log.Fatalln(mensaje)
-			
-			}
-			return
-		}
-	}
-
-	if sP.indexSizeColumns == nil && sP.indexSizeFields == nil {
-
-		log.Fatalln("El archivo no tiene columnas o campos que sincronizar." + sP.dir)
-
-	}
-
-}

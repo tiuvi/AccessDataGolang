@@ -3,9 +3,10 @@ package bd
 import (
 	"log"
 	"os"
+	"strconv"
 )
 
-
+var formatBool = strconv.FormatBool
 
 //Inicia DAC y crea la carpeta para la aplicación
 func NewLaunchDac() *lDAC {
@@ -25,12 +26,30 @@ func (LDAC *lDAC) OnErrors() {
 	LDAC.spaceErrors = new(spaceErrors)
 	LDAC.levelsUrl = 8
 	LDAC.separatorLog = " "
+	EDAC = true
 }
 
 //Desactiva los errores.
 func (LDAC *lDAC) OffErrors() {
 
 	LDAC.spaceErrors = nil
+	EDAC = false
+}
+//Inicia la activacion de errores.
+func (LDAC *lDAC) OnEvalErrors() {
+
+	if LDAC.spaceErrors == nil {
+
+		LDAC.OnErrors()
+	}
+
+	EDAC = true
+}
+
+//Desactiva la evaluacion de los errores.
+func (LDAC *lDAC) OffEvalErrors() {
+
+	EDAC = false
 }
 
 //Activa logConsoleErrors
@@ -184,6 +203,7 @@ func (LDAC *lDAC) OnAllErrors() {
 	LDAC.OnLogTimeOpenFile()
 	LDAC.OnLogMemoryUse()
 	LDAC.OnLogFileMemoryUse()
+	EDAC = true
 }
 
 func (LDAC *lDAC) OffAllErrors() {
@@ -196,11 +216,13 @@ func (LDAC *lDAC) OffAllErrors() {
 	LDAC.OffLogTimeOpenFile()
 	LDAC.OffLogMemoryUse()
 	LDAC.OffLogFileMemoryUse()
+
 }
 
 /**********************************************************************************************/
 /* Funciones: lDAC  */
 /**********************************************************************************************/
+
 
 func (LDAC *lDAC) OnCreateDACFolder() {
 
@@ -228,19 +250,8 @@ func (LDAC *lDAC) OffGoDACFolder() {
 
 func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 
-	if len(LDAC.globalDACFolder) > 0 {
-
-		log.Fatal("La ruta DAC ya esta establecida en: ", "\r\n",
-			LDAC.globalDACFolder, "\r\n",
-			"¿Correcto? Revisa - bd.SetGlobalDACFolder")
-	}
-
-	if len(path) == 0 {
-
-		log.Fatal("Estas enviando una cadena vacia.", "\r\n",
-			"¿Correcto? Revisa - bd.SetGlobalDACFolder")
-
-	}
+	LDAC.ELDAC(len(LDAC.globalDACFolder) > 0 ,"La ruta DAC ya esta establecida.")
+	LDAC.ELDAC(len(path) == 0 ,"patch vacio")
 
 	//Filtrado solo se permite letras mayusculas, letras minusculas, numeros y barras.
 	path = regexPathGlobal(path)
@@ -256,25 +267,20 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 	path += "DAC/"
 
 	//Verificamos la ruta antes de crear la carpeta
-	if !LDAC.goDACFolder {
+	LDAC.ELDAC(!LDAC.goDACFolder ,"¿Correcto?: " + path + " |Activa - bd.OnGoDACFolder()")
 
-		log.Fatal("Chequea la ruta final antes de iniciar DAC: ", "\r\n",
-			path, "\r\n",
-			"¿Correcto? Activa - bd.OnGoDACFolder()")
-
-	}
 
 	//Verificamos si el archivo existe y si no existe lo creamos.
 	_, err := os.Stat(path)
 	if err != nil {
 
-		if os.IsNotExist(err) && !LDAC.newDACFolder {
 
-			log.Fatal("No existe la ruta a la carpeta DAC, o has introducido una ruta incorrecta.", "\r\n",
-				"¿Si te gustaria crear la carpeta DAC? , Usa onCreateDACFolder() para crear la carpeta en la ruta seleccionada.")
+		LDAC.ELDAC(os.IsNotExist(err) && !LDAC.newDACFolder ,
+		"No existe la ruta a la carpeta DAC, o has introducido una ruta incorrecta." + 
+		"\r\n" +
+		"¿Crear nueva ruta? , |Activa onCreateDACFolder() para crear la carpeta en la ruta seleccionada.")
 
-		}
-
+		
 		if os.IsNotExist(err) {
 
 			err = os.MkdirAll(path, 0666)
@@ -283,10 +289,6 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 				log.Fatal("Error al crear la carpeta DAC ", err)
 
 			}
-
-			log.Println("Genial se a creado la carpeta dac en: ", "\r\n",
-				path)
-
 		}
 
 	}
@@ -300,26 +302,21 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 		globUrlDac = LDAC
 
 		go dacTimerCloserDeferFile()
-	
+
 		go dacTimerCloserDiskFile()
 
 		Space = make(map[string]*space)
 
 		//Activacion de archivos de errores de DAC
-		globUrlDac.OnErrorsLog()
+		globUrlDac.onErrorsLog()
 	}
 
 }
 
 func (LDAC *lDAC) GetGlobalDACFolder() string {
-
-	if len(LDAC.globalDACFolder) == 0 {
-
-		log.Fatal("La ruta DAC no esta establecida en: ", "\r\n",
-			LDAC.globalDACFolder, "\r\n",
-			"¿Correcto? Activa - bd.SetGlobalDACFolder")
-	}
-
+	
+	LDAC.ELDAC(len(LDAC.globalDACFolder) == 0,"La ruta DAC no esta establecida.")
+	
 	return LDAC.globalDACFolder
 
 }

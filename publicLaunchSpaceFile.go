@@ -3,41 +3,39 @@ package bd
 import "log"
 
 
-func (obj *space ) OSpace( name string ,folder... string)*spaceFile  {
+func (SP *space ) OSpace( name string ,folder... string)*spaceFile  {
 
 
-	if !obj.compilation {
+	if EDAC &&
+	SP.ECSD( !SP.compilation ,"Este espacio no se ha copilado"){}
 
-		log.Fatalln("Este espacio no se ha copilado, copilar mejora la seguridad.", obj.dir)
-
-	}
 
 
 	if len(name) == 0 {
 
-		log.Fatalln("Nombre de archivo vacio en: ", obj.dir, obj.extension)
+		log.Fatalln("Nombre de archivo vacio en: ", SP.dir, SP.extension)
 
 	}
 
 
-	if checkFileNativeType(obj.fileNativeType, disk ){
+	if checkFileNativeType(SP.fileNativeType, disk ){
 
-		return obj.ospaceDisk(name, folder)
-
-	} 
-
-	if checkFileNativeType(obj.fileNativeType, deferDisk ){
-
-		return obj.ospaceDeferDisk(name, folder)
+		return SP.ospaceDisk(name, folder)
 
 	} 
 
-	if checkFileNativeType(obj.fileNativeType, permDisk ){
+	if checkFileNativeType(SP.fileNativeType, deferDisk ){
 
-		return obj.ospacePermDisk(name, folder)
+		return SP.ospaceDeferDisk(name, folder)
+
+	} 
+
+	if checkFileNativeType(SP.fileNativeType, permDisk ){
+
+		return SP.ospacePermDisk(name, folder)
 
 	}
 
-	log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", obj.dir,obj.extension)
+	log.Fatalln("Es obligatorio definir el FileNativeType de la estructura. ", SP.dir,SP.extension)
 	return nil
 }

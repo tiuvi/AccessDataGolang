@@ -1,126 +1,126 @@
 package bd
 
-import "log"
+import ("strings")
 
 func (LDAC *lDAC) NewSpace() *space {
 
-	if len(LDAC.globalDACFolder) == 0 {
-		//faTAL
-	}
-
+	if EDAC && 
+	LDAC.ELDAC(len(LDAC.globalDACFolder) == 0,"La ruta DAC no esta establecida."){}
+	
 	lSpace := new(space)
 	lSpace.lDAC = LDAC
 
 	return lSpace
 }
 
+func (SP *space) OnErrorFile() {
+
+	if EDAC && 
+	SP.ECSD(SP.isErrorFile == true, "Este espacio ya fue definido como un archivo de error."){}
+	
+	SP.isErrorFile = true
+
+}
+
 func (SP *space) NewTimeFileDisk() {
 
-	if SP.fileNativeType > 0 {
-
-		log.Fatal("Propiedad filenativetype ya establecida e inmutable.")
-
-	}
-
+	if EDAC && 
+	SP.ECSD(SP.fileNativeType > 0 , "Propiedad filenativetype ya establecida e inmutable."){}
+	
 	SP.fileNativeType = disk
 }
 
 func (SP *space) NewTimeFileDeferDisk() {
 
-	if SP.fileNativeType > 0 {
-
-		log.Fatal("Propiedad filenativetype ya establecida e inmutable.")
-
-	}
+	if EDAC && 
+	SP.ECSD(SP.fileNativeType > 0 , "Propiedad filenativetype ya establecida e inmutable."){}
+	
 
 	SP.fileNativeType = deferDisk
 }
 
 func (SP *space) NewTimeFilePermDisk() {
 
-	if SP.fileNativeType > 0 {
-
-		log.Fatal("Propiedad filenativetype ya establecida e inmutable.")
-
-	}
+	if EDAC && 
+	SP.ECSD(SP.fileNativeType > 0 , "Propiedad filenativetype ya establecida e inmutable."){}
+	
 
 	SP.fileNativeType = permDisk
 }
 
-func (SP *space) SetDir(dir string) {
+func (SP *space) SetDir(dirName string) {
 
-	if len(SP.dir) > 0 {
+	if EDAC && 
+	SP.ECSD( len(SP.dir) > 0 , "Propiedad dir ya establecida e inmutable.") ||
+	SP.ECSD( len(dirName) == 0 , "Estas enviando una cadena vacia."){}
+	
+	dirName = regexPathGlobalNoSlash(dirName)
 
-		log.Fatal("Propiedad dir ya establecida e inmutable.")
-
-	}
-
-	if len(dir) == 0 {
-
-		log.Fatal("Estas enviando una cadena vacia.", "\r\n",
-			"¿Correcto? Revisa - bd.SetGlobalDACFolder")
-
-	}
-	dir = regexPathGlobal(dir)
-
-	//Añadimos / barra al final si no la lleva
-	if dir[len(dir)-1:] != "/" {
-
-		dir += "/"
-
-	}
-
-	SP.dir = SP.globalDACFolder + dir
+	SP.dir =  strings.Join([]string{SP.globalDACFolder , dirName , "/" } , "")
 
 }
 
+func (SP *space) SetSubDir(dir ...string) {
+
+	if EDAC && 
+	SP.ECSD( len(SP.dir) > 0 , "Propiedad dir ya establecida e inmutable.") ||
+	SP.ECSD( len(dir) == 0 , "Estas enviando una cadena vacia."){}
+	
+	SP.dir = SP.globalDACFolder
+	
+	for _ , dirNameStr := range dir {
+		
+		regDirName := regexPathGlobalNoSlash(dirNameStr)
+		if EDAC && 
+		SP.ECSD( len(regDirName) == 0 , "Estas enviando una cadena vacia en un array."){}
+
+		SP.dir = strings.Join([]string{SP.dir ,regDirName , "/"}, "" )
+	
+	}
+
+
+}
+
+
 func (SP *space) NewDacByte() {
 
-	if len(SP.extension) > 0 {
+	if EDAC && 
+	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
 
-		log.Fatal("Propiedad extension ya establecida e inmutable.")
-
-	}
 	SP.extension = dacByte
 
 }
 
 func (SP *space) NewDacBit() {
 
-	if len(SP.extension) > 0 {
+	if EDAC && 
+	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
 
-		log.Fatal("Propiedad extension ya establecida e inmutable.")
-
-	}
 	SP.extension = dacBit
 
 }
 
 func (SP *space) NewField(name string, size int64) {
 
-	if SP.indexSizeFields != nil {
+	if EDAC && 
+	SP.ECSD( SP.indexSizeFields != nil , "Propiedad indexSizeFields ya establecida e inmutable.") ||
+	SP.ECSD( size < 1, "Size no puede ser menor o igual a 0."){}
 
-		log.Fatal("Propiedad indexSizeFields ya establecida e inmutable.")
-
-	}
-
-	if size < 1 {
-
-		log.Fatal("Size no puede ser menor o igual a 0.")
-
-	}
 
 	if SP.indexSizeFieldsArray == nil {
 
 		SP.indexSizeFieldsArray = make([]spaceLen, 0)
 
 	}
-
+	
 	SP.indexSizeFieldsArray = append(SP.indexSizeFieldsArray, spaceLen{name, size})
 
 }
 
 func (SP *space) GetNameField() (fields []string) {
+
+	if EDAC && 
+	SP.ECSD( SP.indexSizeFields == nil , "No se han iniciado campos en este espacio."){}
 
 	for _, spaceLen := range SP.indexSizeFieldsArray {
 
@@ -131,6 +131,9 @@ func (SP *space) GetNameField() (fields []string) {
 }
 
 func (SP *space) FieldSizeTotal() (lenField int64) {
+
+	if EDAC && 
+	SP.ECSD( SP.indexSizeFields == nil , "No se han iniciado campos en este espacio."){}
 
 	for _, spaceLen := range SP.indexSizeFieldsArray {
 
@@ -143,23 +146,12 @@ func (SP *space) FieldSizeTotal() (lenField int64) {
 
 func (SP *space) NewColumnByte(name string, size int64) {
 
-	if SP.indexSizeColumns != nil {
 
-		log.Fatal("Propiedad indexSizeColumns ya establecida e inmutable.")
+	if EDAC && 
+	SP.ECSD( SP.indexSizeColumns != nil , "Propiedad indexSizeColumns ya establecida e inmutable.") ||
+	SP.ECSD( size < 1 , "Size no puede ser menor o igual a 0.") ||
+	SP.ECSD( SP.extension != dacByte , "Extension incompatible o indefinida, Activa: space.NewDacByte()"){}
 
-	}
-
-	if size < 1 {
-
-		log.Fatal("Size no puede ser menor o igual a 0.")
-
-	}
-
-	if SP.extension != dacByte {
-
-		log.Fatal("Extension incompatible o indefinida, Activa: space.NewDacByte()")
-
-	}
 
 	if SP.indexSizeColumnsArray == nil {
 
@@ -173,17 +165,10 @@ func (SP *space) NewColumnByte(name string, size int64) {
 
 func (SP *space) NewColumnBit(name string) {
 
-	if SP.indexSizeColumns != nil {
+	if EDAC && 
+	SP.ECSD( SP.indexSizeColumns != nil , "Propiedad indexSizeColumns ya establecida e inmutable.") ||
+	SP.ECSD( SP.extension != dacBit , "Extension incompatible o indefinida, Activa: space.NewDacByte()"){}
 
-		log.Fatal("Propiedad indexSizeColumns ya establecida e inmutable.")
-
-	}
-
-	if SP.extension != dacBit {
-
-		log.Fatal("Extension incompatible o indefinida, Activa: space.NewDacBit()")
-
-	}
 
 	if SP.indexSizeColumnsArray == nil {
 
@@ -197,6 +182,9 @@ func (SP *space) NewColumnBit(name string) {
 
 func (SP *space) GetNameColumn() (columns []string) {
 
+	if EDAC && 
+	SP.ECSD( SP.indexSizeColumns == nil , "No se han iniciado columnas en este espacio"){}
+
 	for _, spaceLen := range SP.indexSizeColumnsArray {
 
 		columns = append(columns, spaceLen.name)
@@ -206,6 +194,9 @@ func (SP *space) GetNameColumn() (columns []string) {
 }
 
 func (SP *space) ColumnSizeTotal() (lenColumn int64) {
+
+	if EDAC && 
+	SP.ECSD( SP.indexSizeColumns == nil , "No se han iniciado columnas en este espacio"){}
 
 	for _, spaceLen := range SP.indexSizeColumnsArray {
 
@@ -224,10 +215,9 @@ func (SP *space) PreformatDefault(function func(*[]byte)) {
 
 	}
 
-	if _, found := SP.hooker[preformat]; found {
-
-		log.Fatal("Ya declaraste el preformat predeterminado.")
-
+	if EDAC {
+		_, found := SP.hooker[preformat]; 
+		SP.ECSD( found , "Ya declaraste el preformat predeterminado.")
 	}
 
 	SP.hooker[preformat] = function
@@ -242,10 +232,9 @@ func (SP *space) PreformatGlobal(name string, function func(*[]byte)) {
 
 	}
 
-	if _, found := SP.hooker[preformat+name]; found {
-
-		log.Fatal("Ya declaraste esta columna o field preformat.")
-
+	if EDAC {
+		_, found := SP.hooker[preformat+name]; 
+		SP.ECSD( found , "Ya declaraste el preformat global.")
 	}
 
 	SP.hooker[preformat+name] = function
@@ -260,10 +249,9 @@ func (SP *space) PostformatDefault(function func(*[]byte)) {
 
 	}
 
-	if _, found := SP.hooker[postformat]; found {
-
-		log.Fatal("Ya declaraste el preformat predeterminado.")
-
+	if EDAC {
+		_, found := SP.hooker[postformat]; 
+		SP.ECSD( found , "Ya declaraste el postformat predeterminado.")
 	}
 
 	SP.hooker[postformat] = function
@@ -278,41 +266,50 @@ func (SP *space) PostformatGlobal(name string, function func(*[]byte)) {
 
 	}
 
-	if _, found := SP.hooker[postformat+name]; found {
-
-		log.Fatal("Ya declaraste esta columna o field preformat.")
-
+	if EDAC {
+		_, found := SP.hooker[postformat+name]; 
+		SP.ECSD( found , "Ya declaraste este postformat global.")
 	}
 
 	SP.hooker[postformat+name] = function
 
 }
 
-func (obj *space ) OSpaceInit()bool  {
+func (SP *space ) OSpaceInit()bool  {
 
-	return obj.ospaceCompilationFile()
+	if EDAC && 
+	SP.ECSD( SP.fileNativeType == 0 ,"fileNativeType no definido") ||
+	SP.ECSD( len(SP.dir) == 0 , "Directorio no definido") ||
+	SP.ECSD( len(SP.extension) == 0 ,"extension no definido") ||
+	SP.ECSD( len(SP.indexSizeFieldsArray) == 0 && len(SP.indexSizeColumnsArray) == 0 ,
+	"Se ha iniciado un espacio sin fields y sin columnas.") ||
+	SP.ECSD( SP.compilation ,"Este espacio ya se ha copilado"){}
+	 
+
+	return SP.ospaceCompilationFile()
 
 }
 
-func (obj *space ) OSpaceGlobal(name string)bool  {
+func (SP *space ) OSpaceGlobal(name string)bool  {
 
-	if _ , found := Space[name]; found {
+	if EDAC {
 
-		return false
+		SP.ECSD( !SP.compilation ,"Este espacio no se ha copilado")
+
+		_ , found := Space[name]; 
+		SP.ECSD( found ,"Este nombre ya existe en el mapa global.")
 	}
-
-	Space[name] = obj
+	
+	Space[name] = SP
 	
 	return true
 }
 
 func (SP *space) SetPublicSpace()*PublicSpace{
 
-	if !SP.compilation {
+	if EDAC &&
+	SP.ECSD( !SP.compilation ,"Este espacio no se ha copilado"){}
 
-		log.Fatalln("Este espacio no se ha copilado.")
-
-	}
 
 	return &PublicSpace{
 		space: SP,

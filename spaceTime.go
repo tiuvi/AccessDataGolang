@@ -10,6 +10,13 @@ import(
 //Abrimos el espacio en disco
 func (obj *space ) ospaceDisk( name string, folder []string)*spaceFile {
 	
+/*
+	if obj.logTimeOpenFile && !obj.isErrorFile {
+
+		defer obj.NewLogDeferTimeMemory("diskFile",time.Now())
+
+	}
+	*/
 
 	var folderString string
 	if len(folder) > 0 {
@@ -33,12 +40,19 @@ func (obj *space ) ospaceDisk( name string, folder []string)*spaceFile {
 		diskSpace.Unlock()
 
 	}
+
 	
 	return spacef
 }
 
 
 func (obj *space ) ospaceDeferDisk(name string, folder []string)*spaceFile{
+
+	if obj.logTimeOpenFile && !obj.isErrorFile {
+
+		defer obj.NewLogDeferTimeMemory("deferDiskFile",time.Now())
+
+	}
 
 	var folderString string
 	if len(folder) > 0 {
@@ -71,6 +85,12 @@ func (obj *space ) ospaceDeferDisk(name string, folder []string)*spaceFile{
 
 
 func (obj *space ) ospacePermDisk( name string,folder []string)*spaceFile{
+
+	if obj.logTimeOpenFile && !obj.isErrorFile {
+
+		defer obj.NewLogDeferTimeMemory("permDiskFile",time.Now())
+
+	}
 
 	var folderString string
 	if len(folder) > 0 {
