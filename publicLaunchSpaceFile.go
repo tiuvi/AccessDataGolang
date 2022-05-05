@@ -33,3 +33,15 @@ func (SP *space ) OSpace( name string ,folder... string)*spaceFile  {
 
 	return nil
 }
+
+func (SF *spaceFile) SetPublicSpaceFile()*PublicSpaceFile{
+
+	if EDAC &&
+	SF.ECSFD( !SF.compilation ,"Este espacio no se ha copilado"){}
+
+
+	return &PublicSpaceFile{
+		spaceFile: SF,
+	}
+
+}

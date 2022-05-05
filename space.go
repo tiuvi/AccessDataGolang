@@ -326,10 +326,14 @@ type space struct {
 
 	compilation bool
 }
+
 type PublicSpace struct  {
 	*space
 }
 
+type PublicSpaceFile struct  {
+	*spaceFile
+}
 
 var Space map[string]*space
 

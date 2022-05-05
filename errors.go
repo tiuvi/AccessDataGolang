@@ -284,7 +284,7 @@ func (EDAC *errorsDac) logNewError() {
 
 	//Log de errores
 	if EDAC.logFileError && EDAC.typeError != MessageCopilation && EDAC.timeNow == nil {
-
+	
 		go EDAC.writeNewError(dateString, EDAC.typeError, fileString, funcNameString, lineStr, EDAC.messageLog, urlNameString)
 
 	}
@@ -404,7 +404,7 @@ func (EDAC *errorsDac) writeNewError(date string, typeError errorDac, fileName s
 	var bufferW *WBuffer
 	var file *spaceFile
 
-	file = errorLog.OSpace(EDAC.fileName+"Errors", EDAC.fileFolder...)
+	file = errorLog.OSpace(EDAC.fileName + "Errors", EDAC.fileFolder...)
 
 	if file != nil {
 

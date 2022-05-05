@@ -201,6 +201,20 @@ func (sF *spaceFile) NewRouteErrorSpaceFile(typeError errorDac, messageLog strin
 	return true
 }
 
+//NewRouteErrorSpaceFile message
+func (SF *spaceFile) NRESM(conditional bool, messageLog string, fileName string, fileFolder ...string)bool{
+	
+	if SF.spaceErrors != nil {
+
+		if conditional {
+
+			return	SF.NewRouteErrorSpaceFile(Message , messageLog , fileName , fileFolder...)
+		}	
+	}
+	return false
+}
+
+
 
 
 

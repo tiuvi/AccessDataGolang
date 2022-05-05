@@ -228,10 +228,16 @@ func (LDAC *lDAC) UnSetLevelsUrl() {
 
 }
 
-func (LDAC *lDAC) OnAllErrors() {
+func (LDAC *lDAC) OnBasicErrors() {
 
 	LDAC.OnErrors()
 	LDAC.OnLogFatalErrors()
+
+	EDAC = true
+}
+func (LDAC *lDAC) OnAllErrors() {
+
+	LDAC.OnBasicErrors()
 	LDAC.OnLogFileError()
 
 	LDAC.OnLogTimeUse()
@@ -246,6 +252,7 @@ func (LDAC *lDAC) OnAllErrors() {
 
 	EDAC = true
 }
+
 
 func (LDAC *lDAC) OffAllErrors() {
 
