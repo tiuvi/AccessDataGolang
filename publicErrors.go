@@ -1,4 +1,4 @@
-package bd
+package dac
 
 import (
 	"time"
@@ -6,13 +6,17 @@ import (
 
 /*
 
+ELDACF
+if EDAC && 
+obj.ELDACF( true," "){}
+
 Evaluacion global de excepciones
 if EDAC && 
 obj.ECSD( true," "){}
 
 Error mas evaluacion global
 if err != nil && EDAC && 
-obj.ECSD( true,"Error al crear el archivo despues de crear la carpeta para ese archivo. \n\r" + fmt.Sprintln(err)){}
+obj.ECSD( true," \n\r" + fmt.Sprintln(err)){}
 
 */
 
@@ -211,7 +215,7 @@ func (sP *space) LogDeferTimeMemoryDefault(timeNow time.Time)bool {
 		messageLog:   "",
 		levelsUrl:    sP.levelsUrl,
 		separatorLog: sP.separatorLog,
-		runCaller:runCallerGlobal,
+		runCaller:    runCallerGlobal -1,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()
@@ -229,7 +233,7 @@ func (sP *space) NewLogDeferTimeMemory(fileName string, timeNow time.Time)bool {
 		messageLog:   "",
 		levelsUrl:    sP.levelsUrl,
 		separatorLog: sP.separatorLog,
-		runCaller:runCallerGlobal,
+		runCaller: runCallerGlobal -1,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()
@@ -248,7 +252,7 @@ func (sP *space) NewRouteLogDeferTimeMemory(timeNow time.Time, fileName string, 
 		messageLog:   "",
 		levelsUrl:    sP.levelsUrl,
 		separatorLog: sP.separatorLog,
-		runCaller:runCallerGlobal,
+		runCaller:    runCallerGlobal -1,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()
@@ -266,7 +270,7 @@ func (sF *spaceFile) LogDeferTimeMemorySF(timeNow time.Time)bool {
 		url:          sF.url,
 		messageLog:   "",
 		levelsUrl:    sF.levelsUrl,
-		runCaller:runCallerGlobal,
+		runCaller:    runCallerGlobal -1,
 		separatorLog: sF.separatorLog,
 		timeNow:      &timeNow,
 	}
@@ -285,7 +289,7 @@ func (sF *spaceFile) NewLogDeferTimeMemorySF(fileName string, timeNow time.Time)
 		messageLog:   "",
 		levelsUrl:    sF.levelsUrl,
 		separatorLog: sF.separatorLog,
-		runCaller:runCallerGlobal,
+		runCaller:    runCallerGlobal -1,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()
@@ -304,7 +308,7 @@ func (sF *spaceFile) NewRouteLogDeferTimeMemorySF(timeNow time.Time, fileName st
 		messageLog:   "",
 		levelsUrl:    sF.levelsUrl,
 		separatorLog: sF.separatorLog,
-		runCaller:runCallerGlobal,
+		runCaller:    runCallerGlobal -1,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()

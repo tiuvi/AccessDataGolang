@@ -1,4 +1,4 @@
-package bd
+package dac
 
 import (
 	"fmt"
@@ -16,17 +16,17 @@ func (obj *space) newSpaceFile(folderString string, name string) *spaceFile {
 	spacef := new(spaceFile)
 
 	//Abrimos el archivo
-	spacef.file, err = os.OpenFile(url, os.O_RDWR|os.O_CREATE, 0666)
+	spacef.file, err = os.OpenFile(url, os.O_RDWR | os.O_CREATE, os.ModePerm)
 	if err != nil {
 
 		if os.IsNotExist(err) {
 
-			err = os.MkdirAll(obj.dir+folderString, 0666)
+			err = os.MkdirAll(obj.dir+folderString, os.ModeDir | os.ModePerm)
 			if err != nil && EDAC &&
 				obj.ECSD(len(name) == 0, "Error al crear la carpeta para ese archivo."+fmt.Sprintln(err)) {
 			}
 
-			spacef.file, err = os.OpenFile(url, os.O_RDWR|os.O_CREATE, 0666)
+			spacef.file, err = os.OpenFile(url, os.O_RDWR | os.O_CREATE , os.ModePerm)
 			if err != nil {
 
 				if err != nil && EDAC &&
@@ -63,9 +63,15 @@ func (obj *spaceFile) ospaceAtomicUpdateSizeFileLine() (line int64) {
 	//Leemos el archivo y movemos el puntero al final para contar su tamaño.
 	size, err := obj.file.Seek(0, 2)
 	if err != nil && EDAC &&
-		obj.ECSD(true, "Error al obtener el numero de lineas del archivo, leyendo el archivo \n\r"+fmt.Sprintln(err)) {
+		obj.ECSD(true, "Error al obtener el numero de lineas del archivo, leyendo el archivo \n\r" + fmt.Sprintln(err)) {
 	}
 
+	if obj.sizeLine == 0 {
+
+		return -1
+
+	}
+	
 	//Si el tamaño es mayor que 0 restomos los fields
 	if size > 0 {
 
@@ -74,7 +80,7 @@ func (obj *spaceFile) ospaceAtomicUpdateSizeFileLine() (line int64) {
 	}
 
 	//Si el resto entre el numero de lineas, es cero, obtenemos el numero de lineas.
-	if size%obj.sizeLine == 0 {
+	if size % obj.sizeLine == 0 {
 
 		line = (size / obj.sizeLine)
 
@@ -82,7 +88,7 @@ func (obj *spaceFile) ospaceAtomicUpdateSizeFileLine() (line int64) {
 
 	//Si el resto entre el numero de lineas, no es cero, obtenemos el numero de lineas
 	//sumando 1 debido a que es una linea que se ha escrito a la mitad.
-	if size%obj.sizeLine != 0 {
+	if size % obj.sizeLine != 0 {
 
 		line = (size / obj.sizeLine) + 1
 

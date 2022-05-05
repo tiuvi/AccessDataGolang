@@ -1,12 +1,17 @@
-package bd
+package dac
 
 import (
 	"fmt"
 	"sync/atomic"
+	"time"
 )
 
 func (WB *WBuffer) writeByteSpace()*int64{
 
+	if EDAC &&
+	WB.logTimeWriteFile && !WB.isErrorFile {
+		defer WB.NewLogDeferTimeMemory("writeBytes", time.Now())
+	}
 
 	//Buffer de bytes
 	if checkFileTypeBuffer(WB.typeBuff , buffBytes ){
@@ -167,6 +172,11 @@ func (WB *WBuffer) writeByteSpace()*int64{
 
 
 func (WB *WBuffer) writeBitSpace()*int64{
+
+	if EDAC &&
+	WB.logTimeWriteFile && !WB.isErrorFile {
+		defer WB.NewLogDeferTimeMemory("writeBits", time.Now())
+	}
 	
 	if checkFileTypeBuffer(WB.typeBuff , buffMap ){
 

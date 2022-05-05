@@ -1,4 +1,4 @@
-package bd
+package dac
 
 import (
 	"fmt"
@@ -169,6 +169,36 @@ func (LDAC *lDAC) OffLogFileMemoryUse() {
 
 }
 
+//Activa logTimeReadFile
+func (LDAC *lDAC) OnLogTimeReadFile() {
+
+	LDAC.logTimeReadFile = true
+
+}
+
+//Desactiva logTimeReadFile
+func (LDAC *lDAC) OffLogTimeReadFile() {
+
+	LDAC.logTimeReadFile = false
+
+}
+
+//Activa logTimeReadFile
+func (LDAC *lDAC) OnLogTimeWriteFile() {
+
+	LDAC.logTimeWriteFile = true
+
+}
+
+//Desactiva logTimeReadFile
+func (LDAC *lDAC) OffLogTimeWriteFile() {
+
+	LDAC.logTimeWriteFile = false
+
+}
+
+
+
 //Elije el separador para los nanosegundos
 func (LDAC *lDAC) SetSeparatorLog(separator string) {
 
@@ -201,13 +231,19 @@ func (LDAC *lDAC) UnSetLevelsUrl() {
 func (LDAC *lDAC) OnAllErrors() {
 
 	LDAC.OnErrors()
-	LDAC.OnLogConsoleErrors()
+	LDAC.OnLogFatalErrors()
 	LDAC.OnLogFileError()
+
 	LDAC.OnLogTimeUse()
 	LDAC.OnLogFileTimeUse()
-	LDAC.OnLogTimeOpenFile()
+	
 	LDAC.OnLogMemoryUse()
 	LDAC.OnLogFileMemoryUse()
+
+	LDAC.OnLogTimeOpenFile()
+	LDAC.OnLogTimeReadFile()
+	LDAC.OnLogTimeWriteFile()
+
 	EDAC = true
 }
 
@@ -216,13 +252,22 @@ func (LDAC *lDAC) OffAllErrors() {
 	LDAC.OffLogFatalErrors()
 	LDAC.OffLogConsoleErrors()
 	LDAC.OffLogFileError()
+
 	LDAC.OffLogTimeUse()
 	LDAC.OffLogFileTimeUse()
-	LDAC.OffLogTimeOpenFile()
+
 	LDAC.OffLogMemoryUse()
 	LDAC.OffLogFileMemoryUse()
 
+	LDAC.OffLogTimeOpenFile()
+	LDAC.OffLogTimeReadFile()
+	LDAC.OffLogTimeWriteFile()
+
 }
+
+
+
+
 
 /**********************************************************************************************/
 /* Funciones: lDAC  */
@@ -252,6 +297,11 @@ func (LDAC *lDAC) OffGoDACFolder() {
 	LDAC.goDACFolder = false
 
 }
+
+
+/**********************************************************************************************/
+/* Configuracion eventos de fichero */
+/**********************************************************************************************/
 
 func (LDAC *lDAC) ConfCloserDiskFile(seconds int64){
 
@@ -288,8 +338,6 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 
 	}
 
-	//Añadimos el nombre del archivo DAC
-	path += "DAC/"
 
 	//Verificamos la ruta antes de crear la carpeta
 	if EDAC && 
@@ -309,7 +357,7 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 		
 		if os.IsNotExist(err) {
 
-			err = os.MkdirAll(path, 0666)
+			err = os.MkdirAll(path, os.ModeDir | os.ModePerm)
 			if err != nil && EDAC && 
 			LDAC.ELDAC( true,"Error al crear la carpeta DAC. \n\r" + fmt.Sprintln(err)){}
 			
@@ -320,10 +368,10 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 
 	LDAC.globalDACFolder = path
 
-	if globUrlDac == nil {
+	if globalDac == nil {
 
 		//Variable SuperGlobal de DAC
-		globUrlDac = LDAC
+		globalDac = LDAC
 
 		go LDAC.dacTimerCloserDeferFile()
 
@@ -332,7 +380,7 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 		Space = make(map[string]*space)
 
 		//Activacion de archivos de errores de DAC
-		globUrlDac.onErrorsLog()
+		globalDac.onErrorsLog()
 	}
 
 }
@@ -345,3 +393,17 @@ func (LDAC *lDAC) GetGlobalDACFolder() string {
 	return LDAC.globalDACFolder
 
 }
+
+func GetGlobalDac()*lDAC{
+	
+	if globalDac != nil {
+
+		if len(globalDac.globalDACFolder) != 0 {
+
+			return globalDac
+		}
+	} 
+	return nil
+}
+
+

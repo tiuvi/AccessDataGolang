@@ -1,4 +1,4 @@
-package bd
+package dac
 
 
 
@@ -184,7 +184,6 @@ func (RB *RBuffer) BRspace(data ...string) {
 	RB.ECSFD(int64(len(data)) > (RB.lenColumns+RB.lenFields) , "El spacio no tiene tantos fields y Columnas.") ||
 	RB.ECSFD(len(data) == 0 , "No se puede enviar un buffer vacio.") ||
 	RB.ECSFD(RB.IsNotColFil(data...) , "Se ha iniciado un buffer de lectura con una columna o fields que no existe.") ||
-	RB.ECSFD(RB.rRangues != nil && RB.rLines != nil,"Usar buffer de lineas y buffer de rangos es propenso a errores.") ||
 	RB.ECSFD(RB.rRangues == nil && RB.rLines == nil,"Iniciaste un buffer vacio."){}
 	
 

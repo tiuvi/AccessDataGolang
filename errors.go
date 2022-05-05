@@ -1,4 +1,4 @@
-package bd
+package dac
 
 import (
 	"log"
@@ -11,7 +11,7 @@ import (
 func (LDAC *lDAC) onErrorsLog() {
 
 	//errorLog
-	space := globUrlDac.NewSpace()
+	space := globalDac.NewSpace()
 	space.OnErrorFile()
 	space.NewTimeFileDisk()
 	space.NewDacByte()
@@ -36,7 +36,7 @@ func (LDAC *lDAC) onErrorsLog() {
 	errorLog = space.SetPublicSpace()
 
 	//memoryLog
-	space = globUrlDac.NewSpace()
+	space = globalDac.NewSpace()
 	space.OnErrorFile()
 	space.NewTimeFileDisk()
 	space.NewDacByte()
@@ -61,7 +61,7 @@ func (LDAC *lDAC) onErrorsLog() {
 	memoryLog = space.SetPublicSpace()
 
 	//memoryLog
-	space = globUrlDac.NewSpace()
+	space = globalDac.NewSpace()
 	space.OnErrorFile()
 	space.NewTimeFileDisk()
 	space.NewDacByte()
@@ -131,18 +131,38 @@ func (EDAC *errorsDac) logNewError() {
 
 	}
 
+	/*
+	count := runtime.Callers(0, make([]uintptr,15))
+
+	if count == 9 {
+		EDAC.runCaller = EDAC.runCaller - 1
+	}
+	if count == 10 {
+		EDAC.runCaller = EDAC.runCaller - 1
+	}
+	if count == 11 {
+		EDAC.runCaller = EDAC.runCaller - 1
+	}
+	
+	log.Println("contador: ", count)
+	*/
+
 	//Inicio de los datos de Archivo, funcion, linea y url del dac desde donde se llama.
 	ptr, _, _, ok := runtime.Caller(EDAC.runCaller)
 	if !ok {
 		return
 	}
+	EDAC.runCaller = EDAC.runCaller + 1
+	
 	date := time.Now()
 	dateString := date.Format("02/01/2006 15:04:05")
+
 
 	firstFrame := runtime.CallersFrames([]uintptr{ptr})
 	frame, _ := firstFrame.Next()
 
 	fileString := frame.File
+	
 	funcNameString := frame.Function
 	urlNameString := EDAC.url
 	lineStr := strconv.Itoa(frame.Line)

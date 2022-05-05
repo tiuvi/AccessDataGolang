@@ -107,7 +107,7 @@ Todas las funciones que se pueden utlizar estan en los archivos que empiezan por
 
 */
 
-package bd
+package dac
 
 import (
 	"os"
@@ -214,8 +214,7 @@ type spaceErrors struct {
 	//Activar fichero de cronometro.
 	//Predeterminado: DAC/timer
 	logFileTimeUse bool
-	//Activar cronometros de apertura de archivos
-	logTimeOpenFile bool
+
 
 	//Activar log de memoria
 	logMemoryUse bool
@@ -229,6 +228,13 @@ type spaceErrors struct {
 
 	//Niveles de la url DAC a mostrar.
 	levelsUrl int
+
+	//Activar cronometros de apertura de archivos
+	logTimeOpenFile bool
+	//Cronometro de lectura de archivos
+	logTimeReadFile bool
+	//Cronometro de lectura de archivos
+	logTimeWriteFile bool
 }
 
 //space globales
@@ -266,7 +272,7 @@ type lDAC struct {
 }
 
 //Variable global de DAC
-var globUrlDac *lDAC
+var globalDac *lDAC
 
 
 

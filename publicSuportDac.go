@@ -1,4 +1,15 @@
-package bd
+package dac
+
+import(
+	"os"
+	"fmt"
+	"strings"
+)
+
+/**********************************************************************************************/
+/* Columnas */
+/**********************************************************************************************/
+
 
 //Verifica si el string, es una columna en ese espacio.
 func (SF *space) IsColumnMap(column string) *bool {
@@ -70,6 +81,12 @@ func (SP *space) CalcSizeColumnBWspace(field string) (sizeTotal int64) {
 
 	return sizeTotal
 }
+
+
+
+/**********************************************************************************************/
+/* Fields */
+/**********************************************************************************************/
 
 //Verifica si el string, es un campo en ese espacio.
 func (SF *space) IsFieldMap(field string) *bool {
@@ -144,6 +161,12 @@ func (SP *space) CalcSizeField(field string) (sizeTotal int64) {
 	return sizeTotal
 }
 
+
+
+/**********************************************************************************************/
+/* Extension */
+/**********************************************************************************************/
+
 //Verifica si el string, es un campo en ese espacio.
 func (SF *space) IsExtension(field string) bool {
 
@@ -165,6 +188,10 @@ func (SF *space) IsNotExtension(field string) bool {
 	}
 	return true
 }
+
+/**********************************************************************************************/
+/* Columnas y fields */
+/**********************************************************************************************/
 
 func (sP *space) IsColFil(data ...string) bool {
 
@@ -199,6 +226,10 @@ func (sP *space) IsNotColFil(data ...string) bool {
 
 	return false
 }
+
+/**********************************************************************************************/
+/* RAngos */
+/**********************************************************************************************/
 
 //CAlcula el numero de rangos de un field o nil si no existe.
 func (SP *space) CalcRangeField(field string, RangeBytes int64) int64 {
@@ -254,4 +285,48 @@ func (SP *space) CalcRangesBytes(lenBuffer int64, RangeBytes int64) int64 {
 	}
 	
 	return TotalRangue
+}
+
+
+/**********************************************************************************************/
+/* Operaciones con directorios */
+/**********************************************************************************************/
+
+func (SP *space) CheckDirSP()bool {
+
+	fInfo, err := os.Stat(SP.dir)
+	if err != nil && 
+	err != os.ErrNotExist && 
+	EDAC && 
+	SP.ECSD( true,"Error al leer el directorio \n\r" +  fmt.Sprintln(err) ){}
+	
+	if err != nil && err == os.ErrNotExist {
+
+		return false
+	} 
+
+	if fInfo.IsDir() {
+
+		return true
+	}
+
+	return false
+}
+
+func (SP *spaceFile) CheckDirSF()bool {
+
+	urlDir    := strings.SplitAfter(SP.url, "/")
+	urlDirStr := strings.Join(urlDir[:len(urlDir)-1], "")
+
+	fInfo, err := os.Stat(urlDirStr)
+	if err != nil && 
+	err == os.ErrExist && 
+	EDAC && 
+	SP.ECSD( true,"Error al leer el directorio \n\r" +  fmt.Sprintln(err) ){}
+	
+	if fInfo.IsDir() {
+		return true
+	}
+
+	return false
 }

@@ -1,10 +1,17 @@
-package bd
+package dac
 
-import ("fmt")
+import (
+	"fmt"
+	"time"
+)
 
 
 func (RB *RBuffer) readByteSpace(){
 
+	if EDAC &&
+	RB.logTimeReadFile && !RB.isErrorFile {
+		defer RB.NewLogDeferTimeMemory("readBytes", time.Now())
+	}
 
 	if checkFileTypeBuffer(RB.typeBuff , buffBytes ){
 
@@ -248,6 +255,11 @@ func (RB *RBuffer) readByteSpace(){
 
 
 func (RB *RBuffer) readBitSpace() {
+
+	if EDAC &&
+	RB.logTimeReadFile && !RB.isErrorFile {
+		defer RB.NewLogDeferTimeMemory("readBits", time.Now())
+	}
 
 	if checkFileTypeBuffer(RB.typeBuff , buffBytes ){
 

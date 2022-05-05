@@ -1,4 +1,4 @@
-package bd
+package dac
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 func writeBit(id int64, turn bool, bufferBit []byte) []byte {
 
 	if EDAC &&
-		globUrlDac.ELDACF(id > 7, "Error Fatal id superior al permitido para la lectura de bit") {
+		globalDac.ELDACF(id > 7, "Error Fatal id superior al permitido para la lectura de bit") {
 	}
 
 	bitId := []uint8{128, 64, 32, 16, 8, 4, 2, 1}
@@ -53,7 +53,7 @@ func writeBit(id int64, turn bool, bufferBit []byte) []byte {
 func readBit(id int64, bufferBit []byte) bool {
 
 	if EDAC &&
-		globUrlDac.ELDACF(id > 7, "Error Fatal id superior al permitido para la lectura de bit") {
+		globalDac.ELDACF(id > 7, "Error Fatal id superior al permitido para la lectura de bit") {
 	}
 
 	bitId := []uint8{128, 64, 32, 16, 8, 4, 2, 1}
