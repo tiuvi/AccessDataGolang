@@ -6,9 +6,12 @@ martes tarde - 2.5
 martes tarde - 2.5
 miercoles madrugada - 2.5
 miercoles tarde -3.5
+jueves mañana - 8
+viernes mañana - 4.5
 
 
-semana - 24
+
+semana - 32
 
 Añadido en esta version 0.1.1
         Correccion runCallerGlobal de las funciones timeStat que devolvian mal el fichero.
@@ -17,6 +20,8 @@ Añadido en esta version 0.1.1
         Nueva funcion para inicio de un spacefile de bits.
         Modificacion de los permisos de creacion de directorios y archivos.
 
+        DEBUG 13 000 BYTES de memoria
+        anulacion de la escritura de archivos en log de errores
 
 Empeza version beta
 

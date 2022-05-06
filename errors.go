@@ -82,38 +82,139 @@ func (LDAC *lDAC) onErrorsLog() {
 
 }
 
-func negritaTerminal(str string) string {
+func BoldConsole(str string) string {
 
 	return strings.Join([]string{"\u001b[01m", ColorWhite, "\u001b[40m", str, Reset}, "")
 }
 
-func (EDAC *errorsDac) uint64ToString(uintData uint64) string {
+func (errorDac errorDac )PrintConsole()string{
 
-	var uintFormat string
-	uintStr := strconv.FormatUint(uintData, 10)
+	var color string
+	switch errorDac {
 
-	divuintStr := len(uintStr) / 3
-	restuintStr := len(uintStr) % 3
+		case Fatal, MessageCopilation:
+			color = ColorRed
+		case Exception:
+			color = ColorGreen
+		case Warning:
+			color = ColorYellow
+		case Message, NewRouteFolder, TimeMemory:
+			color = ColorBlue
+	}
+	return strings.Join([]string{"\u001b[01m", color,  string(errorDac) , Reset}, "")
+}
+
+func Uint64ToStringSep(uintData uint64, sep string) string {
+
+	return counterJoin(strconv.FormatUint(uintData, 10), sep)
+}
+
+func counterJoin(stringJoin string, sep string) (stringJoinFormat string) {
+
+	divuintStr := len(stringJoin) / 3
+	restuintStr := len(stringJoin) % 3
 
 	if restuintStr > 0 {
 
-		uintFormat = strings.Join([]string{uintStr[:restuintStr], EDAC.separatorLog}, "")
-		uintStr = uintStr[restuintStr:]
+		stringJoinFormat = strings.Join([]string{stringJoin[:restuintStr], sep}, "")
+		stringJoin = stringJoin[restuintStr:]
 
 	}
 
 	for x := 0; x < divuintStr; x++ {
 
-		uintFormat += strings.Join([]string{uintStr[:3], EDAC.separatorLog}, "")
-		uintStr = uintStr[3:]
+		stringJoinFormat += strings.Join([]string{stringJoin[:3], sep}, "")
+		stringJoin = stringJoin[3:]
 
 	}
 
-	return uintFormat
+	return stringJoinFormat
+}
+
+
+
+func CallerSystemInfo(urlDac string , numCaller int ,levelsUrl int)(dateNow string , urlFile string ,nameFunction string, lineFunction string,urlDacFormat string , ok bool) {
+
+	/*
+	Por si falla runtime.callers
+
+	count := runtime.Callers(0, make([]uintptr,15))
+
+	if count == 9 {
+		EDAC.runCaller = EDAC.runCaller - 1
+	}
+	if count == 10 {
+		EDAC.runCaller = EDAC.runCaller - 1
+	}
+	if count == 11 {
+		EDAC.runCaller = EDAC.runCaller - 1
+	}
+
+	log.Println("contador: ", count)
+*/
+
+	//Inicio de los datos de Archivo, funcion, linea y url del dac desde donde se llama.
+	ptr, _, _, ok := runtime.Caller(numCaller)
+	if !ok {
+
+		return "","","","","",ok
+
+	}
+
+	dateNow     = time.Now().Format("02/01/2006 15:04:05")
+
+	firstFrame := runtime.CallersFrames([]uintptr{ptr})
+	frame, _ := firstFrame.Next()
+
+
+
+
+	urlFile = frame.File
+	uFileFormat := strings.Split(urlFile , "/")
+	if len(uFileFormat) > 2 {
+
+		urlFile = strings.Join(uFileFormat[len(uFileFormat)-2:], "/")
+
+	}
+
+	nameFunction = frame.Function
+	fNameFormat := strings.Split(nameFunction , "/")
+	if len(fNameFormat) > 1 {
+
+		nameFunction = strings.Join(fNameFormat[len(fNameFormat)-1:], "/")
+	}
+
+
+	lineFunction  = strconv.Itoa(frame.Line)
+
+
+	urlDacFormat = urlDac
+	uDacFormat  := strings.Split(urlDac, "/")
+	if len(uDacFormat) > levelsUrl {
+
+		urlDacFormat = strings.Join(uDacFormat[len(uDacFormat)-levelsUrl:], "/")
+	}
+
+	return
+}
+
+func LogMemory(sep string) (allocString string, totalAlloc string, memSys string, bigObjSize string, gcCount string) {
+
+	var memoryStats runtime.MemStats
+
+	runtime.ReadMemStats(&memoryStats)
+	allocString = Uint64ToStringSep(memoryStats.Alloc, sep)
+	totalAlloc = Uint64ToStringSep(memoryStats.TotalAlloc, sep)
+	memSys = Uint64ToStringSep(memoryStats.Sys, sep)
+	bigObjSize = Uint64ToStringSep(uint64(memoryStats.BySize[60].Size), sep)
+	gcCount = Uint64ToStringSep(uint64(memoryStats.NumGC), sep)
+
+	return
 }
 
 func (EDAC *errorsDac) logNewError() {
 
+	var UTSS func(uint64, string) string = Uint64ToStringSep
 	/*
 	* Variables para iniciar tanto el log como el archivo.
 	*
@@ -131,63 +232,19 @@ func (EDAC *errorsDac) logNewError() {
 
 	}
 
-	/*
-	count := runtime.Callers(0, make([]uintptr,15))
 
-	if count == 9 {
-		EDAC.runCaller = EDAC.runCaller - 1
-	}
-	if count == 10 {
-		EDAC.runCaller = EDAC.runCaller - 1
-	}
-	if count == 11 {
-		EDAC.runCaller = EDAC.runCaller - 1
-	}
-	
-	log.Println("contador: ", count)
-	*/
 
-	//Inicio de los datos de Archivo, funcion, linea y url del dac desde donde se llama.
-	ptr, _, _, ok := runtime.Caller(EDAC.runCaller)
+	dateNow , urlFile ,nameFunction,lineFunction,urlDacFormat,ok := CallerSystemInfo(EDAC.url , EDAC.runCaller ,EDAC.levelsUrl)
 	if !ok {
+
 		return
 	}
+
 	EDAC.runCaller = EDAC.runCaller + 1
-	
-	date := time.Now()
-	dateString := date.Format("02/01/2006 15:04:05")
 
-
-	firstFrame := runtime.CallersFrames([]uintptr{ptr})
-	frame, _ := firstFrame.Next()
-
-	fileString := frame.File
-	
-	funcNameString := frame.Function
-	urlNameString := EDAC.url
-	lineStr := strconv.Itoa(frame.Line)
-
-	fileDir := strings.Split(frame.File, "/")
-	if len(fileDir) > 2 {
-
-		fileString = strings.Join(fileDir[len(fileDir)-2:], "/")
-
-	}
-
-	funcName := strings.Split(frame.Function, "/")
-	if len(funcName) > 1 {
-
-		funcNameString = strings.Join(funcName[len(funcName)-1:], "/")
-	}
-
-	urlName := strings.Split(EDAC.url, "/")
-	if len(urlName) > EDAC.levelsUrl {
-
-		urlNameString = strings.Join(urlName[len(urlName)-EDAC.levelsUrl:], "/")
-	}
 
 	//Inicio de la memoria.
-	var memoryStats runtime.MemStats
+
 	var allocString string
 	var totalAlloc string
 	var memSys string
@@ -195,12 +252,8 @@ func (EDAC *errorsDac) logNewError() {
 	var gcCount string
 	if (EDAC.logMemoryUse || EDAC.logFileMemoryUse) && EDAC.timeNow != nil {
 
-		runtime.ReadMemStats(&memoryStats)
-		allocString = EDAC.uint64ToString(memoryStats.Alloc)
-		totalAlloc = EDAC.uint64ToString(memoryStats.TotalAlloc)
-		memSys = EDAC.uint64ToString(memoryStats.Sys)
-		bigObjSize = EDAC.uint64ToString(uint64(memoryStats.BySize[60].Size))
-		gcCount = EDAC.uint64ToString(uint64(memoryStats.NumGC))
+		allocString, totalAlloc, memSys, bigObjSize, gcCount = LogMemory(EDAC.separatorLog)
+
 	}
 
 	/*
@@ -212,27 +265,15 @@ func (EDAC *errorsDac) logNewError() {
 	 */
 
 	var logString string
-	var nT func(string) string = negritaTerminal
+	var nT func(string) string = BoldConsole
 
 	if (EDAC.logFatalErrors || EDAC.logConsoleErrors) && EDAC.timeNow == nil {
 
-		var color string
-		switch EDAC.typeError {
-
-		case Fatal, MessageCopilation:
-			color = ColorRed
-		case Exception:
-			color = ColorGreen
-		case Warning:
-			color = ColorYellow
-		case Message, NewRouteFolder:
-			color = ColorBlue
-		}
 
 		logString = strings.Join([]string{
-			nT("Fecha:"), " ", dateString, " - ", nT("Tipo de error:"), " ", color, string(EDAC.typeError), Reset, "\n\r",
-			nT("Archivo:"), " ", fileString, " - ", nT("Funcion:"), " ", funcNameString, " - ", nT("Nº Linea:"), " ", lineStr, "\n\r",
-			nT("Ruta DAC:"), " ", urlNameString, "\n\r",
+			nT("Fecha:"), " ", dateNow, " - ", nT("Tipo de error:"), " ", EDAC.typeError.PrintConsole() , "\n\r",
+			nT("Archivo:"), " ", urlFile, " - ", nT("Funcion:"), " ", nameFunction, " - ", nT("Nº Linea:"), " ", lineFunction, "\n\r",
+			nT("Ruta DAC:"), " ", urlDacFormat, "\n\r",
 			nT("Mensaje:"), " ", EDAC.messageLog, "\n\r"}, "")
 
 		if EDAC.logFatalErrors && (EDAC.typeError == Fatal || EDAC.typeError == MessageCopilation) {
@@ -252,9 +293,9 @@ func (EDAC *errorsDac) logNewError() {
 	if EDAC.logMemoryUse && EDAC.timeNow != nil {
 
 		logString := strings.Join([]string{
-			nT("Fecha:"), " ", dateString, " - ", nT("Tipo de error:"), " ", ColorBlue, "memoryStats", Reset, "\n\r",
-			nT("Archivo:"), " ", fileString, " - ", nT("Funcion:"), " ", funcNameString, " - ", nT("Nº Linea:"), " ", lineStr, "\n\r",
-			nT("Ruta DAC:"), " ", urlNameString, "\n\r",
+			nT("Fecha:"), " ", dateNow, " - ", nT("Tipo de error:"), " ", EDAC.typeError.PrintConsole(), "\n\r",
+			nT("Archivo:"), " ", urlFile, " - ", nT("Funcion:"), " ", nameFunction, " - ", nT("Nº Linea:"), " ", lineFunction, "\n\r",
+			nT("Ruta DAC:"), " ", urlDacFormat, "\n\r",
 			nT("Memoria en uso:"), " ", allocString, " Bytes, - ",
 			nT("Memoria total usada:"), " ", totalAlloc, " Bytes, - ",
 			nT("Memoria sistema:"), " ", memSys, " Bytes, - ",
@@ -268,10 +309,10 @@ func (EDAC *errorsDac) logNewError() {
 	if EDAC.logTimeUse && EDAC.timeNow != nil {
 
 		logString := strings.Join([]string{
-			nT("Fecha:"), " ", dateString, " - ", nT("Tipo de error:"), " ", ColorBlue, "timeStats", Reset, "\n\r",
-			nT("Archivo:"), " ", fileString, " - ", nT("Funcion:"), " ", funcNameString, " - ", nT("Nº Linea:"), " ", lineStr, "\n\r",
-			nT("Ruta DAC:"), " ", urlNameString, "\n\r",
-			nT("Tiempo transcurrido:"), " ", EDAC.uint64ToString(uint64(elapsed)), " NanoSegundos.\n\r"}, "")
+			nT("Fecha:"), " ", dateNow, " - ", nT("Tipo de error:"), " ", EDAC.typeError.PrintConsole(), "\n\r",
+			nT("Archivo:"), " ", urlFile, " - ", nT("Funcion:"), " ", nameFunction, " - ", nT("Nº Linea:"), " ", lineFunction, "\n\r",
+			nT("Ruta DAC:"), " ", urlDacFormat, "\n\r",
+			nT("Tiempo transcurrido:"), " ", UTSS(uint64(elapsed), EDAC.separatorLog), " NanoSegundos.\n\r"}, "")
 		go log.Println(logString)
 	}
 
@@ -284,22 +325,22 @@ func (EDAC *errorsDac) logNewError() {
 
 	//Log de errores
 	if EDAC.logFileError && EDAC.typeError != MessageCopilation && EDAC.timeNow == nil {
-	
-		go EDAC.writeNewError(dateString, EDAC.typeError, fileString, funcNameString, lineStr, EDAC.messageLog, urlNameString)
+
+		go EDAC.writeNewError(dateNow, EDAC.typeError, urlFile, nameFunction, lineFunction, EDAC.messageLog, urlDacFormat)
 
 	}
 
 	//Log de tiempo transcurrido y archivo de tiempo transcurrido
 	if EDAC.logFileTimeUse && EDAC.typeError != MessageCopilation && EDAC.timeNow != nil {
 
-		go EDAC.writeNewTimeUse(dateString, fileString, funcNameString, lineStr, urlNameString, EDAC.uint64ToString(uint64(elapsed)))
+		go EDAC.writeNewTimeUse(dateNow, urlFile, nameFunction, lineFunction, urlDacFormat, UTSS(uint64(elapsed), EDAC.separatorLog))
 
 	}
 
 	//Log de memoria y archivo de memoria
 	if EDAC.logFileMemoryUse && EDAC.typeError != MessageCopilation && EDAC.timeNow != nil {
 
-		go EDAC.writeNewMemoryUse(dateString, fileString, funcNameString, lineStr, urlNameString,
+		go EDAC.writeNewMemoryUse(dateNow, urlFile, nameFunction, lineFunction, urlDacFormat,
 			allocString, totalAlloc, memSys, bigObjSize, gcCount)
 
 	}
@@ -404,7 +445,7 @@ func (EDAC *errorsDac) writeNewError(date string, typeError errorDac, fileName s
 	var bufferW *WBuffer
 	var file *spaceFile
 
-	file = errorLog.OSpace(EDAC.fileName + "Errors", EDAC.fileFolder...)
+	file = errorLog.OSpace(EDAC.fileName+"Errors", EDAC.fileFolder...)
 
 	if file != nil {
 

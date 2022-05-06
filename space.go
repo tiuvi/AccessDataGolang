@@ -7,13 +7,13 @@ spaceErrors ->  *pointer
 	lDAC ->  *pointer
 
 		space ->  *pointer
- 
+
 			spaceFile ->  *pointer
 
 				WBuffer -> *pointer
 				RBuffer -> *pointer
 
-Este flujo optimiza la memoria, y la reutilización de en los siguientes espacios, en caso de 
+Este flujo optimiza la memoria, y la reutilización de en los siguientes espacios, en caso de
 tener que actualizar un espacio es inevitable crear un nuevo objeto, que cree dicho espacio
 esto es debido a que el flujo de datos ya esta optimizado.
 
@@ -28,14 +28,14 @@ Ejemplo practico:
 En este caso estamos usando 1 space que genera 50 spaceFile que generan 100 WBuufer y
 1000 rBuffer cada uno.
 
-Otro ejemplo practico:		
+Otro ejemplo practico:
 1 -> spaceErrors, 1 -> lDAC, -> 100 space -> 50 spaceFile -> 100  WBuffer
-														     1000 rBuffer											   
+														     1000 rBuffer
 En este caso estamos usando 100 space que generan 50 spaceFile cada uno que generan a su vez 100 WBuufer y
 1000 rBuffer cada uno.
 
-Como test he creado 1000 000 de archivos que permanecen abiertos en un 
-linux ubuntu y equivalen a 700 mb de ram. Todo son punteros a archivos que van a 
+Como test he creado 1000 000 de archivos que permanecen abiertos en un
+linux ubuntu y equivalen a 700 mb de ram. Todo son punteros a archivos que van a
 permanecer abiertos disminuyendo muchisimo los tiempos de escritura y lectura.
 
 El siguiente paso es comprender como funcionan los archivos hay tres tipos por ahora,
@@ -68,11 +68,11 @@ Los fields ocupan un espacio fijo al inicio del archivo.
 Las lineas ocupan un espacio fijo segun se van creando tengan datos utiles o no.
 
 Ejemplo:
-Cuando un usuario te pide datos como un email ese usuario tendra una id que es el numero de linea 
- o el id suyo en la aplicación y apunta a un numero de linea, leerias los datos directamente 
+Cuando un usuario te pide datos como un email ese usuario tendra una id que es el numero de linea
+ o el id suyo en la aplicación y apunta a un numero de linea, leerias los datos directamente
  de esa linea para ese usuario.
 
- Usuario: Franky, Id: 101, 
+ Usuario: Franky, Id: 101,
  Guardar email pues escribiria en el archivo de emails en la linea 101.
  Leer email pues leeria en el archivo email en la linea 101.
 
@@ -81,7 +81,7 @@ Cuando un usuario te pide datos como un email ese usuario tendra una id que es e
 La primera razon DAC es divertido, resolveras problemas que nuncan pensaste, valoraras las
 soluciones de bases de datos que lo resuelven todo.
 
-La segunda razon es que actualmente es la solucion mas rapida de lectura y escritura de 
+La segunda razon es que actualmente es la solucion mas rapida de lectura y escritura de
 almacenamiento de datos, no lo he medido, la razon es que no hay otra forma de hacerlo
 mas rapido mediante el software teoricamente.
 
@@ -110,6 +110,7 @@ Todas las funciones que se pueden utlizar estan en los archivos que empiezan por
 package dac
 
 import (
+
 	"os"
 	"sync"
 	"time"
@@ -193,6 +194,7 @@ const (
 
 	TimeMemory errorDac = "TimeMemoryStat"
 )
+
 
 //Errores globales dac y seguimiento mediante archivo o log.
 //En DAC no hay excepciones, ni errores que manejar.
@@ -368,6 +370,8 @@ var deferSpace = &spaceDeferDisk{
 var permSpace = &spacePermDisk{
 	permDisk: make(map[string]*spaceFile),
 }
+
+
 
 type spaceFile struct {
 	*space

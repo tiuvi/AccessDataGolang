@@ -8,6 +8,7 @@ import (
 
 func (WB *WBuffer) writeByteSpace()*int64{
 
+
 	if EDAC &&
 	WB.logTimeWriteFile && !WB.isErrorFile {
 		defer WB.NewLogDeferTimeMemory("writeBytes", time.Now())

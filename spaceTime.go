@@ -113,7 +113,7 @@ func (LDAC *lDAC) dacTimerCloserDeferFile() {
 	//Especifica cada cuanto se ejecuta la funcion
 	tikectDb := time.Tick(time.Duration(LDAC.timeEventDeferFile) * time.Second)
 	for range tikectDb {
-
+		
 		if len(deferSpace.deferFile) == 0 || len(deferSpace.info) == 0 {
 
 			continue

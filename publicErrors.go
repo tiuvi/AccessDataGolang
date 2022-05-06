@@ -216,7 +216,23 @@ func (SF *spaceFile) NRESM(conditional bool, messageLog string, fileName string,
 
 
 
+//Coge la url space.dir para el error
+func  LogDeferTimeMemoryDefaultDac(timeNow time.Time)bool {
 
+	EDAC := &errorsDac{
+		spaceErrors:  globalDac.spaceErrors,
+		fileName:     "",
+		typeError:    TimeMemory,
+		url:          globalDac.globalDACFolder,
+		messageLog:   "",
+		levelsUrl:    globalDac.levelsUrl,
+		separatorLog: globalDac.separatorLog,
+		runCaller:    runCallerGlobal -1,
+		timeNow:      &timeNow,
+	}
+	EDAC.logNewError()
+	return true
+}
 
 //Coge la url space.dir para el error
 func (sP *space) LogDeferTimeMemoryDefault(timeNow time.Time)bool {
