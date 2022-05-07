@@ -2,6 +2,8 @@ package dac
 
 
 
+
+
 func (obj *space) ospaceCompilationFile()bool {
 
 	//eMSGoCF: Error Mensaje ospaceCompilationFile
@@ -20,12 +22,12 @@ func (obj *space) ospaceCompilationFile()bool {
 
 	if EDAC && 
 	eMSGoCF(obj.fileNativeType == 0 ,`Variable fileNativeType no definida.`) ||
-	eMSGoCF(obj.fileNativeType == 0,`Variable fileNativeType no definida.`)||
+	eMSGoCF(obj.fileCoding == 0,`Variable fileCoding no definida.`)||
 	eMSGoCF(len(obj.dir) == 0 ,`Variable dir vacia.`)||
 	eMSGoCF(len(obj.extension) == 0, `Extension vacia.`)||
-	eMSGoCF(obj.IsNotExtension(obj.extension),`Extension no valida.`){}
+	eMSGoCF(obj.IsNotExtension(obj.extension),`Extension no valida: ` + obj.extension){}
 
-	
+
 	
 
 	if len(obj.indexSizeFieldsArray) > 0 {
@@ -172,24 +174,8 @@ func (obj *space) ospaceCompilationFile()bool {
 
 
 
-	//Lectura de archivos de byte
-	if obj.extension == dacByte {
 
-		obj.fileCoding = bytes
-		obj.compilation = true
-		return true
-	}
 
-	//bdisk: Lista de bit en un archivo disk
-	if obj.extension == dacBit {
-
-		obj.fileCoding = bit
-		obj.compilation = true
-		return true
-	}
-
-	if EDAC && 
-	eMSGoCF(true,"No se han encontrado coincidencias con las extensiones de archivo predeterminadas."){}
-
-	return false
+	obj.compilation = true
+	return true
 }

@@ -76,7 +76,7 @@ func (sP *space) ErrorSpaceDefault(typeError errorDac, messageLog string)bool {
 		messageLog:   messageLog,
 		levelsUrl:    sP.levelsUrl,
 		separatorLog: sP.separatorLog,
-		runCaller:runCallerGlobal,
+		runCaller: runCallerGlobal ,
 		timeNow:      nil,
 	}
 	EDAC.logNewError()
@@ -216,6 +216,10 @@ func (SF *spaceFile) NRESM(conditional bool, messageLog string, fileName string,
 
 
 
+
+
+
+
 //Coge la url space.dir para el error
 func  LogDeferTimeMemoryDefaultDac(timeNow time.Time)bool {
 
@@ -227,7 +231,7 @@ func  LogDeferTimeMemoryDefaultDac(timeNow time.Time)bool {
 		messageLog:   "",
 		levelsUrl:    globalDac.levelsUrl,
 		separatorLog: globalDac.separatorLog,
-		runCaller:    runCallerGlobal -1,
+		runCaller:    runCallerGlobal ,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()
@@ -245,7 +249,7 @@ func (sP *space) LogDeferTimeMemoryDefault(timeNow time.Time)bool {
 		messageLog:   "",
 		levelsUrl:    sP.levelsUrl,
 		separatorLog: sP.separatorLog,
-		runCaller:    runCallerGlobal -1,
+		runCaller:    runCallerGlobal ,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()
@@ -263,7 +267,7 @@ func (sP *space) NewLogDeferTimeMemory(fileName string, timeNow time.Time)bool {
 		messageLog:   "",
 		levelsUrl:    sP.levelsUrl,
 		separatorLog: sP.separatorLog,
-		runCaller: runCallerGlobal -1,
+		runCaller: runCallerGlobal ,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()
@@ -282,7 +286,7 @@ func (sP *space) NewRouteLogDeferTimeMemory(timeNow time.Time, fileName string, 
 		messageLog:   "",
 		levelsUrl:    sP.levelsUrl,
 		separatorLog: sP.separatorLog,
-		runCaller:    runCallerGlobal -1,
+		runCaller:    runCallerGlobal ,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()
@@ -300,7 +304,7 @@ func (sF *spaceFile) LogDeferTimeMemorySF(timeNow time.Time)bool {
 		url:          sF.url,
 		messageLog:   "",
 		levelsUrl:    sF.levelsUrl,
-		runCaller:    runCallerGlobal -1,
+		runCaller:    runCallerGlobal ,
 		separatorLog: sF.separatorLog,
 		timeNow:      &timeNow,
 	}
@@ -319,7 +323,7 @@ func (sF *spaceFile) NewLogDeferTimeMemorySF(fileName string, timeNow time.Time)
 		messageLog:   "",
 		levelsUrl:    sF.levelsUrl,
 		separatorLog: sF.separatorLog,
-		runCaller:    runCallerGlobal -1,
+		runCaller:    runCallerGlobal ,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()
@@ -338,7 +342,7 @@ func (sF *spaceFile) NewRouteLogDeferTimeMemorySF(timeNow time.Time, fileName st
 		messageLog:   "",
 		levelsUrl:    sF.levelsUrl,
 		separatorLog: sF.separatorLog,
-		runCaller:    runCallerGlobal -1,
+		runCaller:    runCallerGlobal ,
 		timeNow:      &timeNow,
 	}
 	EDAC.logNewError()

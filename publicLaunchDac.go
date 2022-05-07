@@ -273,6 +273,45 @@ func (LDAC *lDAC) OffAllErrors() {
 }
 
 
+/**********************************************************************************************/
+/* Configuracion extensiones */
+/**********************************************************************************************/
+
+
+func  newExtensionAllowed(extension string, description string)bool{
+
+	if _ , found := extensionFile[extension]; found {
+		return false
+	}
+
+	extensionFile[extension] = description
+	return true
+
+}
+
+
+/**********************************************************************************************/
+/* Configuracion eventos de fichero */
+/**********************************************************************************************/
+
+func (LDAC *lDAC) ConfCloserDiskFile(seconds int64){
+
+	if EDAC && 
+	LDAC.ELDAC(seconds < 600 ,"El valor no puede ser inferior a 600 segundos"){}
+
+	LDAC.timersFile.timeEventDiskFile = seconds
+}
+
+func (LDAC *lDAC) ConfCloserDeferFile(fileopen int, seconds int64){
+
+	if EDAC && 
+	LDAC.ELDAC(fileopen < 612 , "El valor de archivos abiertos no puede ser inferior a 612.") ||
+	LDAC.ELDAC(seconds < 600 , "El valor no puede ser inferior a 600 segundos"){}
+
+	LDAC.timersFile.fileOpenDeferFile  = fileopen
+	LDAC.timersFile.timeEventDeferFile = seconds
+}
+
 
 
 
@@ -303,29 +342,6 @@ func (LDAC *lDAC) OffGoDACFolder() {
 
 	LDAC.goDACFolder = false
 
-}
-
-
-/**********************************************************************************************/
-/* Configuracion eventos de fichero */
-/**********************************************************************************************/
-
-func (LDAC *lDAC) ConfCloserDiskFile(seconds int64){
-
-	if EDAC && 
-	LDAC.ELDAC(seconds < 600 ,"El valor no puede ser inferior a 600 segundos"){}
-
-	LDAC.timersFile.timeEventDiskFile = seconds
-}
-
-func (LDAC *lDAC) ConfCloserDeferFile(fileopen int, seconds int64){
-
-	if EDAC && 
-	LDAC.ELDAC(fileopen < 612 , "El valor de archivos abiertos no puede ser inferior a 612.") ||
-	LDAC.ELDAC(seconds < 600 , "El valor no puede ser inferior a 600 segundos"){}
-
-	LDAC.timersFile.fileOpenDeferFile  = fileopen
-	LDAC.timersFile.timeEventDeferFile = seconds
 }
 
 

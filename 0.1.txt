@@ -8,20 +8,33 @@ miercoles madrugada - 2.5
 miercoles tarde -3.5
 jueves mañana - 8
 viernes mañana - 4.5
+viernes tarde  - 4
+Sabado mañana - 2
+sabado tarde - 5
 
-
-
-semana - 32
+semana - 45.5
 
 Añadido en esta version 0.1.1
         Correccion runCallerGlobal de las funciones timeStat que devolvian mal el fichero.
         Nuevo archivo publicOperationESbytesFormat.go para tipado de datos.
         Añadido dos nuevos tipos de errores para verificar los tiempos de lectura y escritura.
-        Nueva funcion para inicio de un spacefile de bits.
+        Nueva funcion para inicio de un spacefile de byte.
         Modificacion de los permisos de creacion de directorios y archivos.
+        DEBUG memory leak BYTES de memoria
+       HECHO - Modificar filecoding y separarlo de la propiedad extension
 
-        DEBUG 13 000 BYTES de memoria
-        anulacion de la escritura de archivos en log de errores
+        ACTUAL - Crear las rutas de servicio de contenido.
+
+
+        ACTUAL - lectura de archivos de contenido dinamica
+        ACTUAL - iniciacion de carpeta de directorios con contenido dinamico.
+
+       ACTUAL - Dar soporte de bytes para lectura de diferentes tipos de content type
+       ACTUAL - Space dinamico donde la lectura del primer campo te de el segundo campo
+       
+
+
+
 
 Empeza version beta
 

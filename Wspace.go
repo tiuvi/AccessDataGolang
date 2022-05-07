@@ -11,7 +11,7 @@ func (WB *WBuffer) writeByteSpace()*int64{
 
 	if EDAC &&
 	WB.logTimeWriteFile && !WB.isErrorFile {
-		defer WB.NewLogDeferTimeMemory("writeBytes", time.Now())
+		defer WB.NewLogDeferTimeMemorySF("writeBytes", time.Now())
 	}
 
 	//Buffer de bytes

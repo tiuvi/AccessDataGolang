@@ -45,3 +45,4 @@ func (SF *spaceFile) SetPublicSpaceFile()*PublicSpaceFile{
 	}
 
 }
+

@@ -146,12 +146,57 @@ const (
 	dacByte string = "dacByte"
 	//Lista de bit con dos estados posibles verdadero y falso
 	dacBit string = "dacBit"
+	//Extensiones de contenido web
+	html = "html"
+	json = "json"
+	js   = "js"
+	css  = "css"
+
+	//Extensiones de contenido imagen
+	glb  = "glb"
+	gif  = "gif"
+	svg  = "svg"
+	png  = "png"
+	jpg  = "jpg"
+	
+	//Extensiones de audio
+	mp3 = "mp3"
+
+	//Extensiones de contenido video
+	mp4 = "mp4"
+
+	//Extensiones de contenido de documentos
+	pdf = "pdf"
+	txt = "txt"
 )
 
 var extensionFile = map[string]string{
 	dacByte: "Archivo que incluye fields y columnas de bytes",
 	dacBit:  "Archivo que incluye fields y una lista de bits",
+	html:    "Archivo que incluye fields y columnas de bytes, en html",
+	json : "json",
+	js   : "js",
+	css  : "css",
+
+	//Extensiones de contenido imagen
+	glb  : "glb",
+	gif  : "gif",
+	svg  : "svg",
+	png  : "png",
+	jpg  : "jpg",
+	
+	//Extensiones de audio
+	mp3 : "mp3",
+	
+	//Extensiones de contenido video
+	mp4 : "mp4",
+
+	//Extensiones de contenido de documentos
+	pdf : "pdf",
+	txt : "txt",
 }
+
+
 
 const (
 	ColorWhite  = "\u001b[37m"

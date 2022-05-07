@@ -2,6 +2,7 @@ package dac
 
 import (
 	"fmt"
+
 	"os"
 	"strings"
 	"sync/atomic"
@@ -14,7 +15,7 @@ func (obj *space) newSpaceFile(folderString string, name string) *spaceFile {
 	var err error
 	//Creamos una nueva referencia a spaceFile
 	spacef := new(spaceFile)
-
+	
 	//Abrimos el archivo
 	spacef.file, err = os.OpenFile(url, os.O_RDWR | os.O_CREATE, os.ModePerm)
 	if err != nil {

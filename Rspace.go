@@ -11,7 +11,7 @@ func (RB *RBuffer) readByteSpace(){
 
 	if EDAC &&
 	RB.logTimeReadFile && !RB.isErrorFile {
-		defer RB.NewLogDeferTimeMemory("readBytes", time.Now())
+		defer RB.NewLogDeferTimeMemorySF("readBytes", time.Now())
 	}
 
 	if checkFileTypeBuffer(RB.typeBuff , buffBytes ){

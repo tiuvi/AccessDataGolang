@@ -48,6 +48,64 @@ func (SP *space) NewTimeFilePermDisk() {
 	SP.fileNativeType = permDisk
 }
 
+
+
+
+func (SP *space) NewDacByte() {
+
+	if EDAC && 
+	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
+
+	SP.extension  = dacByte
+	SP.fileCoding = bytes
+}
+
+
+func (SP *space) NewDacBit() {
+
+	if EDAC && 
+	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
+
+	SP.extension = dacBit
+	SP.fileCoding = bit
+}
+
+//Unicamente para otras extensiones que no sean dacbyte o dacbit
+func (SP *space) SetFileCodgingBit() {
+
+	if EDAC && 
+	SP.ECSD( SP.fileCoding > 0, "Propiedad filecoding ya establecida e inmutable."){}
+
+	SP.fileCoding = bit
+}
+
+//Unicamente para otras extensiones que no sean dacbyte o dacbit
+func (SP *space) SetFileCodgingByte() {
+
+	if EDAC && 
+	SP.ECSD( SP.fileCoding > 0, "Propiedad filecoding ya establecida e inmutable."){}
+
+	SP.fileCoding = bytes
+}
+
+func (SP *space) SetExtensionHtml() {
+
+	if EDAC && 
+	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
+
+	SP.extension = html
+
+}
+
+func (SP *space) SetExtension(extension string) {
+
+	if EDAC && 
+	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
+
+	SP.extension = extension
+
+}
+
 func (SP *space) SetDir(dirName string) {
 
 	if EDAC && 
@@ -82,23 +140,7 @@ func (SP *space) SetSubDir(dir ...string) {
 }
 
 
-func (SP *space) NewDacByte() {
 
-	if EDAC && 
-	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
-
-	SP.extension = dacByte
-
-}
-
-func (SP *space) NewDacBit() {
-
-	if EDAC && 
-	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
-
-	SP.extension = dacBit
-
-}
 
 func (SP *space) NewField(name string, size int64) {
 

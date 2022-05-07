@@ -2,6 +2,7 @@ package dac
 
 import (
 	"log"
+
 )
 
 /*
@@ -10,7 +11,7 @@ import (
 *
  */
 
- func NewBasicDac(path string) {
+func NewBasicDac(path string) {
 
 	// Inicio de DAC
 	lDAC := NewLaunchDac()
@@ -36,14 +37,12 @@ func NewDac(path string, fopenDefer int, secondsEvent int64) {
 	lDAC.SetGlobalDACFolder(path)
 }
 
-
-
 /*
 * Funciones de nuevo espacio global
 *
  */
+func NewSf(fileNativeType fileNativeType,fileCoding fileCoding, extension string, fields map[string]int64, columns map[string]int64, dirName ...string)*PublicSpaceFile{
 
-func NewSfPermBytes(fields map[string]int64, columns map[string]int64, dirName ...string) *PublicSpaceFile {
 
 	DAC := GetGlobalDac()
 	if DAC == nil {
@@ -58,9 +57,16 @@ func NewSfPermBytes(fields map[string]int64, columns map[string]int64, dirName .
 
 	//Creacion de un espacio
 	space := DAC.NewSpace()
-	space.NewTimeFilePermDisk()
-	space.NewDacByte()
-	space.SetSubDir(dirName[:len(dirName)-1]...)
+
+	switch fileNativeType {
+
+		case permDisk:
+			space.NewTimeFilePermDisk()
+		case deferDisk:
+			space.NewTimeFileDeferDisk()
+		case disk:
+			space.NewTimeFileDisk()
+	}
 
 	if len(fields) > 0 {
 		for name, size := range fields {
@@ -69,17 +75,67 @@ func NewSfPermBytes(fields map[string]int64, columns map[string]int64, dirName .
 		}
 	}
 
-	if len(columns) > 0 {
+	switch fileCoding {
+		case  bit:
+			space.SetFileCodgingBit()
+			if len(columns) > 0 {
 
-		for name, size := range columns {
+				for name := range columns {
+		
+					space.NewColumnBit(name)
+				}
+			}
+		case bytes:
+			space.SetFileCodgingByte()
+			if len(columns) > 0 {
 
-			space.NewColumnByte(name, size)
-		}
+				for name, size := range columns {
+		
+					space.NewColumnByte(name, size)
+				}
+			}
 	}
+
+	switch extension {
+
+		case dacBit:
+			space.NewDacBit()
+		case dacByte:
+			space.NewDacByte()
+		case html:
+			space.SetExtensionHtml()
+		default:
+		space.SetExtension(extension)
+	}
+
+	
+
+	space.SetSubDir(dirName[:len(dirName)-1]...)
+
 
 	space.OSpaceInit()
 
 	return &PublicSpaceFile{
 		spaceFile: space.OSpace(dirName[len(dirName)-1]),
 	}
+ }
+
+
+func NewSfPermBytes(fields map[string]int64, columns map[string]int64, dirName ...string) *PublicSpaceFile {
+
+	return NewSf(permDisk , bytes, dacByte ,  fields , columns, dirName...)
+
 }
+
+func NewSfDeferDiskBytes(fields map[string]int64, columns map[string]int64, dirName ...string) *PublicSpaceFile {
+
+	return NewSf(deferDisk , bytes, dacByte , fields , columns, dirName...)
+
+}
+
+func NewSfDiskBytes(fields map[string]int64, columns map[string]int64, dirName ...string) *PublicSpaceFile {
+
+	return NewSf(disk , bytes, dacByte , fields , columns, dirName...)
+
+}
+
