@@ -11,8 +11,9 @@ viernes mañana - 4.5
 viernes tarde  - 4
 Sabado mañana - 2
 sabado tarde - 5
+domingo mañana - 4 
 
-semana - 45.5
+semana - 49.5
 
 Añadido en esta version 0.1.1
         Correccion runCallerGlobal de las funciones timeStat que devolvian mal el fichero.

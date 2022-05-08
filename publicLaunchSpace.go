@@ -120,7 +120,6 @@ func (SP *space) SetDir(dirName string) {
 	SP.ECSD( len(SP.dir) > 0 , "Propiedad dir ya establecida e inmutable.") ||
 	SP.ECSD( len(dirName) == 0 , "Estas enviando una cadena vacia."){}
 	
-	dirName = regexPathGlobalNoSlash(dirName)
 
 	SP.dir =  strings.Join([]string{SP.globalDACFolder , dirName , "/" } , "")
 
@@ -135,12 +134,11 @@ func (SP *space) SetSubDir(dir ...string) {
 	SP.dir = SP.globalDACFolder
 	
 	for _ , dirNameStr := range dir {
-		
-		regDirName := regexPathGlobalNoSlash(dirNameStr)
+			
 		if EDAC && 
-		SP.ECSD( len(regDirName) == 0 , "Estas enviando una cadena vacia en un array."){}
+		SP.ECSD( len(dirNameStr) == 0 , "Estas enviando una cadena vacia en un array."){}
 
-		SP.dir = strings.Join([]string{SP.dir ,regDirName , "/"}, "" )
+		SP.dir = strings.Join([]string{SP.dir ,dirNameStr , "/"}, "" )
 	
 	}
 

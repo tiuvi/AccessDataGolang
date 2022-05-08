@@ -278,7 +278,7 @@ func (LDAC *lDAC) OffAllErrors() {
 /**********************************************************************************************/
 
 
-func  newExtensionAllowed(extension string, description string)bool{
+func  NewExtensionAllowed(extension string, description string)bool{
 
 	if _ , found := extensionFile[extension]; found {
 		return false
@@ -289,6 +289,16 @@ func  newExtensionAllowed(extension string, description string)bool{
 
 }
 
+
+func GetExtension()(extension []string){
+
+	for extName := range extensionFile {
+
+		extension = append(extension, extName)
+	}
+
+	return
+}
 
 /**********************************************************************************************/
 /* Configuracion eventos de fichero */

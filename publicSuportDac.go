@@ -4,6 +4,7 @@ import(
 	"os"
 	"fmt"
 	"strings"
+	"regexp"
 )
 
 /**********************************************************************************************/
@@ -330,3 +331,57 @@ func (SP *spaceFile) CheckDirSF()bool {
 
 	return false
 }
+
+var SanitizeUrlContentRegexp = regexp.MustCompile(`[^a-zA-Z0-9/]`)
+func SanitizeUrl(levelU uint8,maxLevelU uint8,url string)(patch []string){
+
+	level    := int(levelU)
+	maxLevel := int(maxLevelU)
+	
+	if len(url) == 0 {
+		return []string{}
+	}
+
+	//url = SanitizeUrlContentRegexp.ReplaceAllString( url , "")
+
+	patch = strings.Split(url , ".")
+
+	patch[0] = patch[0][1:]
+	patch = strings.Split(patch[0] , "/")
+
+	lenPath := len(patch)
+
+	if lenPath == 0 {
+		return []string{}
+	}
+
+	if lenPath > level {
+
+		patch  = patch[level:]
+
+	} else {
+		return []string{}
+	}
+
+	lenPath = len(patch)
+
+	if lenPath < maxLevel {
+		patch  = patch[:lenPath]
+	}
+
+	if lenPath >= maxLevel {
+		patch  = patch[:maxLevel]
+	}
+	
+	
+	for ind, value :=  range patch{
+
+		patch[ind] = SanitizeUrlContentRegexp.ReplaceAllString( value , "")
+
+	}
+
+
+	return patch
+}
+
+

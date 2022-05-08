@@ -4,7 +4,7 @@ import (
 
 	"os"
 	"strings"
-	"sync"
+	"log"
 	"time"
 )
 
@@ -205,22 +205,77 @@ func(PSF *PublicSpaceFile) DeleteFile(){
 	PSF.ECSFD( err != nil ,"Error al borrar el archivo"){}
 }
 
+
+
+
+
+
+
+
+
+
 /**************************************************************************/
 //Public space file maps disk
 /**************************************************************************/
 
+func SeeGlobalCache(){
 
-
-
-type PublicSpaceCache struct {
-	diskFile map[string]*PublicSpaceFile
-	sync.RWMutex
+	log.Println(globalCache.cache)
 }
+
+func GetCache(directory string)*PublicSpaceCache{
+
+	globalCache.RLock()
+	PublicSpaceCache, found := globalCache.cache[directory]
+	globalCache.RUnlock()
+	if !found {
+		return nil
+	}
+	return PublicSpaceCache
+}
+
+func  InsertCache(directory string)*PublicSpaceCache{
+
+	globalCache.RLock()
+	cache, found := globalCache.cache[directory]
+	globalCache.RUnlock()
+	if found {
+
+		return cache
+	}
+
+	if !found {
+
+		newCache := NewCache()
+		globalCache.Lock()
+		globalCache.cache[directory] = newCache
+		globalCache.Unlock()
+		return newCache
+	}
+
+	return nil
+}
+
+func DeleteCache(directory string){
+
+	globalCache.RLock()
+	_ , found := globalCache.cache[directory]
+	globalCache.RUnlock()
+	if found {
+		
+		globalCache.Lock()
+		delete(globalCache.cache, directory)
+		globalCache.Unlock()
+
+	}
+	
+}
+
 
 func NewCache()*PublicSpaceCache{
 
 	return &PublicSpaceCache{
-			diskFile: make(map[string]*PublicSpaceFile),	
+			cache: make(map[string]*PublicSpaceFile),	
 	}
 
 }
@@ -228,7 +283,7 @@ func NewCache()*PublicSpaceCache{
 func (PSD *PublicSpaceCache) GetFileCache(url string)*PublicSpaceFile{
 
 	PSD.RLock()
-	PublicSpaceFile, found := PSD.diskFile[url]
+	PublicSpaceFile, found := PSD.cache[url]
 	PSD.RUnlock()
 	if !found {
 		return nil
@@ -240,26 +295,25 @@ func (PSD *PublicSpaceCache) GetFileCache(url string)*PublicSpaceFile{
 func (PSD *PublicSpaceCache) InsertFileCache(PSF *PublicSpaceFile){
 
 	PSD.RLock()
-	_, found := PSD.diskFile[PSF.url]
+	_, found := PSD.cache[PSF.url]
 	PSD.RUnlock()
 	if !found {
 
 		PSD.Lock()
-		PSD.diskFile[PSF.url] = PSF
+		PSD.cache[PSF.url] = PSF
 		PSD.Unlock()
-		PSF.PublicSpaceCache = PSD
 	}
 }
 
 func (PSD *PublicSpaceCache) UpdateFileCache(PSF *PublicSpaceFile){
 
 	PSD.RLock()
-	_, found := PSD.diskFile[PSF.url]
+	_, found := PSD.cache[PSF.url]
 	PSD.RUnlock()
 	if found {
 
 		PSD.Lock()
-		PSD.diskFile[PSF.url] = PSF
+		PSD.cache[PSF.url] = PSF
 		PSD.Unlock()
 		
 	}
@@ -269,12 +323,12 @@ func (PSD *PublicSpaceCache) UpdateFileCache(PSF *PublicSpaceFile){
 func (PSD *PublicSpaceCache) DeleteFileCache(PSF *PublicSpaceFile){
 
 	PSD.RLock()
-	_ , found := PSD.diskFile[PSF.url]
+	_ , found := PSD.cache[PSF.url]
 	PSD.RUnlock()
 	if found {
 		
 		PSD.Lock()
-		delete(PSD.diskFile, PSF.url)
+		delete(PSD.cache, PSF.url)
 		PSD.Unlock()
 
 	}

@@ -379,10 +379,7 @@ type PublicSpace struct  {
 	*space
 }
 
-type PublicSpaceFile struct  {
-	*spaceFile
-	*PublicSpaceCache
-}
+
 
 var Space map[string]*space
 
@@ -420,6 +417,31 @@ var permSpace = &spacePermDisk{
 
 
 
+//Archivos
+type PublicSpaceFile struct  {
+	*spaceFile
+	*PublicSpaceCache
+}
+
+//Rutas de archivo
+type PublicSpaceCache struct {
+	cache map[string]*PublicSpaceFile
+	sync.RWMutex
+}
+
+//Directorios
+type spaceGlobalCache struct {
+	cache map[string]*PublicSpaceCache
+	sync.RWMutex
+}
+
+//Iniciando variable global de cache de rutas de directorios
+var globalCache = &spaceGlobalCache{
+	cache: make(map[string]*PublicSpaceCache),
+}
+
+
+
 type spaceFile struct {
 	*space
 	file *os.File
@@ -450,6 +472,8 @@ type spacePermDisk struct {
 	permDisk map[string]*spaceFile
 	sync.RWMutex
 }
+
+
 
 
 /**********************************************************************************************/
