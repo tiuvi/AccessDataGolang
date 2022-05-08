@@ -66,6 +66,8 @@ func NewSf(fileNativeType fileNativeType,fileCoding fileCoding, extension string
 			space.NewTimeFileDeferDisk()
 		case disk:
 			space.NewTimeFileDisk()
+		case openFile:
+			space.NewTimeFileOpenFile()
 	}
 
 	if len(fields) > 0 {
@@ -139,3 +141,8 @@ func NewSfDiskBytes(fields map[string]int64, columns map[string]int64, dirName .
 
 }
 
+func NewSfopenFile(fields map[string]int64, columns map[string]int64, dirName ...string) *PublicSpaceFile {
+
+	return NewSf(openFile , bytes, dacByte , fields , columns, dirName...)
+
+}

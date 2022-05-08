@@ -48,6 +48,14 @@ func (SP *space) NewTimeFilePermDisk() {
 	SP.fileNativeType = permDisk
 }
 
+func (SP *space) NewTimeFileOpenFile() {
+
+	if EDAC && 
+	SP.ECSD(SP.fileNativeType > 0 , "Propiedad filenativetype ya establecida e inmutable."){}
+	
+
+	SP.fileNativeType = openFile
+}
 
 
 

@@ -86,6 +86,10 @@ func BoldConsole(str string) string {
 
 	return strings.Join([]string{"\u001b[01m", ColorWhite, "\u001b[40m", str, Reset}, "")
 }
+func BCG(str string) string {
+
+	return strings.Join([]string{"\u001b[01m", ColorGreen, "\u001b[40m", str, Reset}, "")
+}
 
 func (errorDac errorDac )PrintConsole()string{
 

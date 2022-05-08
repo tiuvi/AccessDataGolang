@@ -28,6 +28,13 @@ func (SP *space ) OSpace( name string ,folder... string)*spaceFile  {
 
 	}
 
+	if checkFileNativeType(SP.fileNativeType, openFile ){
+
+		return SP.ospaceOpenFile(name, folder)
+
+	}
+	
+
 	if EDAC &&
 	SP.ECSD( true ,"Error grave sin coincidencias FileNativeType."){}
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func NewContentReadDiskSf(extension string, dirName ...string) *PublicSpaceFile {
+func (PSC *PublicSpaceCache) NewContentReadDiskSf(extension string, dirName ...string) *PublicSpaceFile {
 
 	DAC := GetGlobalDac()
 	dir := DAC.globalDACFolder
@@ -31,22 +31,28 @@ func NewContentReadDiskSf(extension string, dirName ...string) *PublicSpaceFile 
 
 	}
 
-	dir = strings.Join([]string{dir, ".html"}, "")
+	dir = strings.Join([]string{dir, ".",extension}, "")
 
-	if spaceFile := getFileDisk(dir); spaceFile != nil {
+	
+	if PublicSF := PSC.GetFileCache(dir); PublicSF != nil {
 
-		return spaceFile.SetPublicSpaceFile()
+		return PublicSF
 	}
+	
 
 	info, err := os.Stat(dir)
 	if err != nil {
 		return nil
 	}
 
-	return NewSf(disk, bytes, html, map[string]int64{extension: info.Size()}, nil, dirName...)
+	PSF := NewSf(openFile, bytes, html, map[string]int64{extension: info.Size()}, nil, dirName...)
+
+	PSC.InsertFileCache(PSF)
+
+	return PSF
 }
 
-func NewContentWriteDiskSf(extension string, lenContent int64, dirName ...string) *PublicSpaceFile {
+func(PSC *PublicSpaceCache) NewContentWriteDiskSf(extension string, lenContent int64, dirName ...string) *PublicSpaceFile {
 
 	DAC := GetGlobalDac()
 	dir := DAC.globalDACFolder
@@ -71,12 +77,31 @@ func NewContentWriteDiskSf(extension string, lenContent int64, dirName ...string
 
 	}
 
-	dir = strings.Join([]string{dir, ".html"}, "")
+	dir = strings.Join([]string{dir, ".",extension}, "")
 
-	deleteFileDisk(dir)
+	if PSF := PSC.GetFileCache(dir); PSF != nil {
 
-	return NewSf(disk, bytes, html, map[string]int64{extension: lenContent}, nil, dirName...)
+		if size , _ := PSF.indexSizeFields[extension]; size[1] == lenContent{
+		
+			log.Print(BCG("Get File") )
+			return PSF
 
+		} else {
+
+			PSF := NewSf(openFile, bytes, html, map[string]int64{extension: lenContent}, nil, dirName...)
+			PSC.UpdateFileCache(PSF)
+
+			log.Print(BCG("Update File") )
+
+			return PSF
+		}
+	}
+	
+	PSF:= NewSf(openFile, bytes, html, map[string]int64{extension: lenContent}, nil, dirName...)
+	log.Print(BCG("Insert File") )
+	PSC.InsertFileCache(PSF)
+	
+	return PSF
 }
 
 
@@ -90,7 +115,7 @@ func NewContentWriteDiskSf(extension string, lenContent int64, dirName ...string
 
 
 /*
-Funciones automaticas
+	Funciones automaticas
 
 */
 //ESta funcion genera todas las funciones de contenido.
@@ -124,8 +149,25 @@ func New`+nameMayus+`WriteDiskSf(lenContent int64,dirName ...string) *PublicSpac
 }
 
 
+var HtmlCacheDac  *PublicSpaceCache = &PublicSpaceCache{
+	diskFile: map[string]*PublicSpaceFile{},
+}
 
+func NewHtmlReadDiskSf(dirName ...string) *PublicSpaceFile {
+
+	return HtmlCacheDac.NewContentReadDiskSf(html, dirName...)
+
+}
+
+func NewHtmlWriteDiskSf(lenContent int64, dirName ...string) *PublicSpaceFile {
+
+	return HtmlCacheDac.NewContentWriteDiskSf(html, lenContent, dirName...)
+
+}
+
+/*
 func NewCssReadDiskSf(dirName ...string) *PublicSpaceFile {
+	
 
 	return NewContentReadDiskSf(css, dirName...)
 
@@ -185,18 +227,6 @@ func NewSvgWriteDiskSf(lenContent int64, dirName ...string) *PublicSpaceFile {
 
 }
 
-
-func NewHtmlReadDiskSf(dirName ...string) *PublicSpaceFile {
-
-	return NewContentReadDiskSf(html, dirName...)
-
-}
-
-func NewHtmlWriteDiskSf(lenContent int64, dirName ...string) *PublicSpaceFile {
-
-	return NewContentWriteDiskSf(html, lenContent, dirName...)
-
-}
 
 func NewJpgReadDiskSf(dirName ...string) *PublicSpaceFile {
 
@@ -281,3 +311,5 @@ func NewPdfWriteDiskSf(lenContent int64, dirName ...string) *PublicSpaceFile {
 	return NewContentWriteDiskSf(pdf, lenContent, dirName...)
 
 }
+
+*/

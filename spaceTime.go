@@ -1,7 +1,6 @@
 package dac
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -28,23 +27,17 @@ func (LDAC *lDAC) dacTimerCloserDeferFile() {
 		for len(deferSpace.info) > LDAC.fileOpenDeferFile {
 
 			//Buscamos el primer elemento del slice añadido
-			value, found := deferSpace.deferFile[deferSpace.info[0].name]
+			_, found := deferSpace.deferFile[deferSpace.info[0].name]
 
 			//Si encontramos el elemento
 			if found {
 
-				//Cerramos el descriptor del archivo
-				err := value.file.Close()
-				if err != nil && EDAC && 
-				LDAC.ELDACF( true,"Error al cerrar el archivo en el mapa defer global. \n\r" + fmt.Sprintln(err)){}
+				//Borrado del elemento del mapa y de la variable
+				delete(deferSpace.deferFile, deferSpace.info[0].name)
 
+				//Borramos el primer elemento del slice que hemos borrado
+				deferSpace.info = deferSpace.info[1:]
 			}
-
-			//Borrado del elemento del mapa y de la variable
-			delete(deferSpace.deferFile, deferSpace.info[0].name)
-
-			//Borramos el primer elemento del slice que hemos borrado
-			deferSpace.info = deferSpace.info[1:]
 
 		}
 
@@ -71,15 +64,10 @@ func (LDAC *lDAC) dacTimerCloserDiskFile() {
 		diskSpace.Lock()
 
 		//Recorremos todo el mapa
-		for ind, value := range diskSpace.diskFile {
-
-			//Cerramos todos los archivos
-			err := value.file.Close()
-			if err != nil && EDAC && 
-			LDAC.ELDACF( true,"Error al cerrar el archivo en el mapa defer global. \n\r" + fmt.Sprintln(err)){}
+		for urlDiskFile := range diskSpace.diskFile {
 
 			//Borrado del elemento del mapa y de la variable
-			delete(diskSpace.diskFile, ind)
+			delete(diskSpace.diskFile, urlDiskFile)
 
 		}
 		

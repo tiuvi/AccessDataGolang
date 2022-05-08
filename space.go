@@ -127,6 +127,7 @@ const (
 	disk fileNativeType = 1 << iota
 	deferDisk
 	permDisk
+	openFile
 )
 
 //Diferenciar archivos de Bit de archivos de Byte
@@ -380,6 +381,7 @@ type PublicSpace struct  {
 
 type PublicSpaceFile struct  {
 	*spaceFile
+	*PublicSpaceCache
 }
 
 var Space map[string]*space

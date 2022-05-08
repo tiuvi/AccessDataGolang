@@ -1,10 +1,33 @@
 package dac
 
 import (
-	"strings"
-	"time"
+
 	"os"
+	"strings"
+	"sync"
+	"time"
 )
+
+//Abrimos el archivo
+func (obj *space) ospaceOpenFile(name string, folder []string) (spacef *spaceFile) {
+
+	if EDAC &&
+		obj.logTimeOpenFile && !obj.isErrorFile {
+		defer obj.NewLogDeferTimeMemory("diskFile", time.Now())
+	}
+
+	var folderString string
+	if len(folder) > 0 {
+
+		folderString = strings.Join(folder, "/")
+		folderString += "/"
+	}
+
+
+	//Creamos una nueva referencia a spaceFile
+	return obj.newSpaceFile(folderString, name)
+
+}
 
 //Abrimos el espacio en disco
 func (obj *space) ospaceDisk(name string, folder []string) *spaceFile {
@@ -20,9 +43,13 @@ func (obj *space) ospaceDisk(name string, folder []string) *spaceFile {
 		folderString = strings.Join(folder, "/")
 		folderString += "/"
 	}
-	url := obj.dir + folderString + name + "." + obj.extension
 
+	url := strings.Join([]string{obj.dir, folderString, name, ".", obj.extension}, "")
+	
+	diskSpace.RLock()
 	spacef, found := diskSpace.diskFile[url]
+	diskSpace.RUnlock()
+
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
@@ -54,7 +81,9 @@ func (obj *space) ospaceDeferDisk(name string, folder []string) *spaceFile {
 	}
 	url := strings.Join([]string{obj.dir, folderString, name, ".", obj.extension}, "")
 
+	deferSpace.RLock()
 	spacef, found := deferSpace.deferFile[url]
+	deferSpace.RUnlock()
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
@@ -87,8 +116,10 @@ func (obj *space) ospacePermDisk(name string, folder []string) *spaceFile {
 		folderString += "/"
 	}
 	url := strings.Join([]string{obj.dir, folderString, name, ".", obj.extension}, "")
-
+	
+	permSpace.RLock()
 	spacef, found := permSpace.permDisk[url]
+	permSpace.RUnlock()
 	if !found {
 
 		//Creamos una nueva referencia a spaceFile
@@ -111,11 +142,13 @@ func(SF *spaceFile) DeleteFile(){
 
 	if SF.fileNativeType == disk {
 
-		spaceFile , found := diskSpace.diskFile[SF.url]
+		diskSpace.RLock()
+		_ , found := diskSpace.diskFile[SF.url]
+		diskSpace.RUnlock()
+
 		if found {
 			
 			diskSpace.Lock()
-			spaceFile.file.Close()
 			delete(diskSpace.diskFile, SF.url)
 			diskSpace.Unlock()
 	
@@ -124,12 +157,13 @@ func(SF *spaceFile) DeleteFile(){
 	}
 
 	if SF.fileNativeType == deferDisk {
-
-		spaceFile , found := deferSpace.deferFile[SF.url]
+		
+		deferSpace.RLock()
+		_ , found := deferSpace.deferFile[SF.url]
+		deferSpace.RUnlock()
 		if found {
 			
 			deferSpace.Lock()
-			spaceFile.file.Close()
 			delete(deferSpace.deferFile , SF.url)
 			deferSpace.Unlock()
 
@@ -138,11 +172,12 @@ func(SF *spaceFile) DeleteFile(){
 
 	if SF.fileNativeType == permDisk {
 
-		spaceFile , found := permSpace.permDisk[SF.url]
+		permSpace.RLock()
+		_ , found := permSpace.permDisk[SF.url]
+		permSpace.RUnlock()
 		if found {
 			
 			permSpace.Lock()
-			spaceFile.file.Close()
 			delete(permSpace.permDisk , SF.url)
 			permSpace.Unlock()
 	
@@ -155,25 +190,93 @@ func(SF *spaceFile) DeleteFile(){
 	
 }
 
-func getFileDisk(url string)*spaceFile{
 
-	spacef, found := diskSpace.diskFile[url]
+
+func(PSF *PublicSpaceFile) DeleteFile(){
+
+
+	if PSF.PublicSpaceCache != nil {
+
+		PSF.PublicSpaceCache.DeleteFileCache(PSF)
+
+	}
+	err := os.Remove(PSF.url)
+	if EDAC &&
+	PSF.ECSFD( err != nil ,"Error al borrar el archivo"){}
+}
+
+/**************************************************************************/
+//Public space file maps disk
+/**************************************************************************/
+
+
+
+
+type PublicSpaceCache struct {
+	diskFile map[string]*PublicSpaceFile
+	sync.RWMutex
+}
+
+func NewCache()*PublicSpaceCache{
+
+	return &PublicSpaceCache{
+			diskFile: make(map[string]*PublicSpaceFile),	
+	}
+
+}
+
+func (PSD *PublicSpaceCache) GetFileCache(url string)*PublicSpaceFile{
+
+	PSD.RLock()
+	PublicSpaceFile, found := PSD.diskFile[url]
+	PSD.RUnlock()
 	if !found {
 		return nil
 	}
 
-	return spacef
+	return PublicSpaceFile
 }
 
-func deleteFileDisk(url string){
+func (PSD *PublicSpaceCache) InsertFileCache(PSF *PublicSpaceFile){
 
-	spaceFile , found := diskSpace.diskFile[url]
+	PSD.RLock()
+	_, found := PSD.diskFile[PSF.url]
+	PSD.RUnlock()
+	if !found {
+
+		PSD.Lock()
+		PSD.diskFile[PSF.url] = PSF
+		PSD.Unlock()
+		PSF.PublicSpaceCache = PSD
+	}
+}
+
+func (PSD *PublicSpaceCache) UpdateFileCache(PSF *PublicSpaceFile){
+
+	PSD.RLock()
+	_, found := PSD.diskFile[PSF.url]
+	PSD.RUnlock()
+	if found {
+
+		PSD.Lock()
+		PSD.diskFile[PSF.url] = PSF
+		PSD.Unlock()
+		
+	}
+}
+
+
+func (PSD *PublicSpaceCache) DeleteFileCache(PSF *PublicSpaceFile){
+
+	PSD.RLock()
+	_ , found := PSD.diskFile[PSF.url]
+	PSD.RUnlock()
 	if found {
 		
-		diskSpace.Lock()
-		spaceFile.file.Close()
-		delete(diskSpace.diskFile, url)
-		diskSpace.Unlock()
+		PSD.Lock()
+		delete(PSD.diskFile, PSF.url)
+		PSD.Unlock()
 
 	}
+	
 }
