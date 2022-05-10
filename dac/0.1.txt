@@ -1,0 +1,183 @@
+log.Print(BCG("Rango: "), rango ,BCG("startRange: ") , *startRange )
+						
+
+
+if lenght - *startRange < bandwidth{
+        if resto := *startRange % bandwidth ; resto != 0 {
+                rango += 1
+        }
+}
+
+
+if file.CalcRangeField(extName ,bandwidth ) > rango {
+
+buffer2 := file.GetOneFieldRanges(extName, bandwidth, (rango + 1))
+
+*buffer.FieldBuffer = append(*buffer.FieldBuffer , *buffer2.FieldBuffer...)
+
+rango += 1
+}
+
+var lastRange = lenght - *startRange
+
+
+if lastRange < bandwidth {
+
+
+
+        log.Print(BCG("lastRange"),rango )	
+        log.Print(BCG("startRange"),*startRange, " > ", rango * bandwidth )	
+        if *startRange > rango * bandwidth  {
+        
+                endRangue = strconv.FormatInt( lenght -1 , 10)
+                H.HandlerContentLength(lastRange)
+
+                startRangeStr := strconv.FormatInt( rango * bandwidth   , 10)
+                response.Header().Set("Content-Range", "bytes "+startRangeStr+"-"+endRangue+"/"+fileSize)
+                
+
+                
+                log.Print(BCG("CalcRangeField") ,file.CalcRangeField(extName , bandwidth ) )
+
+                buffer := file.GetOneFieldRanges(extName ,bandwidth , rango)
+
+                
+                log.Print(BCG("lastRange") , buffer.GetTotalRangeBRspace() )	
+
+                log.Println(BCG("Len lastRange")   ,len( *buffer.FieldBuffer))
+                response.Write((*buffer.FieldBuffer)[*startRange - rango * bandwidth :]   )
+
+        } else {
+
+                endRangue = strconv.FormatInt( lenght -1 , 10)
+                H.HandlerContentLength(lastRange)
+
+                startRangeStr := strconv.FormatInt( rango * bandwidth   , 10)
+                response.Header().Set("Content-Range", "bytes "+startRangeStr+"-"+endRangue+"/"+fileSize)
+                
+
+        
+                buffer := file.GetOneFieldRanges(extName ,bandwidth , rango)
+
+                log.Print(BCG("lastRange"),buffer.GetTotalRangeBRspace() )	
+                response.Write(*buffer.FieldBuffer)
+
+        }
+} 
+
+*/
+
+
+
+
+Lunes mañana 6
+martes  mañana 5 horas
+
+
+
+Añadido en esta version 0.1.1
+
+        ACTUAL - Crear las rutas de servicio de contenido.
+
+
+        ACTUAL - lectura de archivos de contenido dinamica
+        ACTUAL - iniciacion de carpeta de directorios con contenido dinamico.
+
+       ACTUAL - Dar soporte de bytes para lectura de diferentes tipos de content type
+       ACTUAL - Space dinamico donde la lectura del primer campo te de el segundo campo
+       
+
+
+
+
+Empeza version beta
+
+
+FUNCIONALIDAD - Gestion de borrado de carpetas, borrado de archivos, truncado de archivos...
+IDEA          - Soporte para truncar archivos cuando se copilan como vaciar errores
+FUNCIONALIDAD - Crear las funciones de borrado de archivos, directorios, subdirectorios.
+
+IDEA - Leer campo y escribir en el como sumar un numero.
+
+FUNCIONALIDAD - Que abstraiga de crear un buffer de bit que sea on y off, y lo cree automaticamente.
+FUNCIONALIDAD - Funciones para gestionar los mapas globales
+
+
+
+
+IDEA - SubPaquete funciones que muestren los datos para iniciar un space o un file en cualquier otro servidor
+        cuando se detecte la extension dacbyte o dacbit, el servidor podra pedir los datos del space para recrearlo.
+crear funcion que pueda recrear un spacio desde un archivo.
+
+IDEA - Añadir funciones de copiar un espacio en un nuevo espacio con mas columnas , mas fields o eliminando
+columnas o campos de manera mas facil y rapida, y haciendo un rename al final.
+
+
+IDEA - Funcion que escriba espacios al final
+IDEA - Funcion que escriba saltos de linea al final
+
+IDEA - SubPaquete para gestionar indexsizefields dinamicos en tiempo de ejecución.
+
+IDEA - SubPaquete que envuelva las funciones de lectura para tipar los resultados.
+
+IDEA - Añadir versiones a los archivos, de tal modo que se pueda Añadir modificaciones, sin tener que actualizar 
+        si no actualizacion por uso, cuando se usa se modifica directamente a la siguiente version.
+
+IDEA - SubPaquete Tunelizacion de archivo:
+            Usar el preformate y el postformat para crear un flujo o analisis de datos de archivos.
+
+                Ejemplo 1
+                preformat -> archivo1 -> postformat -> preformat -> archivo2 -> postformat.
+
+                Ejemplo2
+                        preformat -> archivo1 -> postformat
+                        preformat -> archivo2 -> postformat
+                        preformat -> archivo3 -> postformat
+                          archivo1 ,archivo2 ,archivo3 -> preformat -> archivo4 -> postformat.
+
+
+IDEA - Añadir funciones de busqueda de archivos y listado de archivos en spacio, para operar en muchos ficheros
+como crear grandes actualizaciones por ejemplo o analisis de datos , o entrenar IA.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Semana 2-8 mayo
+Lunes Mañana - 3
+lunes tarde  - 2.5 
+lunes tarde  - 3.5
+martes madrugada - 2.5
+martes tarde - 2.5
+martes tarde - 2.5
+miercoles madrugada - 2.5
+miercoles tarde -3.5
+jueves mañana - 8
+viernes mañana - 4.5
+viernes tarde  - 4
+Sabado mañana - 2
+sabado tarde - 5
+domingo mañana - 4 
+domingo tarde - 6.5
+semana - 56 horas
