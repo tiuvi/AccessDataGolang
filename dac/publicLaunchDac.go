@@ -277,14 +277,16 @@ func (LDAC *lDAC) OffAllErrors() {
 /* Configuracion extensiones */
 /**********************************************************************************************/
 
-
-func  NewExtensionAllowed(extension string, description string)bool{
+//No usar un contentType admitido dara un error a la hora de crear las rutas de contenido.
+func NewExtensionAllowed(extension string, contentType string, allowedrange bool)bool{
 
 	if _ , found := extensionFile[extension]; found {
+
 		return false
 	}
 
-	extensionFile[extension] = description
+	allowedRange[extension]  = allowedrange
+	extensionFile[extension] = contentType
 	return true
 
 }

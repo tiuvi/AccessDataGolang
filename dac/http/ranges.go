@@ -5,92 +5,89 @@ import (
 	"strconv"
 	"strings"
 	."dac"
-	
+	"log"
 )
 
+const (
+	_           = iota // ignore first value by assigning to blank identifier
+	KiloByte  = 1 << (10 * iota)
+	MegaByte
+	GigaByte
+	TeraByte
+	PetaByte
+	ExaByte
+	ZettaByte
+	YottaByte
+)
+
+type httpSpeakerOption struct {
+	bandwidth  int64
+	isCache    bool
+	isProtect  bool
+}
+
+
 type httpSpeaker struct {
+	*httpSpeakerOption
 	response   http.ResponseWriter
 	request    *http.Request
 	file       *PublicSpaceFile
 	fileSize   int64
 	contenType string
-	bandwidth  int64
 	isRange    bool
+
 }
 
-func NewHttpSpeaker(response http.ResponseWriter, request *http.Request, file *PublicSpaceFile, bandwidth uint32, protect bool, cache bool) {
+func SetHttpSpeakerOptions(bandwidth uint32, isProtect bool, isCache bool) *httpSpeakerOption{
 
-	H := &httpSpeaker{
-		response:   response,
-		request:    request,
-		file:       file,
-		contenType: file.GetExtension(),
-		fileSize:   file.CalcSizeField(file.GetExtension()),
+	return &httpSpeakerOption{
 		bandwidth:  int64(bandwidth),
+		isCache: isCache,
+		isProtect:isProtect,
 	}
+}
 
-	if !cache {
+
+func  (HSO *httpSpeakerOption) NewHttpSpeaker(response http.ResponseWriter, request *http.Request, file *PublicSpaceFile) {
+
+
+	H := new(httpSpeaker)
+	H.httpSpeakerOption = HSO
+	H.response =  response
+	H.request  =  request
+	H.file     =  file
+	H.contenType =  file.GetExtension()
+	H.fileSize   =  file.CalcSizeField(H.contenType)
+	H.isRange = 	 IsRagesExtension(H.contenType)
+
+	if !H.isCache {
 		H.handlerCache()
 	}
 
-	if protect {
+	if H.isProtect {
 		H.handlerSecurity()
 	}
+
 	H.handlerContentType()
 
 	H.writeRanges()
 
 }
 
+
+
+
 func (H *httpSpeaker) handlerContentType() {
 
-	if IsExtension(H.contenType) {
+	if value, found := IsExtensionContent(H.contenType); found {
 
-		switch H.contenType {
+		H.response.Header().Set("Content-Type", value)
+	
 
-		//Extensiones de contenido web
-		case "html":
-			H.response.Header().Set("Content-Type", "text/html; charset=UTF-8")
-		case "json":
-			H.response.Header().Set("Content-Type", "application/json; charset=utf-8")
-		case "js":
-			H.response.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
-		case "css":
-			H.response.Header().Set("Content-Type", "text/css; charset=UTF-8")
-
-		//Extensiones de contenido imagen
-		case "jpg":
-			H.response.Header().Set("Content-Type", "image/jpeg")
-		case "png":
-			H.response.Header().Set("Content-Type", "image/png")
-		case "webp":
-			H.response.Header().Set("Content-Type", "image/webp")
-		case "bmp":
-			H.response.Header().Set("Content-Type", "image/bmp")
-		case "svg":
-			H.response.Header().Set("Content-Type", "image/svg+xml")
-		case "gif":
-			H.response.Header().Set("Content-Type", "image/gif")
-		case "glb":
-			H.response.Header().Set("Content-Type", "model/gltf-binary")
+		if H.contenType == "glb" {
 			H.response.Header().Set("Access-Control-Allow-Origin", "*")
-
-		//Extensiones de audio
-		case "mp3":
-			H.response.Header().Set("Content-Type", "audio/mpeg")
-			H.onRange()
-		//Extensiones de contenido video
-		case "mp4":
-			H.response.Header().Set("Content-Type", "video/mp4")
-			H.onRange()
-
-		//Extensiones de contenido de documentos
-		case "pdf":
-			H.response.Header().Set("Content-Type", "application/pdf")
-		case "txt":
-			H.response.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-
 		}
+
 	}
 }
 
@@ -102,7 +99,7 @@ func (H *httpSpeaker) onRange() {
 func (H *httpSpeaker) writeRanges() {
 
 	//Si el tamño no supera al ancho de banda permitido entonces sirvelo completo
-	if H.fileSize <= H.bandwidth && !H.isRange {
+	if H.fileSize <= H.bandwidth && !H.isRange{
 
 		H.HandlerContentLength(H.fileSize)
 		RBuffer := H.file.GetOneFieldChan(H.contenType, H.bandwidth)
@@ -115,7 +112,7 @@ func (H *httpSpeaker) writeRanges() {
 	}
 
 	//Si el tamaño supera al ancho de banda permitido entonces sirvelo por rangos
-	if H.fileSize > H.bandwidth && H.isRange {
+	if H.fileSize > H.bandwidth  && H.isRange{
 
 		//Enviamos los encabezados de rangos y recibimos el encabezado Range
 		if startRange, rango := H.handlerHeaderRanges(); startRange != nil {
@@ -225,3 +222,42 @@ func (H *httpSpeaker) HandlerContentLength(length int64) {
 	H.response.Header().Set("Content-Length", strconv.FormatInt(length, 10))
 
 }
+
+
+
+func (HSO *httpSpeakerOption) NewContentRoute (url string,extension []string , dirName string ){
+
+	//Validar extensiones compatibles
+
+	testWrite := "testing"
+	texto := "creating file system"
+
+	for _, extName := range extension {
+		
+		if content := NewContentWrite(extName, int64(len(texto)), dirName , extName ,testWrite ); content != nil {
+			
+			if !content.CheckDirSF() { 
+				log.Println("CheckDirSF")
+				content.SetOneFieldString(extName, texto)
+				content.DeleteFile()
+			}
+		
+
+			http.HandleFunc( url + "/" + extName + "/",
+			func(response http.ResponseWriter, request *http.Request) {
+
+				path, extName := SanitizeUrl(0, 4, dirName + request.URL.Path)
+
+
+				if file := NewContentRead(extName, path...); file != nil {
+
+					//Abrebiamos una estructura para el response y el request
+					HSO.NewHttpSpeaker(response, request , file )
+
+				}
+			})
+		}
+	}
+
+}
+

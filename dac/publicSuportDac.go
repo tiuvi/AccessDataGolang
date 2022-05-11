@@ -169,15 +169,25 @@ func (SP *space) CalcSizeField(field string) (sizeTotal int64) {
 /**********************************************************************************************/
 
 //Verifica si el string, es un campo en ese espacio.
-func IsExtension(extName string) bool {
+func IsExtensionContent(extName string) (value string, found bool) {
 
 	if extName == "dacByte" || extName ==  "dacBit" {
-		return false
+		return 
 	}
-	_, found := extensionFile[extName]
+
+	value, found = extensionFile[extName]
 	if found {
 
-		return true
+		return 
+	}
+	return 
+}
+
+func IsRagesExtension(extName string) bool {
+
+	value, found := allowedRange[extName]
+	if found {
+		return value
 	}
 	return false
 }
@@ -344,7 +354,20 @@ func (SP *spaceFile) CheckDirSF()bool {
 	return false
 }
 
+func (SP *spaceFile) CheckFileSF()bool {
 
+	fInfo, err := os.Stat(SP.url)
+	if err != nil && 
+	err == os.ErrExist && 
+	EDAC && 
+	SP.ECSD( true,"Error al leer el directorio \n\r" +  fmt.Sprintln(err) ){}
+	
+	if fInfo.IsDir() {
+		return false
+	}
+
+	return true
+}
 
 
 var SanitizeUrlContentRegexp = regexp.MustCompile(`[^a-zA-Z0-9/]`)

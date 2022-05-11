@@ -176,31 +176,38 @@ const (
 var extensionFile = map[string]string{
 	dacByte: "Archivo que incluye fields y columnas de bytes",
 	dacBit:  "Archivo que incluye fields y una lista de bits",
-	html:    "Archivo que incluye fields y columnas de bytes, en html",
-	json : "json",
-	js   : "js",
-	css  : "css",
+
+	html:  "text/html; charset=UTF-8",
+	json : "application/json; charset=utf-8",
+	js   : "text/javascript; charset=UTF-8",
+	css  : "text/css; charset=UTF-8",
 
 	//Extensiones de contenido imagen
-	glb  : "glb",
-	gif  : "gif",
-	svg  : "svg",
-	png  : "png",
-	jpg  : "jpg",
-	webp : "webp",
-	bmp :"bmp",
+	glb  : "model/gltf-binary",
+	gif  : "image/gif",
+	svg  : "image/svg+xml",
+	png  : "image/png",
+	jpg  : "image/jpeg",
+	webp : "image/webp",
+	bmp :  "image/bmp",
 
 	//Extensiones de audio
-	mp3 : "mp3",
+	mp3 : "audio/mpeg",
 	
 	//Extensiones de contenido video
-	mp4 : "mp4",
+	mp4 :  "video/mp4",
 
 	//Extensiones de contenido de documentos
-	pdf : "pdf",
-	txt : "txt",
+	pdf : "application/pdf",
+	txt : "text/plain; charset=UTF-8",
 }
 
+var allowedRange = map[string]bool{
+	//Extensiones de audio
+	mp3 : true,
+//Extensiones de contenido video
+	mp4 :  true,
+}
 
 
 const (
