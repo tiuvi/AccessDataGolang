@@ -1,11 +1,13 @@
 package http
 
 import (
+	. "dac"
+	"log"
+
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
-	."dac"
-	"log"
 )
 
 const (
@@ -181,10 +183,7 @@ func (H *httpSpeaker) handlerHeaderRanges() (*int64, *int64) {
 
 	//Calculando el rango final y el tamaño del rango
 	var calcFinalRango int64 = (rango + 1) * H.bandwidth
-	if calcFinalRango == 0 {
-
-		calcFinalRango = H.bandwidth
-	} else if calcFinalRango > H.fileSize {
+	 if calcFinalRango > H.fileSize {
 
 		calcFinalRango = H.fileSize
 	}
@@ -237,7 +236,7 @@ func (HSO *httpSpeakerOption) NewContentRoute (url string,extension []string , d
 		if content := NewContentWrite(extName, int64(len(texto)), dirName , extName ,testWrite ); content != nil {
 			
 			if !content.CheckDirSF() { 
-				log.Println("CheckDirSF")
+	
 				content.SetOneFieldString(extName, texto)
 				content.DeleteFile()
 			}
@@ -258,6 +257,75 @@ func (HSO *httpSpeakerOption) NewContentRoute (url string,extension []string , d
 			})
 		}
 	}
-
 }
 
+var RegexpNewReactApp = regexp.MustCompile(`[^a-zA-Z0-9/.]`)
+func (HSO *httpSpeakerOption) NewReactApp (url string, dirName string ){
+
+	//Validar extensiones compatibles
+
+	testWrite := "testing3141592"
+	texto     := "creating file system"
+	extName   := "txt"
+
+		if content := NewContentWrite(extName, int64(len(texto)), dirName ,testWrite ); content != nil {
+			
+			content.DeleteFile()
+			
+		
+			log.Println(url)
+			http.HandleFunc( url ,
+			func(response http.ResponseWriter, request *http.Request) {
+
+				log.Println("Url peticion: ",request.URL.Path)
+
+				path, extName := SanitizeUrlRGP(RegexpNewReactApp , 0, 5, dirName + request.URL.Path)
+
+				if len(path) == 0  || len(extName) == 0 {
+					path     = []string{"build","index"}
+					extName = "html"
+				}
+
+				log.Println("Sanitize after peticion: ", path , extName)
+
+				if file := NewContentRead(extName, path...); file != nil {
+
+					//Abrebiamos una estructura para el response y el request
+					HSO.NewHttpSpeaker(response, request , file )
+
+				}
+			})
+		}
+}
+
+
+
+
+func (HSO *httpSpeakerOption) NewHtmlFileRoute (url string, dirName ...string ){
+
+	//Validar extensiones compatibles
+	texto     := "creating file system"
+	extName   := "html"
+
+		
+		if content := NewContentWrite(extName, int64(len(texto)), dirName...  ); content != nil {
+			
+			dirName = append(dirName, extName)
+
+			if !content.CheckDirSF() { 
+				content.SetOneFieldString(extName, texto)
+				content.DeleteFile()
+			}
+		
+			http.HandleFunc( url ,
+			func(response http.ResponseWriter, request *http.Request) {
+
+				if file := NewContentRead(extName, dirName...); file != nil {
+
+					//Abrebiamos una estructura para el response y el request
+					HSO.NewHttpSpeaker(response, request , file )
+
+				}
+			})
+		}
+}

@@ -200,6 +200,7 @@ func(PSF *PublicSpaceFile) DeleteFile(){
 		PSF.PublicSpaceCache.DeleteFileCache(PSF)
 
 	}
+	
 	err := os.Remove(PSF.url)
 	if EDAC &&
 	PSF.ECSFD( err != nil ,"Error al borrar el archivo"){}

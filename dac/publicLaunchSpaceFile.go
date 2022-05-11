@@ -1,6 +1,9 @@
 package dac
 
-
+import(
+	"strings"
+	"os"
+)
 
 func (SP *space ) OSpace( name string ,folder... string)*spaceFile  {
 
@@ -53,3 +56,43 @@ func (SF *spaceFile) SetPublicSpaceFile()*PublicSpaceFile{
 
 }
 
+
+
+func (SP *spaceFile) CheckDirSF()bool {
+
+	urlDir    := strings.SplitAfter(SP.url, "/")
+	urlDirStr := strings.Join(urlDir[:len(urlDir)-1], "")
+
+	fInfo, err := os.Stat(urlDirStr)
+	if err != nil && 
+	err == os.ErrExist && 
+	EDAC && 
+	SP.ECSD( true,"Error al leer el directorio \n\r" +  err.Error() ){}
+	
+	if fInfo.IsDir() {
+		return true
+	}
+
+	return false
+}
+
+func (SP *spaceFile) CheckFileSF()bool {
+
+	fInfo, err := os.Stat(SP.url)
+	if err != nil && 
+	err == os.ErrExist && 
+	EDAC && 
+	SP.ECSD( true,"Error al leer el directorio \n\r" +  err.Error() ){}
+	
+	if fInfo.IsDir() {
+		return false
+	}
+
+	return true
+}
+
+
+func (SP *spaceFile) GetUrl()string {
+ 
+	return SP.url
+}

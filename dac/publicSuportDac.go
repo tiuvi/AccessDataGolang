@@ -1,16 +1,15 @@
 package dac
 
-import(
-	"os"
+import (
 	"fmt"
-	"strings"
+	"os"
 	"regexp"
+	"strings"
 )
 
 /**********************************************************************************************/
 /* Columnas */
 /**********************************************************************************************/
-
 
 //Verifica si el string, es una columna en ese espacio.
 func (SF *space) IsColumnMap(column string) *bool {
@@ -336,38 +335,7 @@ func (SP *space) CheckDirSP()bool {
 	return false
 }
 
-func (SP *spaceFile) CheckDirSF()bool {
 
-	urlDir    := strings.SplitAfter(SP.url, "/")
-	urlDirStr := strings.Join(urlDir[:len(urlDir)-1], "")
-
-	fInfo, err := os.Stat(urlDirStr)
-	if err != nil && 
-	err == os.ErrExist && 
-	EDAC && 
-	SP.ECSD( true,"Error al leer el directorio \n\r" +  fmt.Sprintln(err) ){}
-	
-	if fInfo.IsDir() {
-		return true
-	}
-
-	return false
-}
-
-func (SP *spaceFile) CheckFileSF()bool {
-
-	fInfo, err := os.Stat(SP.url)
-	if err != nil && 
-	err == os.ErrExist && 
-	EDAC && 
-	SP.ECSD( true,"Error al leer el directorio \n\r" +  fmt.Sprintln(err) ){}
-	
-	if fInfo.IsDir() {
-		return false
-	}
-
-	return true
-}
 
 
 var SanitizeUrlContentRegexp = regexp.MustCompile(`[^a-zA-Z0-9/]`)
@@ -424,9 +392,9 @@ func SanitizeUrl(levelU uint8,maxLevelU uint8,url string)(patch []string, extNam
 	
 	
 	for ind, value :=  range patch{
-
+		
 		patch[ind] = SanitizeUrlContentRegexp.ReplaceAllString( value , "")
-
+		
 	}
 
 
@@ -434,3 +402,89 @@ func SanitizeUrl(levelU uint8,maxLevelU uint8,url string)(patch []string, extNam
 }
 
 
+
+
+var regexTwoDots = regexp.MustCompile(`\.\.`)
+func SanitizeUrlRGP(regexp *regexp.Regexp, levelU uint8,maxLevelU uint8,url string)(patch []string, extName string){
+
+	level    := int(levelU)
+	maxLevel := int(maxLevelU)
+	
+	if len(url) == 0 {
+		return []string{} , ""
+	}
+
+	//url = SanitizeUrlContentRegexp.ReplaceAllString( url , "")
+
+
+	position := strings.LastIndex(url, ".")
+	if position == -1 {
+		return []string{} , ""
+	}
+	extName = url[position +1:]
+
+	if extName == "map" {
+		url     = url[:position]
+		position := strings.LastIndex(url, ".")
+		if position == -1 {
+			return []string{} , ""
+		}
+		extName = url[position +1:]
+	}
+
+	url     = url[:position]
+	
+	if url[1:] == "/" {
+
+		url =  url[1:]
+
+	}
+	
+	patch = strings.Split(url , "/")
+	lenPath := len(patch)
+
+	if lenPath == 0 {
+		return []string{} , "" 
+	}
+
+	if lenPath > level {
+
+		patch  = patch[level:]
+
+	} else {
+
+		return []string{} , "" 
+	}
+
+	lenPath = len(patch)
+
+	if lenPath < maxLevel {
+		patch  = patch[:lenPath]
+	}
+
+	if lenPath >= maxLevel {
+		patch  = patch[:maxLevel]
+	}
+	
+	var x int
+	for ind, value :=  range patch{
+
+		ind = ind - x 
+		if value :=  regexp.ReplaceAllString( value , ""); value != ""{
+
+			if value :=  regexTwoDots.ReplaceAllString( value , ""); value != ""{
+				
+				patch[ind] = value
+				continue
+			}
+			continue
+		}
+
+		x++	
+	}
+	patch = patch[:len(patch)-x]
+
+	
+
+	return patch , extName
+}
