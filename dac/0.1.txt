@@ -1,79 +1,9 @@
-log.Print(BCG("Rango: "), rango ,BCG("startRange: ") , *startRange )
-						
 
 
-if lenght - *startRange < bandwidth{
-        if resto := *startRange % bandwidth ; resto != 0 {
-                rango += 1
-        }
-}
-
-
-if file.CalcRangeField(extName ,bandwidth ) > rango {
-
-buffer2 := file.GetOneFieldRanges(extName, bandwidth, (rango + 1))
-
-*buffer.FieldBuffer = append(*buffer.FieldBuffer , *buffer2.FieldBuffer...)
-
-rango += 1
-}
-
-var lastRange = lenght - *startRange
-
-
-if lastRange < bandwidth {
-
-
-
-        log.Print(BCG("lastRange"),rango )	
-        log.Print(BCG("startRange"),*startRange, " > ", rango * bandwidth )	
-        if *startRange > rango * bandwidth  {
-        
-                endRangue = strconv.FormatInt( lenght -1 , 10)
-                H.HandlerContentLength(lastRange)
-
-                startRangeStr := strconv.FormatInt( rango * bandwidth   , 10)
-                response.Header().Set("Content-Range", "bytes "+startRangeStr+"-"+endRangue+"/"+fileSize)
-                
-
-                
-                log.Print(BCG("CalcRangeField") ,file.CalcRangeField(extName , bandwidth ) )
-
-                buffer := file.GetOneFieldRanges(extName ,bandwidth , rango)
-
-                
-                log.Print(BCG("lastRange") , buffer.GetTotalRangeBRspace() )	
-
-                log.Println(BCG("Len lastRange")   ,len( *buffer.FieldBuffer))
-                response.Write((*buffer.FieldBuffer)[*startRange - rango * bandwidth :]   )
-
-        } else {
-
-                endRangue = strconv.FormatInt( lenght -1 , 10)
-                H.HandlerContentLength(lastRange)
-
-                startRangeStr := strconv.FormatInt( rango * bandwidth   , 10)
-                response.Header().Set("Content-Range", "bytes "+startRangeStr+"-"+endRangue+"/"+fileSize)
-                
-
-        
-                buffer := file.GetOneFieldRanges(extName ,bandwidth , rango)
-
-                log.Print(BCG("lastRange"),buffer.GetTotalRangeBRspace() )	
-                response.Write(*buffer.FieldBuffer)
-
-        }
-} 
-
-*/
-
-
-
-
-Lunes mañana 6
+Lunes mañana   6 horas
 martes  mañana 5 horas
-
-
+martes tarde   6 horas
+Miercoles mañana 
 
 Añadido en esta version 0.1.1
 
