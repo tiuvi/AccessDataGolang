@@ -2,6 +2,7 @@ package dac
 
 import (
 	"fmt"
+
 	"os"
 	"regexp"
 	"strings"
@@ -404,46 +405,52 @@ func SanitizeUrl(levelU uint8,maxLevelU uint8,url string)(patch []string, extNam
 
 
 
+
 var regexTwoDots = regexp.MustCompile(`\.\.`)
 func SanitizeUrlRGP(regexp *regexp.Regexp, levelU uint8,maxLevelU uint8,url string)(patch []string, extName string){
 
 	level    := int(levelU)
 	maxLevel := int(maxLevelU)
 	
-	if len(url) == 0 {
+	if len(url) == 0 || maxLevel == 0 || maxLevel < level {
 		return []string{} , ""
 	}
-
-	//url = SanitizeUrlContentRegexp.ReplaceAllString( url , "")
 
 
 	position := strings.LastIndex(url, ".")
 	if position == -1 {
 		return []string{} , ""
 	}
+
 	extName = url[position +1:]
+	url     = url[:position]
 
 	if extName == "map" {
-		url     = url[:position]
+
 		position := strings.LastIndex(url, ".")
 		if position == -1 {
 			return []string{} , ""
 		}
+
 		extName = url[position +1:]
+		url     = url[:position]
 	}
 
-	url     = url[:position]
-	
-	if url[1:] == "/" {
+
+	if len(url) < 2 {
+		return []string{} , ""
+	}
+
+	if url[:1] == "/" {
 
 		url =  url[1:]
 
 	}
 	
-	patch = strings.Split(url , "/")
+	patch   = strings.Split(url , "/")
 	lenPath := len(patch)
 
-	if lenPath == 0 {
+	if lenPath == 0 || extName == "" {
 		return []string{} , "" 
 	}
 
@@ -467,17 +474,16 @@ func SanitizeUrlRGP(regexp *regexp.Regexp, levelU uint8,maxLevelU uint8,url stri
 	}
 	
 	var x int
-	for ind, value :=  range patch{
+	for ind, value :=  range patch {
 
 		ind = ind - x 
-		if value :=  regexp.ReplaceAllString( value , ""); value != ""{
+		if value :=  regexp.ReplaceAllString( value , ""); len(value) > 0 {
 
-			if value :=  regexTwoDots.ReplaceAllString( value , ""); value != ""{
+			if value := strings.ReplaceAll(value, "..", "" ); value != "."  && len(value) > 0  {
 				
 				patch[ind] = value
 				continue
 			}
-			continue
 		}
 
 		x++	

@@ -171,6 +171,7 @@ const (
 	//Extensiones de contenido de documentos
 	pdf = "pdf"
 	txt = "txt"
+	ico = "ico"
 )
 
 var extensionFile = map[string]string{
@@ -190,7 +191,7 @@ var extensionFile = map[string]string{
 	jpg  : "image/jpeg",
 	webp : "image/webp",
 	bmp :  "image/bmp",
-
+	ico : "image/x-icon",
 	//Extensiones de audio
 	mp3 : "audio/mpeg",
 	

@@ -3,7 +3,8 @@
 Lunes mañana   6 horas
 martes  mañana 5 horas
 martes tarde   6 horas
-Miercoles mañana 
+Miercoles mañana 10 horas
+jueves mañana 
 
 Añadido en esta version 0.1.1
 

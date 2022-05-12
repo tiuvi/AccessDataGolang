@@ -3,6 +3,7 @@ package http
 import (
 	. "dac"
 	"log"
+	"time"
 
 	"net/http"
 	"regexp"
@@ -245,8 +246,12 @@ func (HSO *httpSpeakerOption) NewContentRoute (url string,extension []string , d
 			http.HandleFunc( url + "/" + extName + "/",
 			func(response http.ResponseWriter, request *http.Request) {
 
+			
 				path, extName := SanitizeUrl(0, 4, dirName + request.URL.Path)
-
+				if len(path) == 0  || len(extName) == 0 {
+					http.NotFoundHandler()
+					return
+				}
 
 				if file := NewContentRead(extName, path...); file != nil {
 
@@ -272,21 +277,20 @@ func (HSO *httpSpeakerOption) NewReactApp (url string, dirName string ){
 			
 			content.DeleteFile()
 			
-		
-			log.Println(url)
 			http.HandleFunc( url ,
 			func(response http.ResponseWriter, request *http.Request) {
 
-				log.Println("Url peticion: ",request.URL.Path)
 
+				timer := time.Now()
 				path, extName := SanitizeUrlRGP(RegexpNewReactApp , 0, 5, dirName + request.URL.Path)
-
+				log.Println("time: ", time.Since(timer).Nanoseconds())
+				
 				if len(path) == 0  || len(extName) == 0 {
 					path     = []string{"build","index"}
-					extName = "html"
+					extName  = "html"
 				}
 
-				log.Println("Sanitize after peticion: ", path , extName)
+				
 
 				if file := NewContentRead(extName, path...); file != nil {
 
@@ -301,7 +305,7 @@ func (HSO *httpSpeakerOption) NewReactApp (url string, dirName string ){
 
 
 
-func (HSO *httpSpeakerOption) NewHtmlFileRoute (url string, dirName ...string ){
+func (HSO *httpSpeakerOption) NewHtmlFileRoute(url string, dirName ...string ){
 
 	//Validar extensiones compatibles
 	texto     := "creating file system"
