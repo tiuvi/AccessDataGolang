@@ -339,158 +339,139 @@ func (SP *space) CheckDirSP()bool {
 
 
 
-var SanitizeUrlContentRegexp = regexp.MustCompile(`[^a-zA-Z0-9/]`)
-func SanitizeUrl(levelU uint8,maxLevelU uint8,url string)(patch []string, extName string){
-
-	level    := int(levelU)
-	maxLevel := int(maxLevelU)
-	
-	if len(url) == 0 {
-		return []string{} , ""
-	}
-
-	//url = SanitizeUrlContentRegexp.ReplaceAllString( url , "")
-
-	patch = strings.Split(url , ".")
-	if len(patch) == 2 {
-
-		extName = patch[1]
-		
-	}
-
-	if patch[0][1:] == "/" {
-
-		patch[0] = patch[0][1:]
-
-	}
-	
-	patch = strings.Split(patch[0] , "/")
-
-	lenPath := len(patch)
-
-	if lenPath == 0 {
-		return []string{} , "" 
-	}
-
-	if lenPath > level {
-
-		patch  = patch[level:]
-
-	} else {
-
-		return []string{} , "" 
-	}
-
-	lenPath = len(patch)
-
-	if lenPath < maxLevel {
-		patch  = patch[:lenPath]
-	}
-
-	if lenPath >= maxLevel {
-		patch  = patch[:maxLevel]
-	}
-	
-	
-	for ind, value :=  range patch{
-		
-		patch[ind] = SanitizeUrlContentRegexp.ReplaceAllString( value , "")
-		
-	}
-
-
-	return patch , extName
-}
 
 
 
 
 
-var regexTwoDots = regexp.MustCompile(`\.\.`)
-func SanitizeUrlRGP(regexp *regexp.Regexp, levelU uint8,maxLevelU uint8,url string)(patch []string, extName string){
-
-	level    := int(levelU)
-	maxLevel := int(maxLevelU)
-	
-	if len(url) == 0 || maxLevel == 0 || maxLevel < level {
-		return []string{} , ""
-	}
-
+func cutExtensionToPath(url string)(patch string, extension string){
 
 	position := strings.LastIndex(url, ".")
 	if position == -1 {
-		return []string{} , ""
+		return
+	}
+	extension    = url[position +1:]
+	patch        = url[:position]
+
+	return
+}
+
+func sliceUrlToPath(levelU uint8,maxLevelU uint8,url string)(patch []string ){
+
+	level    := int(levelU)
+	maxLevel := int(maxLevelU)
+
+	patch   = strings.Split(url , "/")
+	if len(patch) < level || len(patch) == 0{
+		return patch[:0]
 	}
 
-	extName = url[position +1:]
-	url     = url[:position]
+	if len(patch) > level {
 
-	if extName == "map" {
+		patch  = patch[level:]
+	} 
 
-		position := strings.LastIndex(url, ".")
-		if position == -1 {
-			return []string{} , ""
-		}
+	if len(patch) >= maxLevel {
 
-		extName = url[position +1:]
-		url     = url[:position]
+		patch  = patch[:maxLevel]
+	}
+	
+	return
+}
+
+
+func sanitizePath(regexp *regexp.Regexp, patch []string)[]string {
+
+	var x int
+	for ind, value :=  range patch {
+
+		ind = ind - x 
+
+			if value := regexp.ReplaceAllString(value , ""); len(value) > 0 {
+
+					patch[ind] = value
+					continue
+			}
+
+		x++	
 	}
 
+	return patch[:len(patch)-x]
+}
 
-	if len(url) < 2 {
-		return []string{} , ""
+var SanitizeUrlContentRegexp = regexp.MustCompile(`[^a-zA-Z0-9]`)
+func SanitizeUrl(levelU uint8,maxLevelU uint8,url string)(patch []string, extension string){
+
+	if maxLevelU == 0 || maxLevelU < levelU  || len(url) <= 1 {
+		return
 	}
 
 	if url[:1] == "/" {
 
 		url =  url[1:]
+	} 
 
+	url , extension = cutExtensionToPath(url)
+	if url == "" || extension == ""{
+		return
+	}
+
+	patch = sliceUrlToPath(levelU ,maxLevelU ,url )
+	if len(patch) == 0 {
+		return
 	}
 	
-	patch   = strings.Split(url , "/")
-	lenPath := len(patch)
+	patch   = sanitizePath(SanitizeUrlContentRegexp , patch )
 
-	if lenPath == 0 || extName == "" {
-		return []string{} , "" 
-	}
+	return
+}
 
-	if lenPath > level {
+func sanitizePathRGP(regexp *regexp.Regexp, patch []string)[]string {
 
-		patch  = patch[level:]
-
-	} else {
-
-		return []string{} , "" 
-	}
-
-	lenPath = len(patch)
-
-	if lenPath < maxLevel {
-		patch  = patch[:lenPath]
-	}
-
-	if lenPath >= maxLevel {
-		patch  = patch[:maxLevel]
-	}
-	
 	var x int
 	for ind, value :=  range patch {
 
 		ind = ind - x 
-		if value :=  regexp.ReplaceAllString( value , ""); len(value) > 0 {
 
-			if value := strings.ReplaceAll(value, "..", "" ); value != "."  && len(value) > 0  {
-				
-				patch[ind] = value
-				continue
+			if value := regexp.ReplaceAllString(value , ""); len(value) > 0 {
+
+				if value := strings.ReplaceAll(value, "..", "" ); value != "."  && len(value) > 0  {
+					
+					patch[ind] = value
+					continue
+				}
 			}
-		}
 
 		x++	
 	}
-	patch = patch[:len(patch)-x]
 
-	
+	return patch[:len(patch)-x]
+}
 
-	return patch , extName
+
+func SanitizeUrlRGP(regexp *regexp.Regexp, levelU uint8,maxLevelU uint8, url string)(patch []string, extension string){
+
+
+	if maxLevelU == 0 || maxLevelU < levelU  || len(url) <= 1 {
+		return
+	}
+
+	if url[:1] == "/" {
+
+		url =  url[1:]
+	} 
+
+	url , extension = cutExtensionToPath(url)
+	if url == "" || extension == ""{
+		return
+	}
+
+	patch = sliceUrlToPath(levelU ,maxLevelU ,url )
+	if len(patch) == 0 {
+		return
+	}
+
+	patch   = sanitizePathRGP(regexp , patch )
+
+	return
 }

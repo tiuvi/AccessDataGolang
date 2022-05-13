@@ -152,6 +152,7 @@ const (
 	json = "json"
 	js   = "js"
 	css  = "css"
+	mapa  = "map"
 
 	//Extensiones de contenido imagen
 	glb  = "glb"
@@ -178,11 +179,13 @@ var extensionFile = map[string]string{
 	dacByte: "Archivo que incluye fields y columnas de bytes",
 	dacBit:  "Archivo que incluye fields y una lista de bits",
 
+
 	html:  "text/html; charset=UTF-8",
 	json : "application/json; charset=utf-8",
 	js   : "text/javascript; charset=UTF-8",
 	css  : "text/css; charset=UTF-8",
-
+	mapa: "",
+	
 	//Extensiones de contenido imagen
 	glb  : "model/gltf-binary",
 	gif  : "image/gif",

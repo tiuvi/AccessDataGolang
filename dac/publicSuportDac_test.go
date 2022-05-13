@@ -35,61 +35,121 @@ func AllLetterSlash(n int) string {
 
 }
 
-func TestSanitizeUrlRGP(t *testing.T) {
+var extensionesTestFail []string = []string{
+	//Sin extension
+	"",
+	//Extension vacia
+	".",
+	//Doble extension primera vacia
+	".ext.",
+	//Doble extension las dos vacias
+	"..",
+}
+var extensionesTestOk []string = []string{
+	".ext",
+	".ext.map",
+}
 
-	RegexpNewReactApp := regexp.MustCompile(`[^a-zA-Z0-9/.]`)
+var urlTestFail []string = []string{
+	"",
+	"/",
+	"//",
+	"//ruta//",
+	"/ruta//",
+	"//ruta//",
+}
 
-	cadena    := "/ruta1/ruta2/ruta3/ruta4/ruta5/ruta6/ruta7/"
-	extension := "html"
-	for y := 0 ; y <= 7; y++ {
-		patch , extName  := SanitizeUrlRGP(RegexpNewReactApp, uint8(y), 7 , cadena + "." + extension)
-		t.Log(patch , extName , "\n\r")
+var urlTestOk []string = []string{
+	"ruta",
+	"/ruta1",
+	"/ruta1/ruta2",
+	"/ruta1/ruta2/ruta3",
+	"/ruta1/ruta2/ruta3/ruta4",
+}
+
+var boleanTest [][2]bool = [][2]bool{
+	{true  ,true },
+	{true  ,false },
+	{false  ,true },
+	{false  ,false },
+}
+
+
+
+func urlProve (url bool , extension bool)(urls[]string){
+
+	if url  && extension {
+		for _ , urlVal := range urlTestOk{
+
+			for _ , extVal := range extensionesTestOk{
+
+				urls = append(urls, urlVal + extVal)
+			}
+		}
 	}
 
-	//Extension vacia
-	patch , extName  := SanitizeUrlRGP(RegexpNewReactApp, 0, 7 , cadena + "." + "")
-	t.Log(patch , extName , "\n\r")
+	if !url  && extension {
+		for _ , urlVal := range urlTestFail{
 
-	//Datos vacios
-	patch , extName  = SanitizeUrlRGP(RegexpNewReactApp, 0, 7 , "" + "." + "")
-	t.Log(patch , extName , "\n\r")
-	
-	//barra
-	patch , extName  = SanitizeUrlRGP(RegexpNewReactApp, 0, 7 , "/" + "." + extension)
-	t.Log(patch , extName , "\n\r")
-	
-	//Directorio equivocados
-	patch , extName  = SanitizeUrlRGP(RegexpNewReactApp, 5, 3 , cadena + "." + extension)
-	t.Log(patch , extName , "\n\r")
+			for _ , extVal := range extensionesTestOk{
 
-	//Directorio equivocados
-	patch , extName  = SanitizeUrlRGP(RegexpNewReactApp, 0, 0 , cadena + "." + extension)
-	t.Log(patch , extName , "\n\r")
+				urls = append(urls, urlVal + extVal)
+			}
+		}
+	}
 
-	t.Log("Test de inyeccion")
-	//Test de inyeccion
-	for y := 0 ; y <= 5; y++ {
+	if url  && !extension {
+		for _ , urlVal := range urlTestOk{
 
-		for x := 0 ; x <= 10; x++ {
+			for _ , extVal := range extensionesTestFail{
 
-			//Cadenas con diferentes /
-			cadena :=  AllLetterSlash(x)
+				urls = append(urls, urlVal + extVal)
+			}
+		}
+	}
 
-			//todas las extensiones
-			for _ , ind :=  range GetExtension() {
-				
-				patch , extName  := SanitizeUrlRGP(RegexpNewReactApp, 0, uint8(y) , cadena + "." + ind)
-	
-				t.Log(patch , extName , "\n\r")
+	if !url  && !extension {
+		for _ , urlVal := range urlTestFail{
+
+			for _ , extVal := range extensionesTestFail{
+
+				urls = append(urls, urlVal + extVal)
 			}
 		}
 	}
 
 
+	return
+}
+
+// go test -run TestCutExtensionToPath -v
+func TestCutExtensionToPath(t *testing.T){
+
+	for _ , bolean := range boleanTest{
+
+		t.Log("Url Valida: ",bolean[0] ,"Extension Valida: ", bolean[1])
+
+		for _ , url := range urlProve(bolean[0] , bolean[1]){
+	
+			path , ext := cutExtensionToPath(url)
+			if ext == "" && bolean[1]{
+				t.Fatal(BCG("Url: ") ,url, BCG("patch: "),path , BCG("extension: "), ext )	
+			}
+				
+			if ext != "" && !bolean[1] {
+				t.Fatal(BCG("Url: ") ,url, BCG("patch: "),path , BCG("extension: "), ext )	
+			}
+			t.Log(BCG("Url: ") ,url, BCG("patch: "),path , BCG("extension: "), ext )
+		}	
+	}
 }
 
 
-// go test -bench BenchmarkSanitizeUrlRGP -benchtime 1000x -benchmem
+
+
+
+
+
 var RegexpNewReactApp = regexp.MustCompile(`[^a-zA-Z0-9/.]`)
 func BenchmarkSanitizeUrlRGP(b *testing.B) {
 

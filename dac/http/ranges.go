@@ -3,8 +3,6 @@ package http
 import (
 	. "dac"
 	"log"
-	"time"
-
 	"net/http"
 	"regexp"
 	"strconv"
@@ -12,8 +10,8 @@ import (
 )
 
 const (
-	_           = iota // ignore first value by assigning to blank identifier
-	KiloByte  = 1 << (10 * iota)
+	_        = iota // ignore first value by assigning to blank identifier
+	KiloByte = 1 << (10 * iota)
 	MegaByte
 	GigaByte
 	TeraByte
@@ -24,11 +22,11 @@ const (
 )
 
 type httpSpeakerOption struct {
-	bandwidth  int64
-	isCache    bool
-	isProtect  bool
+	bandwidth int64
+	isCache   bool
+	isProtect bool
+	dirName   string
 }
-
 
 type httpSpeaker struct {
 	*httpSpeakerOption
@@ -38,30 +36,28 @@ type httpSpeaker struct {
 	fileSize   int64
 	contenType string
 	isRange    bool
-
 }
 
-func SetHttpSpeakerOptions(bandwidth uint32, isProtect bool, isCache bool) *httpSpeakerOption{
+func SetHttpSpeakerOptions(bandwidth uint32, isProtect bool, isCache bool, dirName string) *httpSpeakerOption {
 
 	return &httpSpeakerOption{
-		bandwidth:  int64(bandwidth),
-		isCache: isCache,
-		isProtect:isProtect,
+		bandwidth: int64(bandwidth),
+		isCache:   isCache,
+		isProtect: isProtect,
+		dirName:   dirName,
 	}
 }
 
-
-func  (HSO *httpSpeakerOption) NewHttpSpeaker(response http.ResponseWriter, request *http.Request, file *PublicSpaceFile) {
-
+func (HSO *httpSpeakerOption) NewHttpSpeaker(response http.ResponseWriter, request *http.Request, file *PublicSpaceFile) {
 
 	H := new(httpSpeaker)
 	H.httpSpeakerOption = HSO
-	H.response =  response
-	H.request  =  request
-	H.file     =  file
-	H.contenType =  file.GetExtension()
-	H.fileSize   =  file.CalcSizeField(H.contenType)
-	H.isRange = 	 IsRagesExtension(H.contenType)
+	H.response = response
+	H.request = request
+	H.file = file
+	H.contenType = file.GetExtension()
+	H.fileSize = file.CalcSizeField(H.contenType)
+	H.isRange = IsRagesExtension(H.contenType)
 
 	if !H.isCache {
 		H.handlerCache()
@@ -77,15 +73,11 @@ func  (HSO *httpSpeakerOption) NewHttpSpeaker(response http.ResponseWriter, requ
 
 }
 
-
-
-
 func (H *httpSpeaker) handlerContentType() {
 
 	if value, found := IsExtensionContent(H.contenType); found {
 
 		H.response.Header().Set("Content-Type", value)
-	
 
 		if H.contenType == "glb" {
 			H.response.Header().Set("Access-Control-Allow-Origin", "*")
@@ -102,7 +94,7 @@ func (H *httpSpeaker) onRange() {
 func (H *httpSpeaker) writeRanges() {
 
 	//Si el tamño no supera al ancho de banda permitido entonces sirvelo completo
-	if H.fileSize <= H.bandwidth && !H.isRange{
+	if H.fileSize <= H.bandwidth && !H.isRange {
 
 		H.HandlerContentLength(H.fileSize)
 		RBuffer := H.file.GetOneFieldChan(H.contenType, H.bandwidth)
@@ -115,13 +107,13 @@ func (H *httpSpeaker) writeRanges() {
 	}
 
 	//Si el tamaño supera al ancho de banda permitido entonces sirvelo por rangos
-	if H.fileSize > H.bandwidth  && H.isRange{
+	if H.fileSize > H.bandwidth && H.isRange {
 
 		//Enviamos los encabezados de rangos y recibimos el encabezado Range
 		if startRange, rango := H.handlerHeaderRanges(); startRange != nil {
 
 			startRange := *startRange
-			rango      := *rango
+			rango := *rango
 
 			//Expandir el rango de metadatos.
 			buffer := H.file.GetOneFieldRanges(H.contenType, H.bandwidth, rango)
@@ -143,7 +135,7 @@ func (H *httpSpeaker) writeRanges() {
 
 func (H *httpSpeaker) handlerHeaderRanges() (*int64, *int64) {
 
-	var startRange  int64
+	var startRange int64
 	var rango int64
 	var err error
 
@@ -161,7 +153,7 @@ func (H *httpSpeaker) handlerHeaderRanges() (*int64, *int64) {
 	}
 
 	rangeHeader = strings.Replace(rangeHeader, "bytes=", "", -1)
-	ranges     := strings.SplitN(rangeHeader, "-", 2)
+	ranges := strings.SplitN(rangeHeader, "-", 2)
 
 	if len(ranges) < 1 {
 
@@ -184,7 +176,7 @@ func (H *httpSpeaker) handlerHeaderRanges() (*int64, *int64) {
 
 	//Calculando el rango final y el tamaño del rango
 	var calcFinalRango int64 = (rango + 1) * H.bandwidth
-	 if calcFinalRango > H.fileSize {
+	if calcFinalRango > H.fileSize {
 
 		calcFinalRango = H.fileSize
 	}
@@ -223,9 +215,7 @@ func (H *httpSpeaker) HandlerContentLength(length int64) {
 
 }
 
-
-
-func (HSO *httpSpeakerOption) NewContentRoute (url string,extension []string , dirName string ){
+func (HSO *httpSpeakerOption) NewContentRoute(url string, extension []string ) {
 
 	//Validar extensiones compatibles
 
@@ -233,103 +223,141 @@ func (HSO *httpSpeakerOption) NewContentRoute (url string,extension []string , d
 	texto := "creating file system"
 
 	for _, extName := range extension {
-		
-		if content := NewContentWrite(extName, int64(len(texto)), dirName , extName ,testWrite ); content != nil {
-			
-			if !content.CheckDirSF() { 
-	
+
+		if content := NewContentWrite(extName, int64(len(texto)), HSO.dirName, extName, testWrite); content != nil {
+
+			if !content.CheckDirSF() {
+
 				content.SetOneFieldString(extName, texto)
 				content.DeleteFile()
 			}
-		
 
-			http.HandleFunc( url + "/" + extName + "/",
-			func(response http.ResponseWriter, request *http.Request) {
+			http.HandleFunc(url+"/"+extName+"/",
+				func(response http.ResponseWriter, request *http.Request) {
 
-			
-				path, extName := SanitizeUrl(0, 4, dirName + request.URL.Path)
-				if len(path) == 0  || len(extName) == 0 {
-					http.NotFoundHandler()
-					return
-				}
+					path, extName := SanitizeUrl(0, 4, HSO.dirName+request.URL.Path)
+					if len(path) == 0 || len(extName) == 0 {
+						http.NotFoundHandler()
+						return
+					}
 
-				if file := NewContentRead(extName, path...); file != nil {
+					if file := NewContentRead(extName, path...); file != nil {
 
-					//Abrebiamos una estructura para el response y el request
-					HSO.NewHttpSpeaker(response, request , file )
+						//Abrebiamos una estructura para el response y el request
+						HSO.NewHttpSpeaker(response, request, file)
 
-				}
-			})
+					}
+				})
 		}
 	}
 }
 
-var RegexpNewReactApp = regexp.MustCompile(`[^a-zA-Z0-9/.]`)
-func (HSO *httpSpeakerOption) NewReactApp (url string, dirName string ){
+func (HSO *httpSpeakerOption) NewHtmlFileRoute(url string, dirName ...string) {
 
 	//Validar extensiones compatibles
+	texto := "creating file system"
+	extName := "html"
+	dirName = append(dirName, HSO.dirName)
 
-	testWrite := "testing3141592"
-	texto     := "creating file system"
-	extName   := "txt"
+	if content := NewContentWrite(extName, int64(len(texto)), dirName...); content != nil {
 
-		if content := NewContentWrite(extName, int64(len(texto)), dirName ,testWrite ); content != nil {
-			
+		dirName = append(dirName, extName)
+
+		if !content.CheckDirSF() {
+			content.SetOneFieldString(extName, texto)
 			content.DeleteFile()
-			
-			http.HandleFunc( url ,
-			func(response http.ResponseWriter, request *http.Request) {
-
-
-				timer := time.Now()
-				path, extName := SanitizeUrlRGP(RegexpNewReactApp , 0, 5, dirName + request.URL.Path)
-				log.Println("time: ", time.Since(timer).Nanoseconds())
-				
-				if len(path) == 0  || len(extName) == 0 {
-					path     = []string{"build","index"}
-					extName  = "html"
-				}
-
-				
-
-				if file := NewContentRead(extName, path...); file != nil {
-
-					//Abrebiamos una estructura para el response y el request
-					HSO.NewHttpSpeaker(response, request , file )
-
-				}
-			})
 		}
-}
 
-
-
-
-func (HSO *httpSpeakerOption) NewHtmlFileRoute(url string, dirName ...string ){
-
-	//Validar extensiones compatibles
-	texto     := "creating file system"
-	extName   := "html"
-
-		
-		if content := NewContentWrite(extName, int64(len(texto)), dirName...  ); content != nil {
-			
-			dirName = append(dirName, extName)
-
-			if !content.CheckDirSF() { 
-				content.SetOneFieldString(extName, texto)
-				content.DeleteFile()
-			}
-		
-			http.HandleFunc( url ,
+		http.HandleFunc(url,
 			func(response http.ResponseWriter, request *http.Request) {
 
 				if file := NewContentRead(extName, dirName...); file != nil {
 
 					//Abrebiamos una estructura para el response y el request
-					HSO.NewHttpSpeaker(response, request , file )
+					HSO.NewHttpSpeaker(response, request, file)
 
 				}
 			})
+	}
+}
+
+
+
+
+var RegexpNewReactApp = regexp.MustCompile(`[^a-zA-Z0-9/.]`)
+func (HSO *httpSpeakerOption) NewReactApp(url string) {
+
+	//Validar extensiones compatibles
+
+	testWrite := "testing3141592"
+	texto := "creating file system"
+	extName := "txt"
+
+	if content := NewContentWrite(extName, int64(len(texto)), HSO.dirName, testWrite); content != nil {
+
+		content.DeleteFile()
+
+		http.HandleFunc(url,
+			func(response http.ResponseWriter, request *http.Request) {
+
+				path, extName := SanitizeUrlRGP(RegexpNewReactApp, 0, 5, HSO.dirName + request.URL.Path)
+				if len(path) == 0 || len(extName) == 0 {
+					path = []string{HSO.dirName , "index"}
+					extName = "html"
+				}
+
+				if file := NewContentRead(extName, path...); file != nil {
+
+					//Abrebiamos una estructura para el response y el request
+					HSO.NewHttpSpeaker(response, request, file)
+
+				}
+			})
+	}
+}
+
+func (HSO *httpSpeakerOption) NewReactAppPWA(url string ) {
+
+	//Validar extensiones compatibles
+
+	testWrite := "testing3141592"
+	texto := "creating file system"
+	extName := "txt"
+
+	if content := NewContentWrite(extName, int64(len(texto)), HSO.dirName , testWrite); content != nil {
+
+		content.DeleteFile()
+
+		http.HandleFunc(url, HSO.NewAppRoute)
+
+		if url[len(url)-1:] == "/" {
+			//Ranguear usuarios
+			urlUsers := url[:len(url)-1]
+			http.HandleFunc(urlUsers, HSO.NewAppRoute)
+			http.HandleFunc(urlUsers+"franky", HSO.NewAppRoute)
 		}
+
+	}
+
+}
+
+func (HSO *httpSpeakerOption) NewAppRoute(response http.ResponseWriter, request *http.Request) {
+
+	log.Println("Url: ", request.URL.Path)
+	path, extName := SanitizeUrlRGP(RegexpNewReactApp, 0, 5, HSO.dirName +request.URL.Path)
+	log.Println("Path: ", path, extName)
+
+	if len(path) == 0 || len(extName) == 0 {
+		path = []string{HSO.dirName , "index"}
+		extName = "html"
+	}
+
+	log.Println("Path After If: ", path, extName)
+
+	if file := NewContentRead(extName, path...); file != nil {
+
+		//Abrebiamos una estructura para el response y el request
+		HSO.NewHttpSpeaker(response, request, file)
+
+	}
 }

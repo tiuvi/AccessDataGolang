@@ -2,7 +2,6 @@ package dac
 
 import (
 	"os"
-	"log"
 	"strings"
 )
 
@@ -130,46 +129,5 @@ func NewContentWrite(extension string, lenContent int64, dirName ...string) *Pub
 
 
 
-
-
-
-
-
-
-
-
-/*
-	Funciones automaticas
-
-*/
-//ESta funcion genera todas las funciones de contenido.
-func automaticFunction(){
-
-	for name  :=range extensionFile{
-
-		if name == "dacBit" || name == "DacByte"{
-			continue
-		}
-
-		nameMayus :=  strings.ToUpper(name[:1]) + name[1:]
-
-log.Println(`
-func New`+nameMayus+`ReadDiskSf(dirName ...string) *PublicSpaceFile { 
-
-	return NewContentRead( `+name+`  , dirName...)
-
-}
-
-
-func New`+nameMayus+`WriteDiskSf(lenContent int64,dirName ...string) *PublicSpaceFile {
-
-	return NewContentWrite( `+name+`  , lenContent ,dirName...)
-
-}
-`)
-
-	}
-	
-}
 
 
