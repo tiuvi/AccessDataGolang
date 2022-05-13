@@ -1,10 +1,9 @@
 package dac
 
 import (
+	"log"
 	"time"
 )
-
-
 
 //Timer que cierra cuando hay mas de 10 000 archivos abiertos
 //Maximos archivos Ubuntu 1 048 576 Files  --  700 MB Ram
@@ -76,4 +75,34 @@ func (LDAC *lDAC) dacTimerCloserDiskFile() {
 
 	}
 
+}
+
+
+
+func dacTimerCloserGlobalCache(){
+
+	//Cada cuanto se ejecuta la funcion
+	tikecGlobalCache := time.Tick(24 * time.Hour)
+	for range tikecGlobalCache {
+
+		if len(globalCache.cache) == 0 {
+		
+			continue
+		}
+
+		//Abrimos el candado para operaciones de mapas concurrentes
+		globalCache.Lock()
+
+		//Recorremos todo el mapa
+		for directory := range globalCache.cache {
+
+			//Borrado del elemento del mapa y de la variable
+			delete(globalCache.cache, directory)
+
+		}
+		log.Println(globalCache.cache)
+		//Quitamos el candado al mapa
+		globalCache.Unlock()
+
+	}
 }

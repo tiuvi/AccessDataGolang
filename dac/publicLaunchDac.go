@@ -403,6 +403,8 @@ func (LDAC *lDAC) SetGlobalDACFolder(path string) {
 
 		go LDAC.dacTimerCloserDiskFile()
 
+		go dacTimerCloserGlobalCache()
+		
 		Space = make(map[string]*space)
 
 		//Activacion de archivos de errores de DAC

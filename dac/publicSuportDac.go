@@ -358,6 +358,19 @@ func cutExtensionToPath(url string)(patch string, extension string){
 
 func sliceUrlToPath(levelU uint8,maxLevelU uint8,url string)(patch []string ){
 
+	if maxLevelU == 0 || maxLevelU < levelU {
+		return
+	}
+
+	if len(url) <= 1 {
+		return
+	}
+
+	if url[:1] == "/" {
+
+		url =  url[1:]
+	} 
+
 	level    := int(levelU)
 	maxLevel := int(maxLevelU)
 
@@ -366,12 +379,12 @@ func sliceUrlToPath(levelU uint8,maxLevelU uint8,url string)(patch []string ){
 		return patch[:0]
 	}
 
-	if len(patch) > level {
+	if len(patch) >= level {
 
 		patch  = patch[level:]
 	} 
 
-	if len(patch) >= maxLevel {
+	if len(patch) > maxLevel {
 
 		patch  = patch[:maxLevel]
 	}
@@ -379,15 +392,15 @@ func sliceUrlToPath(levelU uint8,maxLevelU uint8,url string)(patch []string ){
 	return
 }
 
-
-func sanitizePath(regexp *regexp.Regexp, patch []string)[]string {
+var SanitizeUrlContentRegexp = regexp.MustCompile(`[^a-zA-Z0-9]`)
+func sanitizePath( patch []string)[]string {
 
 	var x int
 	for ind, value :=  range patch {
 
 		ind = ind - x 
 
-			if value := regexp.ReplaceAllString(value , ""); len(value) > 0 {
+			if value := SanitizeUrlContentRegexp.ReplaceAllString(value , ""); len(value) > 0 {
 
 					patch[ind] = value
 					continue
@@ -399,17 +412,9 @@ func sanitizePath(regexp *regexp.Regexp, patch []string)[]string {
 	return patch[:len(patch)-x]
 }
 
-var SanitizeUrlContentRegexp = regexp.MustCompile(`[^a-zA-Z0-9]`)
+
 func SanitizeUrl(levelU uint8,maxLevelU uint8,url string)(patch []string, extension string){
 
-	if maxLevelU == 0 || maxLevelU < levelU  || len(url) <= 1 {
-		return
-	}
-
-	if url[:1] == "/" {
-
-		url =  url[1:]
-	} 
 
 	url , extension = cutExtensionToPath(url)
 	if url == "" || extension == ""{
@@ -421,19 +426,20 @@ func SanitizeUrl(levelU uint8,maxLevelU uint8,url string)(patch []string, extens
 		return
 	}
 	
-	patch   = sanitizePath(SanitizeUrlContentRegexp , patch )
+	patch   = sanitizePath( patch )
 
 	return
 }
 
-func sanitizePathRGP(regexp *regexp.Regexp, patch []string)[]string {
+var RegexpNewReactApp = regexp.MustCompile(`[^a-zA-Z0-9/.]`)
+func sanitizePathRGP(patch []string)[]string {
 
 	var x int
 	for ind, value :=  range patch {
 
 		ind = ind - x 
 
-			if value := regexp.ReplaceAllString(value , ""); len(value) > 0 {
+			if value := RegexpNewReactApp.ReplaceAllString(value , ""); len(value) > 0 {
 
 				if value := strings.ReplaceAll(value, "..", "" ); value != "."  && len(value) > 0  {
 					
@@ -449,7 +455,7 @@ func sanitizePathRGP(regexp *regexp.Regexp, patch []string)[]string {
 }
 
 
-func SanitizeUrlRGP(regexp *regexp.Regexp, levelU uint8,maxLevelU uint8, url string)(patch []string, extension string){
+func SanitizeUrlRGP(levelU uint8,maxLevelU uint8, url string)(patch []string, extension string){
 
 
 	if maxLevelU == 0 || maxLevelU < levelU  || len(url) <= 1 {
@@ -471,7 +477,7 @@ func SanitizeUrlRGP(regexp *regexp.Regexp, levelU uint8,maxLevelU uint8, url str
 		return
 	}
 
-	patch   = sanitizePathRGP(regexp , patch )
+	patch   = sanitizePathRGP(patch )
 
 	return
 }

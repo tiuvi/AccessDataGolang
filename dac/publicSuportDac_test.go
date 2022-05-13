@@ -1,12 +1,11 @@
 package dac
 
 import (
-	"regexp"
 	"strings"
 	"testing"
 )
 
-
+// Cadena de inyeccion asci sin slash
 func AllLetterNoSlash()(cadena string) {
 
 	for x := 0 ;x < 128; x++ {
@@ -18,6 +17,7 @@ func AllLetterNoSlash()(cadena string) {
 	return
 }
 
+//Crea una cadena url de inyeccion asci
 func AllLetterSlash(n int) string {
 
 	cadena := AllLetterNoSlash()
@@ -32,8 +32,8 @@ func AllLetterSlash(n int) string {
 	strFinal := strings.Join(cadenaArr, "")
 
 	return strFinal
-
 }
+
 
 var extensionesTestFail []string = []string{
 	//Sin extension
@@ -45,6 +45,7 @@ var extensionesTestFail []string = []string{
 	//Doble extension las dos vacias
 	"..",
 }
+
 var extensionesTestOk []string = []string{
 	".ext",
 	".ext.map",
@@ -54,9 +55,17 @@ var urlTestFail []string = []string{
 	"",
 	"/",
 	"//",
+	"/ruta./",
+	"/.ruta/",
+	"/.ruta./",
+	"./ruta./",
 	"//ruta//",
 	"/ruta//",
 	"//ruta//",
+	"/./ruta/./",
+	"/.../ruta/.../",
+	".../.../ruta/.../",
+	"...../...../ruta/.../",
 }
 
 var urlTestOk []string = []string{
@@ -65,6 +74,10 @@ var urlTestOk []string = []string{
 	"/ruta1/ruta2",
 	"/ruta1/ruta2/ruta3",
 	"/ruta1/ruta2/ruta3/ruta4",
+	"/ruta1/ruta2/ruta3/ruta4/ruta5",
+	"/ruta1/ruta2/ruta3/ruta4/ruta5/ruta6",
+	"/ruta1/ruta2/ruta3/ruta4/ruta5/ruta6/ruta7",
+	"/ruta1/ruta2/ruta3/ruta4/ruta5/ruta6/ruta7/ruta8",
 }
 
 var boleanTest [][2]bool = [][2]bool{
@@ -75,7 +88,7 @@ var boleanTest [][2]bool = [][2]bool{
 }
 
 
-
+//Genera url de prueba
 func urlProve (url bool , extension bool)(urls[]string){
 
 	if url  && extension {
@@ -117,8 +130,6 @@ func urlProve (url bool , extension bool)(urls[]string){
 			}
 		}
 	}
-
-
 	return
 }
 
@@ -132,11 +143,8 @@ func TestCutExtensionToPath(t *testing.T){
 		for _ , url := range urlProve(bolean[0] , bolean[1]){
 	
 			path , ext := cutExtensionToPath(url)
-			if ext == "" && bolean[1]{
-				t.Fatal(BCG("Url: ") ,url, BCG("patch: "),path , BCG("extension: "), ext )	
-			}
-				
-			if ext != "" && !bolean[1] {
+	
+			if ext == "" && bolean[1] {
 				t.Fatal(BCG("Url: ") ,url, BCG("patch: "),path , BCG("extension: "), ext )	
 			}
 			t.Log(BCG("Url: ") ,url, BCG("patch: "),path , BCG("extension: "), ext )
@@ -144,20 +152,123 @@ func TestCutExtensionToPath(t *testing.T){
 	}
 }
 
+// go test -run TestSliceUrlToPath -v
+func TestSliceUrlToPath(t *testing.T){
+
+	var levelU uint8
+	var maxLevelU uint8
+	for levelU = 0; levelU <= 6 ; levelU++{
+
+		for maxLevelU = 0; maxLevelU <= 6 ; maxLevelU++{
+
+			for _, url :=  range urlTestOk {
+
+				path := sliceUrlToPath(levelU ,maxLevelU ,url )
+
+				t.Log(BCG("Url: ") ,url,BCG("levelU: "),levelU , BCG("maxLevelU: "),maxLevelU ,BCG("path: "), path )
+			}
+		}
+	}
+
+}
+
+// go test -run TestSanitizePath -v   //Regex: [^a-zA-Z0-9]
+func TestSanitizePath(t *testing.T){
+
+	for _ , bolean := range boleanTest{
+
+		t.Log("Url Valida: ",bolean[0] ,"Extension Valida: ", bolean[1])
+
+		for _ , url := range urlProve(bolean[0] , bolean[1]){
+	
+			patch := sliceUrlToPath(0 ,10 ,url )
+			patch  = sanitizePath( patch)
+	
+			t.Log(BCG("Url: ") ,url, BCG("patch: "),patch  )
+		}	
+	}
+
+}
 
 
+// go test -run TestSanitizePathRGP -v   //Regex: [^a-zA-Z0-9/.]
+func TestSanitizePathRGP(t *testing.T){
+
+	for _ , bolean := range boleanTest{
+
+		t.Log("Url Valida: ",bolean[0] ,"Extension Valida: ", bolean[1])
+
+		for _ , url := range urlProve(bolean[0] , bolean[1]){
+	
+			patch := sliceUrlToPath(0 ,10 ,url )
+			patch  = sanitizePathRGP( patch)
+	
+			t.Log(BCG("Url: ") ,url, BCG("patch: "),patch  )
+		}	
+	}
+}
 
 
+// go test -run TestSanitizeUrl -v   //Regex: [^a-zA-Z0-9]
+func TestSanitizeUrl(t *testing.T){
+
+	for _ , bolean := range boleanTest{
+
+		t.Log("Url Valida: ",bolean[0] ,"Extension Valida: ", bolean[1])
+
+		for _ , url := range urlProve(bolean[0] , bolean[1]){
+	
+			patch, ext  := SanitizeUrl(0,6, url)
+	
+			t.Log(BCG("Url: ") ,url, BCG("patch: "),patch , BCG("extension: "), ext )
+		}	
+	}
+}
+
+// go test -run TestSanitizeUrlRGP -v    //Regex: [^a-zA-Z0-9/.]
+func TestSanitizeUrlRGP(t *testing.T){
+
+	for _ , bolean := range boleanTest{
+
+		t.Log("Url Valida: ",bolean[0] ,"Extension Valida: ", bolean[1])
+
+		for _ , url := range urlProve(bolean[0] , bolean[1]){
+	
+			patch, ext  := SanitizeUrlRGP(0,6, url)
+	
+			t.Log(BCG("Url: ") ,url, BCG("patch: "),patch , BCG("extension: "), ext )
+		}	
+	}
+	
+}
 
 
-var RegexpNewReactApp = regexp.MustCompile(`[^a-zA-Z0-9/.]`)
-func BenchmarkSanitizeUrlRGP(b *testing.B) {
+// go test -bench BenchmarkSanitizeUrl -benchtime 1000x -benchmem
+func BenchmarkSanitizeUrl(b *testing.B) {
 
-	cadena :=  AllLetterSlash(10)
-	ext    := "html"
     for i := 0; i < b.N; i++ {
 
-		SanitizeUrlRGP(RegexpNewReactApp, 0, 5 , cadena + "." + ext)
-      
+		for _ , bolean := range boleanTest{
+
+			for _ , url := range urlProve(bolean[0] , bolean[1]){
+				b.ResetTimer()
+				SanitizeUrl(0,6, url)
+			}	
+		}
+    }
+}
+
+// go test -bench BenchmarkSanitizeUrlRGP -benchtime 1000x -benchmem
+func BenchmarkSanitizeUrlRGP(b *testing.B) {
+
+    for i := 0; i < b.N; i++ {
+
+		for _ , bolean := range boleanTest{
+
+			for _ , url := range urlProve(bolean[0] , bolean[1]){
+				b.ResetTimer()
+				SanitizeUrlRGP(0,6, url)
+			}	
+		}
     }
 }

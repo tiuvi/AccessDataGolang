@@ -2,9 +2,7 @@ package http
 
 import (
 	. "dac"
-	"log"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -252,112 +250,4 @@ func (HSO *httpSpeakerOption) NewContentRoute(url string, extension []string ) {
 	}
 }
 
-func (HSO *httpSpeakerOption) NewHtmlFileRoute(url string, dirName ...string) {
 
-	//Validar extensiones compatibles
-	texto := "creating file system"
-	extName := "html"
-	dirName = append(dirName, HSO.dirName)
-
-	if content := NewContentWrite(extName, int64(len(texto)), dirName...); content != nil {
-
-		dirName = append(dirName, extName)
-
-		if !content.CheckDirSF() {
-			content.SetOneFieldString(extName, texto)
-			content.DeleteFile()
-		}
-
-		http.HandleFunc(url,
-			func(response http.ResponseWriter, request *http.Request) {
-
-				if file := NewContentRead(extName, dirName...); file != nil {
-
-					//Abrebiamos una estructura para el response y el request
-					HSO.NewHttpSpeaker(response, request, file)
-
-				}
-			})
-	}
-}
-
-
-
-
-var RegexpNewReactApp = regexp.MustCompile(`[^a-zA-Z0-9/.]`)
-func (HSO *httpSpeakerOption) NewReactApp(url string) {
-
-	//Validar extensiones compatibles
-
-	testWrite := "testing3141592"
-	texto := "creating file system"
-	extName := "txt"
-
-	if content := NewContentWrite(extName, int64(len(texto)), HSO.dirName, testWrite); content != nil {
-
-		content.DeleteFile()
-
-		http.HandleFunc(url,
-			func(response http.ResponseWriter, request *http.Request) {
-
-				path, extName := SanitizeUrlRGP(RegexpNewReactApp, 0, 5, HSO.dirName + request.URL.Path)
-				if len(path) == 0 || len(extName) == 0 {
-					path = []string{HSO.dirName , "index"}
-					extName = "html"
-				}
-
-				if file := NewContentRead(extName, path...); file != nil {
-
-					//Abrebiamos una estructura para el response y el request
-					HSO.NewHttpSpeaker(response, request, file)
-
-				}
-			})
-	}
-}
-
-func (HSO *httpSpeakerOption) NewReactAppPWA(url string ) {
-
-	//Validar extensiones compatibles
-
-	testWrite := "testing3141592"
-	texto := "creating file system"
-	extName := "txt"
-
-	if content := NewContentWrite(extName, int64(len(texto)), HSO.dirName , testWrite); content != nil {
-
-		content.DeleteFile()
-
-		http.HandleFunc(url, HSO.NewAppRoute)
-
-		if url[len(url)-1:] == "/" {
-			//Ranguear usuarios
-			urlUsers := url[:len(url)-1]
-			http.HandleFunc(urlUsers, HSO.NewAppRoute)
-			http.HandleFunc(urlUsers+"franky", HSO.NewAppRoute)
-		}
-
-	}
-
-}
-
-func (HSO *httpSpeakerOption) NewAppRoute(response http.ResponseWriter, request *http.Request) {
-
-	log.Println("Url: ", request.URL.Path)
-	path, extName := SanitizeUrlRGP(RegexpNewReactApp, 0, 5, HSO.dirName +request.URL.Path)
-	log.Println("Path: ", path, extName)
-
-	if len(path) == 0 || len(extName) == 0 {
-		path = []string{HSO.dirName , "index"}
-		extName = "html"
-	}
-
-	log.Println("Path After If: ", path, extName)
-
-	if file := NewContentRead(extName, path...); file != nil {
-
-		//Abrebiamos una estructura para el response y el request
-		HSO.NewHttpSpeaker(response, request, file)
-
-	}
-}

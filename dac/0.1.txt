@@ -4,7 +4,9 @@ Lunes     mañana  6 horas tarde
 martes    mañana  5 horas tarde  6 horas
 Miercoles mañana 10 horas tarde  
 jueves    mañana  9 horas tarde  
-Viernes   mañana    horas tarde  
+Viernes   mañana 10.5
+
+Semana 46.5
 
 Añadido en esta version 0.1.1
 
