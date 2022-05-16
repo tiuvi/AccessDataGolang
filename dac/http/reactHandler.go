@@ -61,6 +61,8 @@ func (HSO *httpSpeakerOption) NewReactAppPWA(url string ) {
 			http.HandleFunc(urlUsers, HSO.NewAppRoute)
 			http.HandleFunc(urlUsers+"franky", HSO.NewAppRoute)
 			http.HandleFunc(urlUsers+"maria", HSO.NewAppRoute)
+			http.HandleFunc(urlUsers+"estefania", HSO.NewAppRoute)
+			http.HandleFunc(urlUsers+"happycode", HSO.NewAppRoute)
 		}
 
 	}

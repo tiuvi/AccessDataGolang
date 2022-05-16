@@ -1,12 +1,14 @@
+Semana 16 - 22 mayo
+Lunes     mañana   2 horas tarde   horas
+martes    mañana    horas tarde   horas
+Miercoles mañana    horas tarde   horas
+jueves    mañana    horas tarde   horas
+Viernes   mañana    horas tarde   horas
+Sabado    mañana    horas tarde   horas
+Domingo   mañana    horas tarde   horas
+Horas totales: 
 
 
-Lunes     mañana  6 horas tarde  
-martes    mañana  5 horas tarde  6 horas
-Miercoles mañana 10 horas tarde  
-jueves    mañana  9 horas tarde  
-Viernes   mañana 10.5
-
-Semana 46.5
 
 Añadido en esta version 0.1.1
 
@@ -96,21 +98,24 @@ como crear grandes actualizaciones por ejemplo o analisis de datos , o entrenar 
 
 
 
+Semana  -  mayo
+Lunes     mañana    horas tarde   horas
+martes    mañana    horas tarde   horas
+Miercoles mañana    horas tarde   horas
+jueves    mañana    horas tarde   horas
+Viernes   mañana    horas tarde   horas
+Sabado    mañana    horas tarde   horas
+Domingo   mañana    horas tarde   horas
+Horas totales:
 
-Semana 2-8 mayo
-Lunes Mañana - 3
-lunes tarde  - 2.5 
-lunes tarde  - 3.5
-martes madrugada - 2.5
-martes tarde - 2.5
-martes tarde - 2.5
-miercoles madrugada - 2.5
-miercoles tarde -3.5
-jueves mañana - 8
-viernes mañana - 4.5
-viernes tarde  - 4
-Sabado mañana - 2
-sabado tarde - 5
-domingo mañana - 4 
-domingo tarde - 6.5
-semana - 56 horas
+Semana 2-8 mayo -> Horas totales: 56 horas
+
+Semana 9 - 15 mayo
+Lunes     mañana  6   horas tarde    horas
+martes    mañana  5   horas tarde  6 horas
+Miercoles mañana 10   horas tarde    horas
+jueves    mañana  9   horas tarde    horas
+Viernes   mañana 10.5 horas tarde    horas
+Sabado    mañana 4.5  horas tarde    horas
+Domingo   mañana      horas tarde 4  horas
+Horas totales: 55 horas.

@@ -92,7 +92,7 @@ func (H *httpSpeaker) onRange() {
 func (H *httpSpeaker) writeRanges() {
 
 	//Si el tamño no supera al ancho de banda permitido entonces sirvelo completo
-	if H.fileSize <= H.bandwidth && !H.isRange {
+	if  !H.isRange {
 
 		H.HandlerContentLength(H.fileSize)
 		RBuffer := H.file.GetOneFieldChan(H.contenType, H.bandwidth)
@@ -105,7 +105,7 @@ func (H *httpSpeaker) writeRanges() {
 	}
 
 	//Si el tamaño supera al ancho de banda permitido entonces sirvelo por rangos
-	if H.fileSize > H.bandwidth && H.isRange {
+	if  H.isRange {
 
 		//Enviamos los encabezados de rangos y recibimos el encabezado Range
 		if startRange, rango := H.handlerHeaderRanges(); startRange != nil {

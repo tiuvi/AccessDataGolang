@@ -65,7 +65,6 @@ func (SP *space) NewDacByte() {
 	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
 
 	SP.extension  = dacByte
-	SP.fileCoding = bytes
 }
 
 
@@ -75,7 +74,6 @@ func (SP *space) NewDacBit() {
 	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
 
 	SP.extension = dacBit
-	SP.fileCoding = bit
 }
 
 //Unicamente para otras extensiones que no sean dacbyte o dacbit
@@ -96,14 +94,7 @@ func (SP *space) SetFileCodgingByte() {
 	SP.fileCoding = bytes
 }
 
-func (SP *space) SetExtensionHtml() {
 
-	if EDAC && 
-	SP.ECSD( len(SP.extension) > 0, "Propiedad extension ya establecida e inmutable."){}
-
-	SP.extension = html
-
-}
 
 func (SP *space) SetExtension(extension string) {
 

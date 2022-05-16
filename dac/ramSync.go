@@ -4,16 +4,15 @@ import (
 //	"log"
 )
 
-type SpaceSGMStr struct {
+type SpaceRamSync struct {
 	*spaceFile
 	colName string
 	size    [2]int64
 	Map     map[string]int64
 }
 
-//SGMapStringLineInit: Sincroniza un mapa string/int64 superglobal con un archivo.
-//#bd/ramSync/SGMapStringLineInit
-func (sF *spaceFile) SGMapStringLineInit(colName string) *SpaceSGMStr {
+
+func (sF *spaceFile) InitSync(colName string) *SpaceRamSync {
 
 	size, found := sF.indexSizeColumns[colName]
 
@@ -24,7 +23,7 @@ func (sF *spaceFile) SGMapStringLineInit(colName string) *SpaceSGMStr {
 	if found {
 
 		//Creamos un puntero a la estructura.
-		SGMS := &SpaceSGMStr{
+		SGMS := &SpaceRamSync{
 			spaceFile: sF,
 			colName:   colName,
 			size:      size,
@@ -65,7 +64,7 @@ func (sF *spaceFile) SGMapStringLineInit(colName string) *SpaceSGMStr {
 
 //SGMapStringLineRead: Lee un elemento y devuelve si existe o no con un boleano.
 //#bd/ramSync/SGMapStringLineRead
-func (SGMS *SpaceSGMStr) SGMapStringLineRead(bufferBytes *[]byte) bool {
+func (SGMS *SpaceRamSync) GetLine(bufferBytes *[]byte)*int64 {
 
 	//Preformateamos los datos para que mantenga la concordancia con el archivo.
 	if SGMS.hooker != nil {
@@ -88,20 +87,79 @@ func (SGMS *SpaceSGMStr) SGMapStringLineRead(bufferBytes *[]byte) bool {
 	defer SGMS.RUnlock()
 
 	//Si existe devolvemos true si no false.
-	_, found := SGMS.Map[valueStr]
+	line , found := SGMS.Map[valueStr]
 	if found {
 
-		return true
+		return &line
 
 	}
 
-	return false
+	return nil
 }
+
+func (SGMS *SpaceRamSync) GetLineString(str string)*int64 {
+
+	RBuffer := []byte(str)
+	return SGMS.GetLine(&RBuffer)
+}
+
+
 
 //SGMapStringLineUpd: Actualiza el archivo y el mapa superglobal, unicamente campos unicos
 //si no retorna false la funcion.
 //#bd/ramSync/SGMapStringLineUpd
-func (SGMS *SpaceSGMStr) SGMapStringLineUpd(line int64, bufferBytes *[]byte) (*int64, bool) {
+func (SGMS *SpaceRamSync) SetLine(line int64, bufferBytes *[]byte)*int64 {
+
+	if EDAC && 
+	SGMS.ECSFD( len(*bufferBytes) == 0 , "No se puede enviar un buffer de bytes vacio.") ||
+	SGMS.ECSFD( line < 0, "Line no puede ser inferior a 0."){}
+
+	//preformat para el mapa
+	if SGMS.hooker != nil {
+
+		SGMS.hookerPreFormatPointer(bufferBytes, SGMS.colName)
+
+	}
+
+	//Aplicamos los padding del archivo.
+	SGMS.spacePaddingPointer(bufferBytes, SGMS.size)
+
+	//Borramos los espacios a la derecha
+	SGMS.spaceTrimPointer(bufferBytes)
+
+	//Transformamos a string
+	strBuffer := string(*bufferBytes)
+
+	//Creamos el buffer de escritura
+
+	//creamos los bloqueos
+	SGMS.Lock()
+	defer SGMS.Unlock()
+
+
+	//Primero leemos el fichero y borramos esa linea del mapa
+	//BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)
+	//BuffBytes.Rspace()
+
+	BuffBytes := SGMS.GetOneLine(SGMS.colName, line)
+
+	//Borramos los espacios a la derecha
+	SGMS.spaceTrimPointer(BuffBytes.Buffer)
+
+	delete(SGMS.Map, string(*BuffBytes.Buffer))
+
+	//Despues escribimos la nueva linea en el archivo
+	lineNew := SGMS.SetOneLine(SGMS.colName, line, bufferBytes)
+
+	//Añadimos esa linea al mapa tambien
+	SGMS.Map[strBuffer] = *lineNew
+
+	return lineNew
+
+}
+
+
+func (SGMS *SpaceRamSync) NewLine(bufferBytes *[]byte)*int64 {
 
 	//preformat para el mapa
 	if SGMS.hooker != nil {
@@ -126,49 +184,29 @@ func (SGMS *SpaceSGMStr) SGMapStringLineUpd(line int64, bufferBytes *[]byte) (*i
 	defer SGMS.Unlock()
 
 	//Si la linea es -1  buscamos en el mapa, creamos una nueva entrada y una nueva linea en el archivo.
-	if line == -1 {
+	_, found := SGMS.Map[strBuffer]
+	if !found {
 
-		_, found := SGMS.Map[strBuffer]
-		if !found {
+		line := *SGMS.NewOneLine(SGMS.colName, bufferBytes)
 
-			line := *SGMS.NewOneLine(SGMS.colName, bufferBytes)
+		SGMS.Map[strBuffer] = line
 
-			SGMS.Map[strBuffer] = line
+		return &line
 
-			return &line, true
-
-		}
-		return nil , false
 	}
-
-	//Si la linea es > -1 actualizamos la linea y el mapa
-	if line > -1 {
-
-		//Primero leemos el fichero y borramos esa linea del mapa
-		//BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)
-		//BuffBytes.Rspace()
-
-		BuffBytes := SGMS.GetOneLine(SGMS.colName, line)
-
-		//Borramos los espacios a la derecha
-		SGMS.spaceTrimPointer(BuffBytes.Buffer)
-
-		delete(SGMS.Map, string(*BuffBytes.Buffer))
-
-		//Despues escribimos la nueva linea en el archivo
-		line := SGMS.SetOneLine(SGMS.colName, line, bufferBytes)
-		//Añadimos esa linea al mapa tambien
-		SGMS.Map[strBuffer] = *line
-
-		return line, true
-	}
-
-	return nil , false
+	return nil
 }
+
+func (SGMS *SpaceRamSync) NewLineString(str string)*int64 {
+
+	WBuffer := []byte(str)
+	return SGMS.NewLine( &WBuffer)
+}
+
 
 //SGMapStringLineDel: Borramos un elemento del archivo y del mapa
 //#bd/ramSync/SGMapStringLineDel
-func (SGMS *SpaceSGMStr) SGMapStringLineDel(line int64)(linePointer *int64) {
+func (SGMS *SpaceRamSync) DeleteLine(line int64)(linePointer *int64) {
 
 	//Creamos un buffer de lectura y leemos el numero de linea
 	//BuffBytes := SGMS.BRspace( BuffBytes, false ,  line, line  , SGMS.colName)

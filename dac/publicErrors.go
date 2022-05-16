@@ -21,7 +21,7 @@ obj.ECSD( true," \n\r" + fmt.Sprintln(err)){}
 */
 
 
-var runCallerGlobal = 3
+var runCallerGlobal = 5
 
 //Coge la url space.dir para el error
 func (LDAC *lDAC) ErrorLDACDefault(typeError errorDac, messageLog string)bool {

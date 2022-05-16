@@ -15,6 +15,7 @@ func (LDAC *lDAC) onErrorsLog() {
 	space.OnErrorFile()
 	space.NewTimeFileDisk()
 	space.NewDacByte()
+	space.SetFileCodgingByte()
 	space.SetSubDir("errors", "dac", "errors")
 	space.NewField("exceptionCount", 64)
 	space.NewField("warningCount", 64)
@@ -40,6 +41,7 @@ func (LDAC *lDAC) onErrorsLog() {
 	space.OnErrorFile()
 	space.NewTimeFileDisk()
 	space.NewDacByte()
+	space.SetFileCodgingByte()
 	space.SetSubDir("errors", "dac", "memory")
 
 	space.NewColumnByte("date", 20)
@@ -65,6 +67,7 @@ func (LDAC *lDAC) onErrorsLog() {
 	space.OnErrorFile()
 	space.NewTimeFileDisk()
 	space.NewDacByte()
+	space.SetFileCodgingByte()
 	space.SetSubDir("errors", "dac", "timers")
 
 	space.NewColumnByte("date", 20)
