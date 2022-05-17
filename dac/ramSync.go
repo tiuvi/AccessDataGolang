@@ -74,7 +74,7 @@ func (SGMS *SpaceRamSync) GetLine(bufferBytes *[]byte)*int64 {
 	}
 
 	//Aplicamos los padding del archivo.
-	SGMS.spacePaddingPointer(bufferBytes, SGMS.size)
+	SpacePaddingPointer(bufferBytes, SGMS.size)
 
 	//Borramos los espacios a la derecha
 	SGMS.spaceTrimPointer(bufferBytes)
@@ -122,7 +122,7 @@ func (SGMS *SpaceRamSync) SetLine(line int64, bufferBytes *[]byte)*int64 {
 	}
 
 	//Aplicamos los padding del archivo.
-	SGMS.spacePaddingPointer(bufferBytes, SGMS.size)
+	SpacePaddingPointer(bufferBytes, SGMS.size)
 
 	//Borramos los espacios a la derecha
 	SGMS.spaceTrimPointer(bufferBytes)
@@ -169,7 +169,7 @@ func (SGMS *SpaceRamSync) NewLine(bufferBytes *[]byte)*int64 {
 	}
 
 	//Aplicamos los padding del archivo.
-	SGMS.spacePaddingPointer(bufferBytes, SGMS.size)
+	SpacePaddingPointer(bufferBytes, SGMS.size)
 
 	//Borramos los espacios a la derecha
 	SGMS.spaceTrimPointer(bufferBytes)

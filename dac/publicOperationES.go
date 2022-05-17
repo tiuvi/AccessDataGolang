@@ -52,6 +52,26 @@ func (sF *spaceFile) GetOneLine(col string, line int64) *RBuffer {
 	return RBuf
 }
 
+func (sF *spaceFile) GetOneFieldRaw(col string) (RBuf *RBuffer) {
+
+	RBuf = sF.NewReaderBytes()
+	RBuf.NoRangeFieldsBRspace()
+	RBuf.BRspace(col)
+	RBuf.Rspace()
+
+	return RBuf
+}
+
+func (sF *spaceFile) GetOneLineRaw(col string, line int64) *RBuffer {
+
+	RBuf := sF.NewReaderBytes()
+	RBuf.OneLineBRspace(line)
+	RBuf.BRspace(col)
+	RBuf.Rspace()
+
+	return RBuf
+}
+
 /*
 * Funciones de buffer de bytes escritura
 *
@@ -84,6 +104,37 @@ func (sF *spaceFile) NewOneLine(col string, bufferBytes *[]byte) *int64 {
 
 	return RBuf.Wspace()
 }
+
+func (SF *spaceFile) SetOneFieldRaw(col string, bufferBytes *[]byte) *int64 {
+
+	WBuffBytes := SF.NewWriterBytes()
+	WBuffBytes.OffPreFormat()
+	WBuffBytes.NewNoRangeWBspace()
+
+	WBuffBytes.SendBWspace(col, bufferBytes)
+
+	return WBuffBytes.Wspace()
+}
+
+func (sF *spaceFile) SetOneLineRaw(col string, line int64, bufferBytes *[]byte) *int64 {
+
+	WBuffBytes := sF.NewWriterBytes()
+	WBuffBytes.OffPreFormat()
+	WBuffBytes.UpdateLineWBspace(line)
+	WBuffBytes.SendBWspace(col, bufferBytes)
+	return WBuffBytes.Wspace()
+}
+
+func (sF *spaceFile) NewOneLineRaw(col string, bufferBytes *[]byte) *int64 {
+
+	WBuffBytes := sF.NewWriterBytes()
+	WBuffBytes.OffPreFormat()
+	WBuffBytes.NewLineWBspace()
+	WBuffBytes.SendBWspace(col, bufferBytes)
+	return WBuffBytes.Wspace()
+}
+
+
 
 /*
 * Funciones de buffer de mapas lectura

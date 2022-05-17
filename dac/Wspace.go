@@ -55,7 +55,7 @@ func (WB *WBuffer) writeByteSpace()*int64{
 
 				}
 				
-				WB.spacePaddingPointer(WB.buffer , size)
+				SpacePaddingPointer(WB.buffer , size)
 
 				_ , err := WB.file.WriteAt(*WB.buffer , WB.lenFields + (WB.sizeLine * line) + size[0])
 				if err != nil && EDAC && 
@@ -113,7 +113,7 @@ func (WB *WBuffer) writeByteSpace()*int64{
 						WB.hookerPreFormatPointer(&bufBytes,colName)
 					}
 					
-					WB.spacePaddingPointer(&bufBytes , size)
+					SpacePaddingPointer(&bufBytes , size)
 					
 					_ , err := WB.file.WriteAt(bufBytes, WB.lenFields + (WB.sizeLine * line) + size[0])
 					if err != nil && EDAC && 
@@ -155,7 +155,7 @@ func (WB *WBuffer) writeByteSpace()*int64{
 					
 					}
 			
-					WB.spacePaddingPointer(&CHAN.buffer , size)
+					SpacePaddingPointer(&CHAN.buffer , size)
 						
 		
 					_, err := WB.file.WriteAt(CHAN.buffer, WB.lenFields + (WB.sizeLine * CHAN.line) + size[0])

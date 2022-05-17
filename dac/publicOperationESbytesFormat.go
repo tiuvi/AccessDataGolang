@@ -21,6 +21,14 @@ func (SF *spaceFile) GetOneFieldBytes(col string)[]byte {
 
 }
 
+func (SF *spaceFile) GetOneFieldBytesRaw(col string)[]byte {
+
+	buffer := SF.GetOneFieldRaw(col)
+
+	return *buffer.FieldBuffer
+
+}
+
 
 /*
 * Escritura de fields bytes

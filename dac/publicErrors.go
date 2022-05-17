@@ -40,6 +40,37 @@ func (LDAC *lDAC) ErrorLDACDefault(typeError errorDac, messageLog string)bool {
 	EDAC.logNewError()
 	return true
 }
+//Coge la url spaceFile.url para el error
+func (LDAC *lDAC) NewRouteErrorLDAC(typeError errorDac, messageLog string, fileName string, fileFolder ...string)bool {
+
+	EDAC := &errorsDac{
+		spaceErrors:  LDAC.spaceErrors,
+		fileName:     fileName,
+		fileFolder:   fileFolder,
+		typeError:    typeError,
+		url:          LDAC.globalDACFolder,
+		messageLog:   messageLog,
+		levelsUrl:    LDAC.levelsUrl,
+		separatorLog: LDAC.separatorLog,
+		runCaller:  3,
+		timeNow:      nil,
+	}
+	EDAC.logNewError()
+	return true
+}
+
+func NRELDACG(conditional bool, messageLog string, fileName string, fileFolder ...string)bool{
+	
+	if globalDac.spaceErrors != nil {
+
+		if conditional {
+
+			return	globalDac.NewRouteErrorLDAC(Message , messageLog , fileName , fileFolder...)
+		}	
+	}
+	return false
+}
+
 
 func (LDAC *lDAC) ELDAC (conditional bool, msg string)bool {
 	

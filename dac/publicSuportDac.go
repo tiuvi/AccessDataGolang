@@ -2,11 +2,53 @@ package dac
 
 import (
 	"fmt"
-
 	"os"
 	"regexp"
 	"strings"
 )
+
+
+func (SF *spaceFile) ExistReadLine(line int64)bool{
+
+	if SF.sizeFileLine == nil {
+
+		return false
+	}
+	if *SF.sizeFileLine >= line {
+
+		return true
+	}
+	return false
+}
+
+func (SF *spaceFile) ExistReadfield(field string)(found *bool){
+
+
+	if size ,exist := SF.indexSizeFields[field]; exist == true {
+		
+		found = new(bool)
+	
+		//Leemos el archivo y movemos el puntero al final para contar su tamaño.
+		sizeFile, err := SF.file.Seek(0, 2)
+		if err != nil && EDAC &&
+		SF.ECSFD(true, "Error al obtener el numero de lineas del archivo, leyendo el archivo \n\r" + fmt.Sprintln(err)) {
+		}
+
+		if sizeFile >= size[1]  {
+			
+			*found = true
+			return found
+		}
+			*found = false
+			return found
+	}
+
+	return nil
+}
+
+
+
+
 
 /**********************************************************************************************/
 /* Columnas */

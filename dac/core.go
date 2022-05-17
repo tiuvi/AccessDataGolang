@@ -130,9 +130,9 @@ func (sp *spaceFile) hookerPostFormatPointer(bufByte *[]byte, colName string) {
 	}
 }
 
-//spacePaddingPointer: Genera espacios tanto para fields como para columnas.
+//SpacePaddingPointer: Genera espacios tanto para fields como para columnas.
 //#bd/core.go
-func (sP *space) spacePaddingPointer(buf *[]byte, size [2]int64) {
+func SpacePaddingPointer(buf *[]byte, size [2]int64) {
 
 	//Contamos el array de bytes
 	textCount := int64(len(*buf))
@@ -152,8 +152,7 @@ func (sP *space) spacePaddingPointer(buf *[]byte, size [2]int64) {
 
 }
 
-//spacePaddingPointer: Genera espacios tanto para fields como para columnas.
-//#bd/core.go
+
 func (sP *space) spaceTrimPointer(buf *[]byte) {
 
 	//Limpiamos nulos
@@ -183,7 +182,7 @@ func (WB *WBuffer) WriteIndexSizeField(colName string, size [2]int64, rangues wR
 
 		if rangueFinal <= rangueTotal {
 
-			WB.spacePaddingPointer(fieldBuffer, [2]int64{0, rangues.rangeBytes})
+			SpacePaddingPointer(fieldBuffer, [2]int64{0, rangues.rangeBytes})
 
 		}
 
@@ -192,7 +191,7 @@ func (WB *WBuffer) WriteIndexSizeField(colName string, size [2]int64, rangues wR
 			restRangue := rangues.rangeBytes - (rangueFinal - rangueTotal)
 			if restRangue > 0 {
 
-				WB.spacePaddingPointer(fieldBuffer, [2]int64{0, restRangue})
+				SpacePaddingPointer(fieldBuffer, [2]int64{0, restRangue})
 			}
 			if restRangue <= 0 {
 				return
@@ -203,7 +202,7 @@ func (WB *WBuffer) WriteIndexSizeField(colName string, size [2]int64, rangues wR
 
 	if rangues.rangeBytes >= rangueTotal || rangues.rangeBytes <= 0 {
 
-		WB.spacePaddingPointer(fieldBuffer, size)
+		SpacePaddingPointer(fieldBuffer, size)
 
 	}
 
