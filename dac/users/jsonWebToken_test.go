@@ -102,6 +102,7 @@ func TestDencripter(t *testing.T) {
 
 
 // go test -bench BenchmarkEncripter -benchtime 1000x -benchmem
+//BenchmarkEncripter-8  1000times 1778 ns/op 160 B/op 5 allocs/op
 func BenchmarkEncripter(b *testing.B) {
   
 	arrString := stringArray(10000)
@@ -118,7 +119,8 @@ func BenchmarkEncripter(b *testing.B) {
     }
 }
 
-// go test -bench BenchmarkEncripter -benchtime 1000x -benchmem
+// go test -bench BenchmarkDencripter -benchtime 1000x -benchmem
+//BenchmarkDencripter-8 1000 time 730.9 ns/op 112 B/op 3 allocs/op
 func BenchmarkDencripter(b *testing.B) {
   
 	arrString := stringArray(10000)
@@ -193,6 +195,7 @@ func TestDecodeJWT(t *testing.T) {
 
 
 // go test -bench BenchmarkNewJWT -benchtime 1000x -benchmem
+//BenchmarkNewJWT-8 1000 times 3635 ns/op 622 B/op 17 allocs/op
 func BenchmarkNewJWT(b *testing.B) {
   
 
@@ -201,15 +204,18 @@ func BenchmarkNewJWT(b *testing.B) {
    
     for i := 0; i < b.N; i++ {
 
-		NewJWT(strconv.FormatInt(int64(i) , 10) ,
-		arrString[i] ,
-		"0.0.0.0" ,
-		strconv.FormatInt(time.Now().Unix() , 10) )
+		b.StopTimer()
+		value1 := strconv.FormatInt(int64(i) , 10) 
+		value2 := strconv.FormatInt(time.Now().Unix() , 10)
+		b.StartTimer()
+		
+		NewJWT(value1, arrString[i] ,"0.0.0.0" ,value2)
 
     }
 }
 
 // go test -bench BenchmarkDecodeJWT -benchtime 1000x -benchmem
+//BenchmarkDecodeJWT-8 1000 times 1480 ns/op 479 B/op 14 allocs/op
 func BenchmarkDecodeJWT(b *testing.B) {
   
 	arrString := stringArray(1000)
