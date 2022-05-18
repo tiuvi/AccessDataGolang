@@ -153,7 +153,7 @@ func SpacePaddingPointer(buf *[]byte, size [2]int64) {
 }
 
 
-func (sP *space) spaceTrimPointer(buf *[]byte) {
+func SpaceTrimPointer(buf *[]byte) {
 
 	//Limpiamos nulos
 	for len(*buf) > 0 && (*buf)[len(*buf)-1] == 0 {
@@ -246,7 +246,7 @@ func (buf *RBuffer) readIndexSizeFieldPointer(colName string, size [2]int64) {
 			//Limpiamos el buffer de espacios
 			if buf.postFormat == true {
 
-				buf.spaceTrimPointer(buf.FieldBuffer)
+				SpaceTrimPointer(buf.FieldBuffer)
 
 			}
 
@@ -276,7 +276,7 @@ func (buf *RBuffer) readIndexSizeFieldPointer(colName string, size [2]int64) {
 			//Limpiamos el buffer de espacios
 			if buf.postFormat == true {
 
-				buf.spaceTrimPointer(buf.FieldBuffer)
+				SpaceTrimPointer(buf.FieldBuffer)
 
 			}
 
@@ -304,7 +304,7 @@ func (buf *RBuffer) readIndexSizeFieldPointer(colName string, size [2]int64) {
 		//Limpiamos el buffer de espacios
 		if buf.postFormat == true {
 
-			buf.spaceTrimPointer(buf.FieldBuffer)
+			SpaceTrimPointer(buf.FieldBuffer)
 
 		}
 

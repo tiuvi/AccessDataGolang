@@ -1,13 +1,13 @@
 Semana 16 - 22 mayo
 Lunes     mañana   8.5 horas tarde   horas
-martes    mañana    horas tarde   horas
+martes    mañana   8.5 horas tarde   horas
 Miercoles mañana    horas tarde   horas
 jueves    mañana    horas tarde   horas
 Viernes   mañana    horas tarde   horas
 Sabado    mañana    horas tarde   horas
 Domingo   mañana    horas tarde   horas
 
-Horas totales: 8.5
+Horas totales: 17
 
 
 

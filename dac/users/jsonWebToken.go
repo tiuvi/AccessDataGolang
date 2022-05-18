@@ -6,13 +6,12 @@ import (
 	"crypto/rand"
 	. "dac"
 	"encoding/base64"
-	"strconv"
-	"time"
 	"strings"
-	."fmt"
+
+	. "fmt"
 )
 
-func Falsefunction(){
+func Falsefunction() {
 	Println("")
 }
 
@@ -36,7 +35,8 @@ func initToken() {
 		bufferBytes := make([]byte, 32)
 		_, err := rand.Read(bufferBytes)
 		if err != nil &&
-			gCipher.NRESM(err != nil, err.Error(), "users", "tokenErrors") {
+			EDAC &&
+			gCipher.NRESF(err != nil, err.Error(), "users", "tokenErrors") {
 			return
 		}
 
@@ -51,48 +51,50 @@ func initToken() {
 	//Crea una nueva clave de cifrado
 	ST.block, err = aes.NewCipher(ST.key)
 	if err != nil &&
-		gCipher.NRESM(err != nil, err.Error(), "users", "tokenErrors") {
+		EDAC &&
+		gCipher.NRESF(err != nil, err.Error(), "users", "tokenErrors") {
 		return
 	}
 
 	globalCipher = ST
 }
 
-func encripter(text string) (ciphertext []byte, count int) {
+func encripter(bufferBytes *[]byte) {
 
-	if len(text) == 0 {
-		return nil, 0
+	if len(*bufferBytes) == 0 {
+		*bufferBytes = nil
+		return 
 	}
-
-	plaintext := []byte(text)
 
 	//El texto debe ser cifrado en bloques de 16 bytes
 	//Añadimos padding hasta completar.
-	if count = len(plaintext) % aes.BlockSize; count != 0 {
+	if count := len(*bufferBytes) % aes.BlockSize; count != 0 {
 
 		count = aes.BlockSize - count
-		padding := len(plaintext) + count
-		SpacePaddingPointer(&plaintext, [2]int64{0, int64(padding)})
+		padding := len(*bufferBytes) + count
+		SpacePaddingPointer(bufferBytes, [2]int64{0, int64(padding)})
 
 	}
 
 	//Creamos un array con el tamaño de bloque + el texto
-	ciphertext = make([]byte, aes.BlockSize+len(plaintext))
+	ciphertext := make([]byte, aes.BlockSize+len(*bufferBytes))
 
 	//Añadimos bytes aleatorios al principio del texto
 	_, err := rand.Read(ciphertext[:aes.BlockSize])
 	if err != nil &&
 		NRELDACG(err != nil, err.Error(), "users", "tokenErrors") {
-		return nil, 0
+		*bufferBytes = nil
+		return 
 	}
 
 	mode := cipher.NewCBCEncrypter(globalCipher.block, ciphertext[:aes.BlockSize])
-	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
+	mode.CryptBlocks(ciphertext[aes.BlockSize:], *bufferBytes)
 
-	return ciphertext, count
+	*bufferBytes = ciphertext
+	return
 }
 
-func dencripter(ciphertext *[]byte, count int) {
+func dencripter(ciphertext *[]byte) {
 
 	if len(*ciphertext) < aes.BlockSize {
 		*ciphertext = nil
@@ -112,50 +114,73 @@ func dencripter(ciphertext *[]byte, count int) {
 
 	mode.CryptBlocks(*ciphertext, *ciphertext)
 
-	*ciphertext = (*ciphertext)[:len(*ciphertext)-count]
+	SpaceTrimPointer(ciphertext)
 
 }
 
+func NewJWT(params ...string) (cipherJWT string) {
 
-
-func NewJWT(line int64, UserName string, ip string , timeNow time.Time )[]byte{
+	if len(params) == 0 {
+		return
+	}
 
 	if globalCipher == nil {
 		initToken()
 	}
 
-	 //JWT := strconv.FormatInt(line , 10) + UserName + ip + strconv.FormatInt(timeNow.Unix() , 10)
-	
+	for ind, param := range params {
+		if param == ""{
+			return
+		}
+		params[ind] = base64.StdEncoding.EncodeToString([]byte(param))
+	}
 
-	//	 Println("Original: ",line , UserName , ip  , timeNow.Unix() )
+	var JWT []byte
+	if len(params) > 1 {
 
-	JWT := strings.Join( []string{
-		base64.StdEncoding.EncodeToString( []byte(strconv.FormatInt(line , 10))),
-		base64.StdEncoding.EncodeToString( []byte( UserName )),
-		base64.StdEncoding.EncodeToString( []byte( ip )),
-		base64.StdEncoding.EncodeToString( []byte( strconv.FormatInt(timeNow.Unix() , 10))),
-	} , ".")
-	
-	//	Println("Base 64: ",JWT , "tamaño: " ,len(JWT))
+		JWT = []byte(strings.Join(params, "."))
+	} else {
 
-	ciphertext, count := encripter(JWT)
+		JWT = []byte(params[0])
+	}
 
-	//Println("encripter: ", string(ciphertext) )
+	encripter(&JWT)
+	if JWT == nil {
+		return
+	}
 
-	dencripter(&ciphertext , count)
-	//Println("dencripter: ",string(ciphertext), "tamaño: " ,len(ciphertext))
+	return base64.StdEncoding.EncodeToString(JWT)
+}
 
-	tokenRaw := strings.Split(string(ciphertext) , ".")
-	var decode []byte
-	for _ , str := range tokenRaw{
+func DecodeJWT(JWT string) (params []string) {
 
-		decode, _ = base64.StdEncoding.DecodeString(str)
-
-		
-	
-
+	if len(JWT) == 0 {
+		return
 	}
 	
+	cipherJWT , err := base64.StdEncoding.DecodeString(JWT)
+	if err != nil {
+		return
+	}
+	dencripter(&cipherJWT)
+	if cipherJWT == nil {
+		return 
+	}
+	params = strings.Split(string(cipherJWT), ".")
 
-	return decode
+	for ind, param := range params {
+
+		if param == ""{
+			return []string{}
+		}
+		decode, err := base64.StdEncoding.DecodeString(param)
+		if err != nil {
+			return []string{}
+		}
+
+		params[ind] = string(decode)
+
+	}
+
+	return params
 }

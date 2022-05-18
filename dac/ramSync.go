@@ -43,7 +43,7 @@ func (sF *spaceFile) InitSync(colName string) *SpaceRamSync {
 		for x = 0; x <= *sF.sizeFileLine; x++ {
 
 			//Borramos los espacios a la derecha
-			SGMS.spaceTrimPointer(&mapColumn.BufferMap[colName][x])
+			SpaceTrimPointer(&mapColumn.BufferMap[colName][x])
 
 			mapString := string(mapColumn.BufferMap[colName][x])
 
@@ -77,7 +77,7 @@ func (SGMS *SpaceRamSync) GetLine(bufferBytes *[]byte)*int64 {
 	SpacePaddingPointer(bufferBytes, SGMS.size)
 
 	//Borramos los espacios a la derecha
-	SGMS.spaceTrimPointer(bufferBytes)
+	SpaceTrimPointer(bufferBytes)
 
 	//Transformamos a string
 	valueStr := string(*bufferBytes)
@@ -125,7 +125,7 @@ func (SGMS *SpaceRamSync) SetLine(line int64, bufferBytes *[]byte)*int64 {
 	SpacePaddingPointer(bufferBytes, SGMS.size)
 
 	//Borramos los espacios a la derecha
-	SGMS.spaceTrimPointer(bufferBytes)
+	SpaceTrimPointer(bufferBytes)
 
 	//Transformamos a string
 	strBuffer := string(*bufferBytes)
@@ -144,7 +144,7 @@ func (SGMS *SpaceRamSync) SetLine(line int64, bufferBytes *[]byte)*int64 {
 	BuffBytes := SGMS.GetOneLine(SGMS.colName, line)
 
 	//Borramos los espacios a la derecha
-	SGMS.spaceTrimPointer(BuffBytes.Buffer)
+	SpaceTrimPointer(BuffBytes.Buffer)
 
 	delete(SGMS.Map, string(*BuffBytes.Buffer))
 
@@ -172,7 +172,7 @@ func (SGMS *SpaceRamSync) NewLine(bufferBytes *[]byte)*int64 {
 	SpacePaddingPointer(bufferBytes, SGMS.size)
 
 	//Borramos los espacios a la derecha
-	SGMS.spaceTrimPointer(bufferBytes)
+	SpaceTrimPointer(bufferBytes)
 
 	//Transformamos a string
 	strBuffer := string(*bufferBytes)
@@ -214,7 +214,7 @@ func (SGMS *SpaceRamSync) DeleteLine(line int64)(linePointer *int64) {
 	BuffBytes := SGMS.GetOneLine(SGMS.colName, line)
 
 	//Borramos los espacios a la derecha
-	SGMS.spaceTrimPointer(BuffBytes.Buffer)
+	SpaceTrimPointer(BuffBytes.Buffer)
 
 	//Borramos ese numero de linea del mapa
 	delete(SGMS.Map, string(*BuffBytes.Buffer))

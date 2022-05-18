@@ -40,7 +40,7 @@ func (RB *RBuffer) readByteSpace(){
 				//Limpiamos el buffer de espacios
 				if RB.postFormat == true {
 
-					RB.spaceTrimPointer(RB.Buffer)
+					SpaceTrimPointer(RB.Buffer)
 
 				}
 
@@ -109,7 +109,7 @@ func (RB *RBuffer) readByteSpace(){
 						//Limpiamos el buffer de espacios
 						if RB.postFormat == true {
 		
-							RB.spaceTrimPointer(&bufferChan)
+							SpaceTrimPointer(&bufferChan)
 
 						}
 						
@@ -224,7 +224,7 @@ func (RB *RBuffer) readByteSpace(){
 						//Limpiamos el buffer de espacios
 						if RB.postFormat == true {
 
-							RB.spaceTrimPointer(&RB.BufferMap[colName][len(RB.BufferMap[colName])-1])
+							SpaceTrimPointer(&RB.BufferMap[colName][len(RB.BufferMap[colName])-1])
 
 						}
 					

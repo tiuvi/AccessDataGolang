@@ -245,7 +245,17 @@ func (SF *spaceFile) NRESM(conditional bool, messageLog string, fileName string,
 	return false
 }
 
+func (SF *spaceFile) NRESF(conditional bool, messageLog string, fileName string, fileFolder ...string)bool{
+	
+	if SF.spaceErrors != nil {
 
+		if conditional {
+
+			return	SF.NewRouteErrorSpaceFile(Fatal , messageLog , fileName , fileFolder...)
+		}	
+	}
+	return false
+}
 
 
 
