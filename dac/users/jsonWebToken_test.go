@@ -234,3 +234,29 @@ func BenchmarkDecodeJWT(b *testing.B) {
 
     }
 }
+
+
+// go test -run TestNewToken -v -benchmem
+func TestNewToken(t *testing.T) {
+
+	NewBasicDac("/media/franky/GOLANG/tiuviData")
+	var line int64
+	// 19 , 32 , 15 ,19 = 85 
+	line, userName , ip , timeNow := 9223372036854775807  , "franciscoTiuviGolangProgramadors"  , "255.255.255.255", time.Now().Add(time.Duration(8760) * time.Hour)                          
+	
+	t.Log("Comienzo- ", "line: " , line , "userName: " , userName , "ip: ", ip ,"timeNow", timeNow, "\n")
+
+	token := NewToken(line, userName , ip , timeNow )
+	if len(token) == 0 {
+		t.FailNow()
+	}
+
+	t.Log("lenToken: ", len(token), "token: ", token)
+
+	line  , userName  , ip ,timeNow , err  := DecodeToken(token)
+	if err != nil {
+		t.FailNow()
+	}
+	t.Log("Final- ","line: " , line , "userName: " , userName , "ip: ", ip ,"timeNow", timeNow.String() , "\n")
+
+}

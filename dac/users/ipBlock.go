@@ -24,6 +24,12 @@ func InitBlockIp() {
 
 }
 
+func NewVisitBlock( ip string){
+	
+	IpBlock.NewLineString(ip)
+
+}
+
 func IsVisitBlock(ip string)(found bool) {
 
 	if block := IpBlock.GetLineString(ip); block != nil {
@@ -34,9 +40,11 @@ func IsVisitBlock(ip string)(found bool) {
 	return false
 }
 
-func NewVisitBlock( ip string){
+
+
+func NewUserBlock( ip string){
 	
-	IpBlock.NewLineString(ip)
+	IpApp.NewLineString(ip)
 
 }
 

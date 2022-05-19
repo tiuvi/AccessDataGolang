@@ -7,13 +7,12 @@ import (
 	. "dac"
 	"encoding/base64"
 	"strings"
-
-	. "fmt"
+	"time"
+	"strconv"
+	"errors"
 )
 
-func Falsefunction() {
-	Println("")
-}
+
 
 type spaceCipher struct {
 	key   []byte
@@ -157,6 +156,10 @@ func DecodeJWT(JWT string) (params []string) {
 	if len(JWT) == 0 {
 		return
 	}
+
+	if globalCipher == nil {
+		initToken()
+	}
 	
 	cipherJWT , err := base64.StdEncoding.DecodeString(JWT)
 	if err != nil {
@@ -183,4 +186,42 @@ func DecodeJWT(JWT string) (params []string) {
 	}
 
 	return params
+}
+
+
+
+func NewToken(line int64 , userName string , ip string,timeNow time.Time)(JWT string){
+
+	if line < 0 || len(userName) == 0  || len(ip) == 0 {
+		return
+	}
+
+	return NewJWT(strconv.FormatInt(int64(line) , 10) ,
+	userName ,
+	ip,
+	strconv.FormatInt(timeNow.UnixMilli(), 10))
+
+}
+
+func DecodeToken(JWT string)(line int64 , userName string , ip string,timeNow time.Time, err error){
+
+	params := DecodeJWT(JWT)
+	if len(params) == 0 {
+		return 0  , ""  , "" , time.Unix(0,0), errors.New("tokenInvalido")
+	}
+
+	line, err = strconv.ParseInt(params[0],10 ,64)
+	if err != nil{
+		return
+	}
+	userName = params[1]
+	ip       = params[2]
+	timeNowInt64 , err := strconv.ParseInt(params[3],10 ,64)
+	if err != nil{
+		return
+	}
+
+	timeNow = time.UnixMilli(timeNowInt64)
+	
+	return
 }

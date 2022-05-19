@@ -34,11 +34,10 @@ func (SF *spaceFile) GetOneFieldBytesRaw(col string)[]byte {
 * Escritura de fields bytes
 */
 
-func (SF *spaceFile) SetOneFieldString(col string,str string)*int64 {
+func (SF *spaceFile) SetOneFieldString(col string,str string) {
 
 	buffer := []byte(str)
-
-	return SF.SetOneField(col , &buffer)
+	SF.SetOneField(col , &buffer)
 
 }
 
