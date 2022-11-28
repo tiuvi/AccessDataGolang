@@ -65,3 +65,50 @@ mapa buffer de bits <br>
 Mil escrituras MapsBufferBytes en:       0. 173 969 542 <br>
 Diezmil escrituras ChanBufferBytes en:   1. 930 629 185 <br>
 Cienmil escrituras ChanBufferBytes en:  10. 658 817 437 <br>
+
+<h1>Ademas tambien cdn</h1>
+
+Urls tiuvi.com
+
+Usuarios<br>
+https://tiuvi.com/@/
+<br>
+https://tiuvi.com/glb/test.glb<br>
+
+
+https://tiuvi.com/png/test.png<br>
+
+
+https://tiuvi.com/js/test.js<br>
+
+
+https://tiuvi.com/css/test.css<br>
+
+
+https://tiuvi.com/jpg/test.jpg<br>
+
+
+https://tiuvi.com/pdf/test.pdf<br>
+
+
+https://tiuvi.com/html/test.html<br>
+
+
+https://tiuvi.com/json/test.json<br>
+
+
+https://tiuvi.com/gif/test.gif<br>
+
+
+https://tiuvi.com/svg/test.svg<br>
+
+
+https://tiuvi.com/mp3/test.mp3<br>
+
+
+https://tiuvi.com/mp4/test.mp4<br>
+
+https://tiuvi.com/mp4/test2.mp4<br>
+
+
+https://tiuvi.com/txt/test.txt<br>
